@@ -1,7 +1,7 @@
 
  ```shell
                         O~~~AA      O~~         O~       O~~~~~~~AO~~~~~~~~A
-                      O~~    O~~ O~~   O~~     O~ ~~     O~~      O~~       
+                      O~~    O~~ O~~   O~~     O~O~~     O~~      O~~       
                        O~~      O~~           O~  O~~    O~~      O~~       
                          O~~    O~~          O~~   O~~   O~~~~~AA O~~~~~~A  
                             O~~ O~~         O~~~~~A O~~  O~~      O~~       
@@ -47,9 +47,4 @@ run demo
 ## Run SCAFE
 
 ```shell
-perl GREMA_main.pl \
-    -i input/Dream4_10_1_timeseries_expression.txt \
-    -k input/insilico_size10_no_prior_knowledge.txt \
-    -o output/Dream4_10_1/ \
-    -t 10
 ```
