@@ -85,6 +85,9 @@ use Cwd 'abs_path';
    --outputPrefix         [required] [string]  prefix for the output files
    --outDir               [required] [string]  directory for the output files
 
+
+   --overwrite            [optional] [yes/no]  erase outDir/outputPrefix before running (default=no)
+
  Dependencies:
    bedtools
    
