@@ -70,7 +70,7 @@ use Cwd 'abs_path';
 
    This workflow process a single sample, from a bulk CAGE bam file to read count per tCRE 
 
-   workflow.sc.solo.pl [options] --run_bam_path --genome --run_tag --run_outDir
+   workflow.bk.solo.pl [options] --run_bam_path --genome --run_tag --run_outDir
 
  Required:
    --run_bam_path          [required] [string] bam file (of CAGE reads), can be read 1 only or pair-end
