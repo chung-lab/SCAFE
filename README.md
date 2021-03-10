@@ -16,7 +16,8 @@
 Profiling of transcribed cis-regulatory elements in single cells. _bioRxiv_, 2021, [XXXXXX](https://XXXXXXXXXX/)
 
 ## What does SCAFE do? It defines tCRE using RNA 5'ends
-<div style="text-align:center"><img src="img/tCRE_definition.png?" width="860"></div>
+<div style="text-align:center"><img src="img/tCRE_definition.png?" width="640"></div>
+<div style="text-align:center"><img src="img/zenbu.png?" width="400"></div>
 
 Profiling of cis-regulatory elements (CREs, mostly promoters and enhancers) in single cells allows us to interrogate the cell-type specific contexts of gene regulation and genetic predisposition to diseases. Single-cell RNA-5’end-sequencing (sc-end5-seq) methods can detect transcribed CREs (tCREs), enabling the quantification of promoter and enhancer activities in single cells. To identify genuine tCREs, we implemented a workflow which effectively eliminates false positives from sc-end5-seq data.
 
