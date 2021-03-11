@@ -204,7 +204,7 @@ sub addCountIndivLibTask {
 		$task_num++;
 		$task_info_hsh_ref->{$task_num} = {
 			'task_name' => 'count',
-			'script_name' => '(.+)',
+			'script_name' => 'tool.sc.count',
 			'param' => [
 				['countRegion_bed_path', $path_hsh_ref->{"tCRE_bed_path"}],
 				['ctss_bed_path', $CB_ctss_bed_path],
@@ -307,7 +307,7 @@ sub define_task {
 	my $task_info_hsh_ref = {
 		1 => {
 			'task_name' => 'pool',
-			'script_name' => '(.+)',
+			'script_name' => 'tool.sc.pool',
 			'param' => [
 				['lib_list_path', $path_hsh_ref->{'lib_list_path'}],
 				['max_thread', $max_thread],
@@ -323,7 +323,7 @@ sub define_task {
 		},
 		2 => {
 			'task_name' => 'remove_strand_invader',
-			'script_name' => '(.+)',
+			'script_name' => 'tool.cm.remove_strand_invader',
 			'param' => [
 				['ctss_bed_path', $path_hsh_ref->{'collapse_ctss_bed_path'}],
 				['genome', $genome],
@@ -337,7 +337,7 @@ sub define_task {
 		},
 		3 => {
 			'task_name' => 'cluster',
-			'script_name' => '(.+)',
+			'script_name' => 'tool.cm.cluster',
 			'param' => [
 				['cluster_ctss_bed_path', $path_hsh_ref->{'filtered_ctss_bed_path'}],
 				['count_ctss_bed_path_list', $path_hsh_ref->{'filtered_ctss_bed_path'}],
@@ -351,7 +351,7 @@ sub define_task {
 		},
 		4 => {
 			'task_name' => 'filter',
-			'script_name' => '(.+)',
+			'script_name' => 'tool.cm.filter',
 			'param' => [
 				['genome', $genome],
 				['training_signal_path', $path_hsh_ref->{'training_signal_path'}],
@@ -370,7 +370,7 @@ sub define_task {
 		},
 		5 => {
 			'task_name' => 'ctss_to_bigwig',
-			'script_name' => '(.+)',
+			'script_name' => 'tool.cm.ctss_to_bigwig',
 			'param' => [
 				['genome', $genome],
 				['ctss_bed_path', $path_hsh_ref->{'filtered_ctss_bed_path'}],
@@ -386,7 +386,7 @@ sub define_task {
 		},
 		6 => {
 			'task_name' => 'annotate',
-			'script_name' => '(.+)',
+			'script_name' => 'tool.cm.annotate',
 			'param' => [
 				['genome', $genome],
 				['tssCluster_bed_path', $path_hsh_ref->{"default.filtered_tssCluster_bed_path"}],
