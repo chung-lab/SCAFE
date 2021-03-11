@@ -80,6 +80,9 @@ use Cwd 'abs_path';
    wget
    tar
 
+ For demo, cd to SCAFE dir and run,
+   ./script/download.demo.input
+
 =head1 VERSION
 
 1.0

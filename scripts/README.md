@@ -856,6 +856,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    tar
 
  To demo run, cd to SCAFE dir and run:
+   ./script/download.demo.input
 ```
 
 ### demo.test.run [[top]](#0)<a name="23"></a>

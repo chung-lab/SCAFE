@@ -243,23 +243,30 @@ my ($lib_info_hsh_ref) = &readLibInfo($lib_list_path);#->858
 sub checkBedtoolsVersion {
 #....................................................................................................................................................#
 #	subroutineCategory: general, checkTools
-#	dependOnSub: reportAndLogStatus|929
+#	dependOnSub: reportAndLogStatus|2230
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|120
+#	primaryAppearInSection: 3_getInfoTasks|184
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: $bedtools_bin
 #	toCall: my ($bedtools_bin) = &checkBedtoolsVersion();
-#	calledInLine: 135
+#	calledInLine: 188
 #....................................................................................................................................................#
 
 	my $dirPath = dirname(rel2abs($0));
-	my $bedtools_bin = "$dirPath/../resources/bin/bedtools/bedtools";
+
+	my $bedtools_bin = "bedtools";
+	
 	my $stdOut = `$bedtools_bin --version 2>&1`;
 	if ($stdOut =~ m/bedtools v(\S+)/) {
-		&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->929
+		&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->2230
 	} else {
-		die "bedtools not installed properly. Quitting.\n";
+		$bedtools_bin = "$dirPath/../resources/bin/bedtools/bedtools";
+		if ($stdOut =~ m/bedtools v(\S+)/) {
+			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->2230
+		} else {
+			die "bedtools not installed properly. Quitting.\n";
+		}
 	}
 	
 	return($bedtools_bin);
