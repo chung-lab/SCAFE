@@ -78,6 +78,10 @@ Once you ensured the above required R packages are installed, it's to get starte
 ### Clone this respository
 
 ```shell
+#--- make a directory to install SCAFE
+mkdir -pm 755 /my/path/to/install/
+cd /my/path/to/install/
+
 #--- Obtain SCAFE from github
 git clone https://github.com/chung-lab/SCAFE
 cd SCAFE
