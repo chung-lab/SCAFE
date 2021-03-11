@@ -45,13 +45,13 @@ perl --version
 ### R
 SCAFE relies on R for logistic regression, ROC analysis and graph plotting. Rscript (v3.6.1 or later) and the following R packages have to be properly installed:
 
-* ROCR (vX.Y.Z or later)
-* PRROC (vX.Y.Z or later)
-* caret (vX.Y.Z or later)
-* e1071 (vX.Y.Z or later)
-* ggplot2 (vX.Y.Z or later)
-* scales (vX.Y.Z or later)
-* reshape2 (vX.Y.Z or later)
+* [ROCR](https://cran.r-project.org/web/packages/ROCR/readme/README.html)
+* [PRROC](https://cran.r-project.org/web/packages/PRROC/index.html)
+* [caret](https://cran.r-project.org/web/packages/caret/index.html)
+* [e1071](https://cran.r-project.org/web/packages/e1071/index.html)
+* [ggplot2](https://ggplot2.tidyverse.org/)
+* [scales](https://cran.r-project.org/web/packages/scales/index.html)
+* [reshape2](https://cran.r-project.org/web/packages/reshape2/index.html)
 
 Failed to install these packages will crash ./scripts/tool.cm.filter.
 
@@ -73,7 +73,7 @@ SCAFE also relies on a number of 3rd party applications. The binaries and execut
 SCAFE was developed and tested on Debian GNU/Linux 9. Running SACFE on other OS are not guranteed.
 
 ## Getting started
-Once you ensured the above required R packages are installed, it's to get started. Here's the instructions on getting SCAFE, downloading demo data and reference genome, and finally a couple of test runs on the demo data.
+Once you ensured the above required R packages are installed, you are all set. Here's the instructions on getting SCAFE, downloading demo data and reference genome, and finally a couple of test runs on the demo data.
 
 ### Clone this respository
 
