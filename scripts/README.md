@@ -23,7 +23,7 @@ This folder contains the following tools and workflows. A tool perform a single 
 * [**tool.bk.bam\_to\_ctss**](#20) ---> tool, bulk mode, convert bam to ctss bed
 
 
-### workflow.sc.subsample [[top]](#0)<a name="2"></a>
+### workflow.sc.subsample [[top]](#0)<a name="1"></a>
    This workflow subsamples a ctss file, defines tCRE and generate a tCRE UMI/cellbarcode count matrix
    Subsampling is useful to investigate the effect of sequencing depth to tCRE definition
 
@@ -73,7 +73,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --run_outDir=./demo/output/sc.subsample/
 ```
 
-### workflow.sc.solo [[top]](#0)<a name="3"></a>
+### workflow.sc.solo [[top]](#0)<a name="2"></a>
    This workflow process a single sample, from a cellranger bam file to tCRE UMI/cellbarcode count matrix
 
 ```
@@ -118,7 +118,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --run_outDir=./demo/output/sc.solo/
 ```
 
-### workflow.sc.pool [[top]](#0)<a name="4"></a>
+### workflow.sc.pool [[top]](#0)<a name="3"></a>
    This workflow process a single sample, from a cellranger bam file to tCRE UMI/cellbarcode count matrix
 
 ```
@@ -165,7 +165,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --run_outDir=./demo/output/sc.pool/
 ```
 
-### workflow.bk.subsample [[top]](#0)<a name="5"></a>
+### workflow.bk.subsample [[top]](#0)<a name="4"></a>
    This workflow subsamples a ctss file, defines tCRE and generate tCRE read count
    Subsampling is useful to investigate the effect of sequencing depth to tCRE definition
 
@@ -211,7 +211,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --run_outDir=./demo/output/bk.subsample/
 ```
 
-### workflow.bk.solo [[top]](#0)<a name="6"></a>
+### workflow.bk.solo [[top]](#0)<a name="5"></a>
    This workflow process a single sample, from a bulk CAGE bam file to read count per tCRE 
 
 ```
@@ -253,7 +253,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --run_outDir=./demo/output/bk.solo/
 ```
 
-### workflow.bk.pool [[top]](#0)<a name="7"></a>
+### workflow.bk.pool [[top]](#0)<a name="6"></a>
    This workflow process a single sample, from a bulk CAGE bam file to read count per tCRE per sample
 
 ```
@@ -299,7 +299,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --run_outDir=./demo/output/bk.pool/
 ```
 
-### tool.sc.subsample\_ctss [[top]](#0)<a name="8"></a>
+### tool.sc.subsample\_ctss [[top]](#0)<a name="7"></a>
    This tool subsample a ctss bed file and maintains the cellbarcode and UMI information
 
 ```
@@ -326,7 +326,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.subsample/subsample_ctss/
 ```
 
-### tool.sc.pool [[top]](#0)<a name="9"></a>
+### tool.sc.pool [[top]](#0)<a name="8"></a>
    This tool pool multiple ctss bed file and maintains the unique (suffixed) cellbarcode and UMI information
 
 ```
@@ -358,7 +358,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.pool/pool/
 ```
 
-### tool.sc.count [[top]](#0)<a name="10"></a>
+### tool.sc.count [[top]](#0)<a name="9"></a>
    This tool counts the UMI within a set of user-defined regions, e.g. tCRE, and returns a UMI/cellbarcode matrix
 
 ```
@@ -389,7 +389,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/count/
 ```
 
-### tool.sc.bam\_to\_ctss [[top]](#0)<a name="11"></a>
+### tool.sc.bam\_to\_ctss [[top]](#0)<a name="10"></a>
    This tool converts a bam file to a ctss bed file, identifies read 5'end (capped TSS, i.e. ctss),
    extracts the unencoded G information, pileup ctss, and deduplicate the UMI
 
@@ -426,7 +426,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/bam_to_ctss/
 ```
 
-### tool.cm.remove\_strand\_invader [[top]](#0)<a name="12"></a>
+### tool.cm.remove\_strand\_invader [[top]](#0)<a name="11"></a>
    This tool identify and remove strand invader artefact from a ctss bed file, 
    by aligning the sequence immediate upstream of a ctss to TS oligo sequence
 
@@ -460,7 +460,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/remove_strand_invader/
 ```
 
-### tool.cm.prep\_genome [[top]](#0)<a name="13"></a>
+### tool.cm.prep\_genome [[top]](#0)<a name="12"></a>
    This tool prepares a reference genome assembly and its gene models for others tools in scafe.
 
 ```
@@ -498,7 +498,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/genome/
 ```
 
-### tool.cm.filter [[top]](#0)<a name="14"></a>
+### tool.cm.filter [[top]](#0)<a name="13"></a>
 
 ```
  Usage:
@@ -561,7 +561,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/filter/
 ```
 
-### tool.cm.ctss\_to\_bigwig [[top]](#0)<a name="15"></a>
+### tool.cm.ctss\_to\_bigwig [[top]](#0)<a name="14"></a>
    This tool converts a ctss bed file into two bigwig file, one for each strand, for visualization purpose 
 
 ```
@@ -586,7 +586,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/ctss_to_bigwig/
 ```
 
-### tool.cm.cluster [[top]](#0)<a name="16"></a>
+### tool.cm.cluster [[top]](#0)<a name="15"></a>
    This tool generate TSS cluster from a ctss bed file, using an external tool paraclu with user-defined cutoffs
 
 ```
@@ -630,7 +630,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/cluster/
 ```
 
-### tool.cm.annotate [[top]](#0)<a name="17"></a>
+### tool.cm.annotate [[top]](#0)<a name="16"></a>
    This tool defines tCRE from TSS clusters and annotates them based their overlap with gene models.
 
 ```
@@ -698,7 +698,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/annotate/
 ```
 
-### tool.bk.subsample\_ctss [[top]](#0)<a name="18"></a>
+### tool.bk.subsample\_ctss [[top]](#0)<a name="17"></a>
    This tool subsample a ctss bed file from bulk CAGE ctss
 
 ```
@@ -724,7 +724,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/bk.subsample/subsample_ctss/
 ```
 
-### tool.bk.pool [[top]](#0)<a name="19"></a>
+### tool.bk.pool [[top]](#0)<a name="18"></a>
    This tool pools multiple bulk CAGE ctss bed file
 
 ```
@@ -755,7 +755,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/bk.pool/pool/
 ```
 
-### tool.bk.count [[top]](#0)<a name="20"></a>
+### tool.bk.count [[top]](#0)<a name="19"></a>
    This tool counts the CAGE reads within a set of user-defined regions, e.g. tCRE, and 
    returns the reads per regions
 
@@ -784,7 +784,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/bk.solo/count/
 ```
 
-### tool.bk.bam\_to\_ctss [[top]](#0)<a name="21"></a>
+### tool.bk.bam\_to\_ctss [[top]](#0)<a name="20"></a>
    This tool converts a bulk CAGE bam file to a ctss bed file, identifies read 5'end 
    (capped TSS, i.e. ctss), extracts the unencoded G information, pileup ctss, 
    and deduplicate the UMI
