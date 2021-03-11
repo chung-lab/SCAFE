@@ -573,7 +573,6 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outputPrefix   <required> [string] prefix for the output files
    --outDir         <required> [string] directory for the output files
    --overwrite      (optional) [yes/no] erase outDir/outputPrefix before running (default=no)
-   
 
  Dependencies:
    bedGraphToBigWig
