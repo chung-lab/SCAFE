@@ -25,7 +25,7 @@ Profiling of cis-regulatory elements (CREs, mostly promoters and enhancers) in s
 Blablabla
 
 ## How does SCAFE do it?
-### [SCAFE Core Tools and Workflows](scripts/README.md)
+### [SCAFE Core Tools and Workflows](scripts/)
 <div style="text-align:center"><img src=".github/images/flowchart.png?" width="860"></div>
 
 SCAFE consists of a set of perl programs for processing of single cell 5’end RNA-seq data. Major tools are listed here. SCAFE accepts read alignment in .bam format from standard 10X GenomicsTM tool cellranger. Tool bam_to_ctss extracts the 5’ position of reads, taking the 5’ unencoded-Gs into account. Tool remove_strand_invader removes read 5’ends that are strand invasion artifacts by aligning the TS oligo sequence to the immediate upstream sequence of the read 5’end. Tool cluster performs clustering of read 5’ends using 3rd-party tool Paraclu. Tool filter extracts the properties of TSS clusters and performs multiple logistic regression to distinguish genuine TSS clusters from artifacts. Tool annotate define tCREs by merging closely located TSS clusters and annotate tCREs based on their proximity to known genes. Tool count counts the number of UMI within each tCRE in single cells and generates a tCRE-Cell UMI count matrix. SCAFE tools were also implemented workflows for processing of individual samples or pooling of multiple samples.
