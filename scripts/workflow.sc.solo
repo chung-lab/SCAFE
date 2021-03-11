@@ -158,7 +158,7 @@ my ($scafe_dir, $script_dir, $result_script_dir, $ARGVStr, $scriptAbsPath) = &pr
 #<section ID="run" num="1">
 my ($path_hsh_ref) = &define_path($run_outDir, $run_tag, $run_bam_path, $run_cellbarcode_path, $training_signal_path, $testing_signal_path, $script_dir);#->168
 my ($task_info_hsh_ref) = &define_task($genome, $path_hsh_ref, $max_thread, $run_tag, $run_outDir);#->216
-&run_task($task_info_hsh_ref, $path_hsh_ref);#->453
+&run_task($task_info_hsh_ref, $path_hsh_ref, $result_script_dir);#->453
 #<\section>
 #====================================================================================================================================================#
 
@@ -368,8 +368,8 @@ sub define_task {
 			],
 			'check' => [
 				$run_outDir."/count/$run_tag/matrix/matrix.mtx",
-				$run_outDir."/count/$run_tag/matrix/matrix/genes.tsv",
-				$run_outDir."/count/$run_tag/matrix/matrix/barcodes.tsv",
+				$run_outDir."/count/$run_tag/matrix/genes.tsv",
+				$run_outDir."/count/$run_tag/matrix/barcodes.tsv",
 			]
 		},
 	};
@@ -484,18 +484,20 @@ sub readParameters {
 sub run_task {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: >none
+#	dependOnSub: currentTime|141
 #	appearInSub: >none
-#	primaryAppearInSection: 1_run|124
+#	primaryAppearInSection: 1_run|115
 #	secondaryAppearInSection: >none
-#	input: $path_hsh_ref, $task_info_hsh_ref
+#	input: $path_hsh_ref, $result_script_dir, $task_info_hsh_ref
 #	output: none
-#	toCall: &run_task($task_info_hsh_ref, $path_hsh_ref);
-#	calledInLine: 129
+#	toCall: &run_task($task_info_hsh_ref, $path_hsh_ref, $result_script_dir);
+#	calledInLine: 120
 #....................................................................................................................................................#
 	
-	my ($task_info_hsh_ref, $path_hsh_ref) = @_;
+	my ($task_info_hsh_ref, $path_hsh_ref, $result_script_dir) = @_;
 	
+	open TASKLOG, ">", "$result_script_dir/task.log.txt";
+	print TASKLOG join "", (join "\t", ('0', 'workflow', 'manager', 'started', &currentTime())), "\n";#->141
 	foreach my $task_num (sort {$a <=> $b} keys %{$task_info_hsh_ref}) {
 		my $task_name = $task_info_hsh_ref->{$task_num}{'task_name'};
 		my $script_name = $task_info_hsh_ref->{$task_num}{'script_name'};
@@ -506,9 +508,11 @@ sub run_task {
 		
 		if ($result_found eq 'no') {
 
+			print "\n";
 			print "#===========================#\n";
 			print "Start running $task_name\n";
 			print "#===========================#\n";
+			print TASKLOG join "", (join "\t", ($task_num, $task_name, $script_name, 'started', &currentTime())), "\n";#->141
 
 			my $script_path = $path_hsh_ref->{'script_dir'}.'/'.$script_name;
 			die "script of $task_name does not exist at $script_path\n" if not -s $script_path;
@@ -522,12 +526,40 @@ sub run_task {
 			my $cmd = join " ", @cmd_param_ary;
 			system "$cmd";
 
+			$result_found = 'yes';
+			foreach my $check_path (@{$task_info_hsh_ref->{$task_num}{'check'}}) {
+				$result_found = 'no' if not -s $check_path;
+			}
+			
+			if ($result_found eq 'yes') {
+				print "\n";
+				print "#============================================#\n";
+				print "Results of $task_name found. Run successfully.\n";
+				print "#============================================#\n";
+				print TASKLOG join "", (join "\t", ($task_num, $task_name, $script_name, 'successful', &currentTime())), "\n";#->141
+			} else {
+				print TASKLOG join "", (join "\t", ($task_num, $task_name, $script_name, 'failed', &currentTime())), "\n";#->141
+				print TASKLOG join "", (join "\t", ('0', 'workflow', 'workflow', 'failed', &currentTime())), "\n";#->141
+				print "\n";
+				print "#========================================#\n";
+				print "Results of $task_name not found. Quitting.\n";
+				print "#========================================#\n";
+				die;
+			}
+			
 		} else {
 			print "#=====================================#\n";
 			print "Results of $task_name found. Skipping.\n";
 			print "#=====================================#\n";
 		}
 	}
+
+	print "\n";
+	print "#=====================================================#\n";
+	print "Results of all tasks found. All tasks run successfully.\n";
+	print "#=====================================================#\n";
+	print TASKLOG join "", (join "\t", ('0', 'workflow', 'manager', 'successful', &currentTime())), "\n";#->141
+	close TASKLOG;
 }
 
 exit;
