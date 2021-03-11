@@ -80,7 +80,7 @@ Once you ensured the above required R packages are installed, it's to get starte
 ```shell
 #--- Obtain SCAFE from github
 git clone https://github.com/chung-lab/SCAFE
-cd 	SCAFE
+cd SCAFE
 
 #--- making sure the scripts and binaries are executable
 chmod 755 -R ./scripts/
