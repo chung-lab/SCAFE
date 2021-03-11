@@ -141,7 +141,8 @@ ls -alh ./demo/output/sc.solo/count/demo/matrix
 #--- check out the help message of demo.test.run
 ./scripts/demo.test.run --help
 
-#--- run the all six available workflows on the demo bulk and single cell, it'll take a around 20 minutes
+#--- run the all six available workflows on the demo bulk and single
+#--- it'll take a around 20 minutes
 ./scripts/demo.test.run \
 --overwrite=yes \
 --run_outDir=./demo/output/
