@@ -1,7 +1,7 @@
 ## Reference Genome file
 SCAFE relies on parsed reference genome files for data processing. Please use ./scripts/download.resources.genome to download the genome corresponding to your datasets. The demo data is on hg19.gencode_v32lift37. Alternatively, you can use ./scripts/tool.cm.prep_genome to build your custom genome.
 
-### download.resources.genome [[top]](#0)<a name="21"></a>
+### download.resources.genome
    This script download reference genome data and save in ./resources/genome.
 
 ```
@@ -23,7 +23,7 @@ SCAFE relies on parsed reference genome files for data processing. Please use ./
    --genome=hg19.gencode_v32lift37
 ```
 
-### tool.cm.prep\_genome [[top]](#0)<a name="12"></a>
+### tool.cm.prep\_genome
    This tool prepares a reference genome assembly and its gene models for others tools in scafe.
 
 ```
