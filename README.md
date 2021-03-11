@@ -146,6 +146,61 @@ ls -alh ./demo/output/sc.solo/count/demo/matrix
 --overwrite=yes \
 --run_outDir=./demo/output/
 ```
+If everything runs smoothly, you should see the following report on screen
+
+```shell
+#=======================#
+Results of Demo Test Run.
+#=======================#
+workflow.bk.pool	manager	successful
+workflow.bk.pool	tool.bk.pool	successful
+workflow.bk.pool	tool.cm.cluster	successful
+workflow.bk.pool	tool.cm.filter	successful
+workflow.bk.pool	tool.cm.ctss_to_bigwig	successful
+workflow.bk.pool	tool.cm.annotate	successful
+workflow.bk.pool	tool.bk.count	successful
+workflow.bk.pool	tool.bk.count	successful
+workflow.bk.solo	manager	successful
+workflow.bk.solo	tool.bk.bam_to_ctss	successful
+workflow.bk.solo	tool.cm.cluster	successful
+workflow.bk.solo	tool.cm.filter	successful
+workflow.bk.solo	tool.cm.ctss_to_bigwig	successful
+workflow.bk.solo	tool.cm.annotate	successful
+workflow.bk.solo	tool.bk.count	successful
+workflow.bk.subsample	manager	successful
+workflow.bk.subsample	tool.bk.subsample_ctss	successful
+workflow.bk.subsample	tool.cm.cluster	successful
+workflow.bk.subsample	tool.cm.filter	successful
+workflow.bk.subsample	tool.cm.ctss_to_bigwig	successful
+workflow.bk.subsample	tool.cm.annotate	successful
+workflow.bk.subsample	tool.bk.count	successful
+workflow.sc.pool	manager	successful
+workflow.sc.pool	tool.sc.pool	successful
+workflow.sc.pool	tool.cm.remove_strand_invader	successful
+workflow.sc.pool	tool.cm.cluster	successful
+workflow.sc.pool	tool.cm.filter	successful
+workflow.sc.pool	tool.cm.ctss_to_bigwig	successful
+workflow.sc.pool	tool.cm.annotate	successful
+workflow.sc.pool	tool.sc.count	successful
+workflow.sc.pool	tool.sc.count	successful
+workflow.sc.solo	manager	successful
+workflow.sc.solo	tool.sc.bam_to_ctss	successful
+workflow.sc.solo	tool.cm.remove_strand_invader	successful
+workflow.sc.solo	tool.cm.cluster	successful
+workflow.sc.solo	tool.cm.filter	successful
+workflow.sc.solo	tool.cm.ctss_to_bigwig	successful
+workflow.sc.solo	tool.cm.annotate	successful
+workflow.sc.solo	tool.sc.count	successful
+workflow.sc.subsample	manager	successful
+workflow.sc.subsample	tool.sc.subsample_ctss	successful
+workflow.sc.subsample	tool.cm.remove_strand_invader	successful
+workflow.sc.subsample	tool.cm.cluster	successful
+workflow.sc.subsample	tool.cm.filter	successful
+workflow.sc.subsample	tool.cm.ctss_to_bigwig	successful
+workflow.sc.subsample	tool.cm.annotate	successful
+workflow.sc.subsample	tool.sc.count	successful
+```
+
 
 ## Run SCAFE for your own data
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum
