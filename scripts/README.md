@@ -24,6 +24,7 @@ This folder contains the following tools and workflows. A tool perform a single 
 * [**download.resources.genome**](#21) ---> download, reference genome to resources dir
 * [**download.demo.input**](#22) ---> download, demo input data for testing
 * [**demo.test.run**](#23) ---> demo, run demo data for testing
+* [**check.dependencies**](#24) ---> check dependencies
 
 
 ### workflow.sc.subsample [[top]](#0)<a name="1"></a>
@@ -884,4 +885,20 @@ This folder contains the following tools and workflows. A tool perform a single 
    ./scripts/demo.test.run \
    --overwrite=yes \
    --run_outDir=./demo/output/
+```
+
+### check.dependencies [[top]](#0)<a name="24"></a>
+   This scripts check the integrity of tools and workflow scripts, 3rd executable dependencies and R packages.
+
+```
+ Usage:
+   check.dependencies
+
+ Dependencies:
+   wget
+   tar
+   Rscript
+
+ To demo run, cd to SCAFE dir and run:
+   ./script/check.dependencies
 ```

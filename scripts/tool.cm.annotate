@@ -631,7 +631,6 @@ sub checkAllExecutable {
 
 	return ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin);
 }
-
 sub checkTranscriptInfoBedChromSizeGeneInfoPath {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
