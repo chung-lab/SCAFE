@@ -45,7 +45,7 @@ set.custom.ggplot.theme <- function () {
 }
 load.packages <- function() {
   package.list = c(
-    'ROCR','PRROC', 'caret', 'e1071', 'ggplot2'
+    'ROCR','PRROC', 'caret', 'e1071', 'ggplot2', 'scales'
   )
   suppressMessages(suppressWarnings(sapply(package.list, library, character.only = TRUE, quietly = TRUE)))
   return()
