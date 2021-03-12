@@ -15,6 +15,7 @@ get.args <- function () {
       args[2] = "./testing"
     }
   } else {
+	stop("build_glm.R has no input", call.=FALSE)
     args <- c(
       '/osc-fs_home/hon-chun/analysis/tenX_single_cell/scafe/dev/deploy/release/1.0/demo/output/sc.solo/filter/demo/glm/tssCluster.glm.predictors.tsv',      
       '/osc-fs_home/hon-chun/analysis/tenX_single_cell/scafe/dev/deploy/release/1.0/demo/output/sc.solo/filter/demo/glm/build_glm'      

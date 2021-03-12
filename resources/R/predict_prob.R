@@ -13,6 +13,8 @@ get.args <- function () {
       stop("input model not specified.n", call.=FALSE)
     } 
   } else {
+
+    stop("predict_prob.R has no input", call.=FALSE)
     args <- c(
       '/osc-fs_home/hon-chun/analysis/tenX_single_cell/scafe/dev/deploy/release/1.0/demo/output/sc.solo/filter/demo/glm/tssCluster.glm.predictors.tsv',      
       '/osc-fs_home/hon-chun/analysis/tenX_single_cell/scafe/dev/deploy/release/1.0/demo/output/sc.solo/filter/demo/glm/build_glm/combined.predictors.glm.model.RDS',

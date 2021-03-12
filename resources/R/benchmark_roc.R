@@ -12,7 +12,8 @@ get.args <- function () {
       args[2] = "./output/"
     }
   } else {
-    args <- c(
+	stop("benchmark_roc.R has no input", call.=FALSE)
+	args <- c(
       '/osc-fs_home/hon-chun/analysis/tenX_single_cell/scafe/v1.0/resources/R/00_test/00_reg_roc/roc.input.tsv',      
       '/osc-fs_home/hon-chun/analysis/tenX_single_cell/scafe/v1.0/resources/R/00_test/00_reg_roc'      
     )
