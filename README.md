@@ -32,6 +32,7 @@ SCAFE consists of [a set of perl programs](scripts/) for processing of single ce
 
 ### SCAFE discovers *de novo* genunie TSS clusters and tCREs
 <div style="text-align:center"><img src=".github/images/AUC.png?" width="860"></div>
+SCAFE extracts the properties of gold-standard TSS clusters (left) and theirperformance as a TSS classifier measured as Area Under Receiver Operating Characteristic (ROC) Curve (AUC) (right). b, logistic probability of gold-standard TSS clusters (left) and its performance as a TSS classifier measured as AUC (right). c, performance of various metrics as a TSS classifier in (a) and (b) across various sequencing depth. d, histone marks at TSS clusters with logistic probability below (right) or above (right) threshold 0.5, at various genomic locations, including annotated gene TSS, exonic or intronic regions in sense or antisense orientations, or otherwise intergenic regions. n, number of TSS clusters. %, percentage of TSS clusters in all genomic locationsregardless of logistic probability threshold.
 
 ## Dependencies
 ### perl
