@@ -123,8 +123,8 @@ use Cwd 'abs_path';
 #<global>
 my $scriptDirPath = dirname(rel2abs($0));
 my $scriptAbsPath = abs_path($0);
-my ($curntTimeStamp) = &timeStamp();#->562
-my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->203
+my ($curntTimeStamp) = &timeStamp();#->619
+my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->258
 my $globalReadmeHsh_ref = {};
 our $tmplog_fh;
 #<\global>
@@ -138,7 +138,7 @@ our $tmplog_fh;
 #	section 0_startingTasks
 #
 #<section ID="startingTasks" num="0">
-my ($countRegion_bed_path, $ctss_bed_path, $outputPrefix, $outDir, $overwrite) = &readParameters();#->461
+my ($countRegion_bed_path, $ctss_bed_path, $outputPrefix, $outDir, $overwrite) = &readParameters();#->516
 #<\section>
 #====================================================================================================================================================#
 
@@ -163,9 +163,9 @@ my $result_log_dir = "$result_dir/log/"; push @mkDirAry, $result_log_dir;
 my $result_script_dir = "$result_dir/script/"; push @mkDirAry, $result_script_dir;
 foreach my $dir (@mkDirAry) {system ("mkdir -pm 777 $dir");}
 open $tmplog_fh, ">", "$result_dir/00_screen_log.$curntTimeStamp.log.txt";
-&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->221
-&printStartOrFinishMessage("startMessage");#->387
-my ($bedtools_bin) = &checkBedtoolsVersion();#->179
+&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->276
+&printStartOrFinishMessage("startMessage");#->442
+my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();#->178
 #<\section>
 #====================================================================================================================================================#
 
@@ -173,9 +173,9 @@ my ($bedtools_bin) = &checkBedtoolsVersion();#->179
 #	section 3_output
 #
 #<section ID="output" num="3">
-my ($countRegion_info_hsh_ref) = &readCountRegionInfo($countRegion_bed_path);#->421
-&runBedToolsIntersect($countRegion_bed_path, $ctss_bed_path, $countRegion_info_hsh_ref, $bedtools_bin);#->525
-&printCount($countRegion_info_hsh_ref, $result_log_dir);#->246
+my ($countRegion_info_hsh_ref) = &readCountRegionInfo($countRegion_bed_path);#->476
+&runBedToolsIntersect($countRegion_bed_path, $ctss_bed_path, $countRegion_info_hsh_ref, $bedtools_bin);#->582
+&printCount($countRegion_info_hsh_ref, $result_log_dir);#->301
 #<\section>
 #====================================================================================================================================================#
 
@@ -183,8 +183,8 @@ my ($countRegion_info_hsh_ref) = &readCountRegionInfo($countRegion_bed_path);#->
 #	section 4_finishingTasks
 #
 #<section ID="finishingTasks" num="4">
-&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->272
-&printStartOrFinishMessage("finishMessage");#->387
+&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->327
+&printStartOrFinishMessage("finishMessage");#->442
 #<\section>
 #====================================================================================================================================================#
 
@@ -195,12 +195,9 @@ my ($countRegion_info_hsh_ref) = &readCountRegionInfo($countRegion_bed_path);#->
 #====================================================================================================================================================#
 #List of subroutines by category
 #
-#	checkTools [n=1]:
-#		checkBedtoolsVersion
-#
-#	general [n=6]:
-#		checkBedtoolsVersion, currentTime, logCalledCMDAndScript
-#		printStartOrFinishMessage, readParameters, timeStamp
+#	general [n=5]:
+#		currentTime, logCalledCMDAndScript, printStartOrFinishMessage
+#		readParameters, timeStamp
 #
 #	log [n=1]:
 #		reportAndLogStatus
@@ -214,46 +211,102 @@ my ($countRegion_info_hsh_ref) = &readCountRegionInfo($countRegion_bed_path);#->
 #	time [n=1]:
 #		timeStamp
 #
-#	unassigned [n=2]:
-#		printCount, readCountRegionInfo
+#	unassigned [n=3]:
+#		checkAllExecutable, printCount, readCountRegionInfo
 #
 #====================================================================================================================================================#
 
-sub checkBedtoolsVersion {
+sub checkAllExecutable {
 #....................................................................................................................................................#
-#	subroutineCategory: general, checkTools
-#	dependOnSub: reportAndLogStatus|503
+#	subroutineCategory: unassigned
+#	dependOnSub: reportAndLogStatus|560
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|110
+#	primaryAppearInSection: 2_defineOutDirPath|112
 #	secondaryAppearInSection: >none
 #	input: none
-#	output: $bedtools_bin
-#	toCall: my ($bedtools_bin) = &checkBedtoolsVersion();
-#	calledInLine: 124
+#	output: $bedGraphToBigWig_bin, $bedtools_bin, $bigWigAverageOverBed_bin, $cut_sh_path, $paraclu_bin, $samtools_bin
+#	toCall: my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
+#	calledInLine: 126
 #....................................................................................................................................................#
-
+	
 	my $dirPath = dirname(rel2abs($0));
+
 	my $bedtools_bin = "$dirPath/../resources/bin/bedtools/bedtools";
-	my $stdOut = `$bedtools_bin --version 2>&1`;
-	if ($stdOut =~ m/bedtools v(\S+)/) {
-		&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->503
-	} else {
-		die "bedtools not installed properly. Quitting.\n";
+	my $samtools_bin = "$dirPath/../resources/bin/samtools/samtools";
+	my $paraclu_bin = "$dirPath/../resources/bin/paraclu/paraclu";
+	my $cut_sh_path = "$dirPath/../resources/bin/paraclu/paraclu-cut.sh";
+	my $bedGraphToBigWig_bin = "$dirPath/../resources/bin/bedGraphToBigWig/bedGraphToBigWig";
+	my $bigWigAverageOverBed_bin = "$dirPath/../resources/bin/bigWigAverageOverBed/bigWigAverageOverBed";
+	
+	&reportAndLogStatus("Checking all SCAFE executables", 10, "\n");#->560
+	
+	{
+		my $stdOut = `$bedtools_bin --version 2>&1`;
+		if ($stdOut =~ m/bedtools v(\S+)/) {
+			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->560
+		} else {
+			die "bedtools is not installed properly. Quitting.\n";
+		}
+	}
+
+	{
+		my $stdOut = `$samtools_bin 2>&1`;
+		if ($stdOut =~ m/\s+(Version: \S+)\s+/) {
+			&reportAndLogStatus("Checking: samtools version: $1", 0, "\n");#->560
+		} else {
+			die "samtools is not installed properly. Quitting.\n";
+		}
 	}
 	
-	return($bedtools_bin);
+	{
+		my $stdOut = `$paraclu_bin 2>&1`;
+		if ($stdOut =~ m/paraclu: I need a minValue and a fileName/) {
+			&reportAndLogStatus("Checking: paraclu found.", 0, "\n");#->560
+		} else {
+			die "paraclu is not installed properly. Quitting.\n";
+		}
+	}
+	
+	{
+		my $stdOut = `$cut_sh_path 55C7128A 2>&1`;
+		if ($stdOut =~ m/awk: fatal: cannot open/) {
+			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->560
+		} else {
+			die "paraclu-cut is not installed properly. Quitting.\n";
+		}
+	}
+
+	{
+		my $stdOut = `$bedGraphToBigWig_bin 2>&1`;
+		if ($stdOut =~ m/bedGraphToBigWig v (\S+)/) {
+			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->560
+		} else {
+			die "bedGraphToBigWig not installed properly. Quitting.\n";
+		}
+	}
+
+	{
+		my $stdOut = `$bigWigAverageOverBed_bin 2>&1`;
+		if ($stdOut =~ m/bigWigAverageOverBed v(\S+)/) {
+			&reportAndLogStatus("Checking: bigWigAverageOverBed version: $1", 0, "\n");#->560
+		} else {
+			die "bigWigAverageOverBed is not installed properly. Quitting.\n";
+		}
+	}
+
+	return ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin);
 }
 sub currentTime {
 #....................................................................................................................................................#
 #	subroutineCategory: general
 #	dependOnSub: >none
-#	appearInSub: printStartOrFinishMessage|387, reportAndLogStatus|503
+#	appearInSub: printStartOrFinishMessage|442, reportAndLogStatus|560
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 2_defineOutDirPath|110, 4_finishingTasks|139
+#	secondaryAppearInSection: 2_defineOutDirPath|112, 4_finishingTasks|141
 #	input: none
 #	output: $runTime
 #	toCall: my ($runTime) = &currentTime();
-#	calledInLine: 83, 403, 407, 412, 416, 519, 520
+#	calledInLine: 85, 458, 462, 467, 471, 576, 577
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
@@ -266,12 +319,12 @@ sub logCalledCMDAndScript {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|110
+#	primaryAppearInSection: 2_defineOutDirPath|112
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $result_script_dir, $scriptAbsPath
 #	output: 
 #	toCall: &logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);
-#	calledInLine: 122
+#	calledInLine: 124
 #....................................................................................................................................................#
 	my ($ARGVStr, $result_script_dir, $scriptAbsPath) = @_;
 
@@ -289,18 +342,18 @@ sub logCalledCMDAndScript {
 sub printCount {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|503
+#	dependOnSub: reportAndLogStatus|560
 #	appearInSub: >none
-#	primaryAppearInSection: 3_output|129
+#	primaryAppearInSection: 3_output|131
 #	secondaryAppearInSection: >none
 #	input: $countRegion_info_hsh_ref, $result_log_dir
 #	output: 
 #	toCall: &printCount($countRegion_info_hsh_ref, $result_log_dir);
-#	calledInLine: 134
+#	calledInLine: 136
 #....................................................................................................................................................#
 	my ($countRegion_info_hsh_ref, $result_log_dir) = @_;
 	
-	&reportAndLogStatus("printing count", 0, "\n");#->503
+	&reportAndLogStatus("printing count", 0, "\n");#->560
 	
 	open (COUNTLOG, ">", "$result_log_dir/count.log.tsv");
 	print COUNTLOG join "", ((join "\t", ('countRegion_ID', 'count')), "\n");
@@ -317,12 +370,12 @@ sub printOutputFileListAndReadme {
 #	subroutineCategory: output
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 4_finishingTasks|139
+#	primaryAppearInSection: 4_finishingTasks|141
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $outDir, $paramTag
 #	output: 
 #	toCall: &printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);
-#	calledInLine: 142
+#	calledInLine: 144
 #....................................................................................................................................................#
 	my ($ARGVStr, $paramTag, $outDir) = @_;
 	
@@ -430,54 +483,54 @@ sub printOutputFileListAndReadme {
 sub printStartOrFinishMessage {
 #....................................................................................................................................................#
 #	subroutineCategory: general
-#	dependOnSub: currentTime|203
+#	dependOnSub: currentTime|258
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|110, 4_finishingTasks|139
+#	primaryAppearInSection: 2_defineOutDirPath|112, 4_finishingTasks|141
 #	secondaryAppearInSection: >none
 #	input: $StartOrFinishMessage
 #	output: none
 #	toCall: &printStartOrFinishMessage($StartOrFinishMessage);
-#	calledInLine: 123, 143
+#	calledInLine: 125, 145
 #....................................................................................................................................................#
 
 	my ($StartOrFinishMessage) = @_;
 	
 	if ($StartOrFinishMessage eq "startMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] starts running ...... \n";#->203
+		print "[".&currentTime()."] starts running ...... \n";#->258
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->203
+		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->258
 		print $tmplog_fh "=========================================================================\n\n";
 
 	} elsif ($StartOrFinishMessage eq "finishMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] finished running .......\n";#->203
+		print "[".&currentTime()."] finished running .......\n";#->258
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->203
+		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->258
 		print $tmplog_fh "=========================================================================\n\n";
 	}
 }
 sub readCountRegionInfo {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|503
+#	dependOnSub: reportAndLogStatus|560
 #	appearInSub: >none
-#	primaryAppearInSection: 3_output|129
+#	primaryAppearInSection: 3_output|131
 #	secondaryAppearInSection: >none
 #	input: $countRegion_bed_path
 #	output: $countRegion_info_hsh_ref
 #	toCall: my ($countRegion_info_hsh_ref) = &readCountRegionInfo($countRegion_bed_path);
-#	calledInLine: 132
+#	calledInLine: 134
 #....................................................................................................................................................#
 	my ($countRegion_bed_path) = @_;
 	
 	my $countRegion_info_hsh_ref = {};
 
-	&reportAndLogStatus("reading count region info", 0, "\n");#->503
+	&reportAndLogStatus("reading count region info", 0, "\n");#->560
 	if ($countRegion_bed_path =~ m/\.gz$/) {
 		open (COUNTREGION, " gzip -dc $countRegion_bed_path |");
 	} else {
@@ -497,7 +550,7 @@ sub readCountRegionInfo {
 	close COUNTREGION;
 	
 	my $num_countRegion = keys %{$countRegion_info_hsh_ref};
-	&reportAndLogStatus("info of $num_countRegion countRegion stored", 0, "\n");#->503
+	&reportAndLogStatus("info of $num_countRegion countRegion stored", 0, "\n");#->560
 		
 	return ($countRegion_info_hsh_ref);
 }
@@ -506,12 +559,12 @@ sub readParameters {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startingTasks|94
+#	primaryAppearInSection: 0_startingTasks|96
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: $countRegion_bed_path, $ctss_bed_path, $outDir, $outputPrefix, $overwrite
 #	toCall: my ($countRegion_bed_path, $ctss_bed_path, $outputPrefix, $outDir, $overwrite) = &readParameters();
-#	calledInLine: 97
+#	calledInLine: 99
 #....................................................................................................................................................#
 	
 	my ($countRegion_bed_path, $ctss_bed_path, $outputPrefix, $outDir, $overwrite);
@@ -548,41 +601,41 @@ sub readParameters {
 sub reportAndLogStatus {
 #....................................................................................................................................................#
 #	subroutineCategory: log
-#	dependOnSub: currentTime|203
-#	appearInSub: checkBedtoolsVersion|179, printCount|246, readCountRegionInfo|421, runBedToolsIntersect|525
+#	dependOnSub: currentTime|258
+#	appearInSub: checkAllExecutable|178, printCount|301, readCountRegionInfo|476, runBedToolsIntersect|582
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 2_defineOutDirPath|110, 3_output|129
+#	secondaryAppearInSection: 2_defineOutDirPath|112, 3_output|131
 #	input: $lineEnd, $message, $numTrailingSpace
 #	output: 
 #	toCall: &reportAndLogStatus($message, $numTrailingSpace, $lineEnd);
-#	calledInLine: 195, 259, 436, 456, 539
+#	calledInLine: 199, 204, 213, 222, 231, 240, 249, 314, 491, 511, 596
 #....................................................................................................................................................#
 	my ($message, $numTrailingSpace, $lineEnd) = @_;
 
 	my $trailingSpaces = '';
 	$trailingSpaces .= " " for (1..$numTrailingSpace);
 	
-	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->203
-	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->203
+	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->258
+	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->258
 	
 	return ();
 }
 sub runBedToolsIntersect {
 #....................................................................................................................................................#
 #	subroutineCategory: range
-#	dependOnSub: reportAndLogStatus|503
+#	dependOnSub: reportAndLogStatus|560
 #	appearInSub: >none
-#	primaryAppearInSection: 3_output|129
+#	primaryAppearInSection: 3_output|131
 #	secondaryAppearInSection: >none
 #	input: $bedtools_bin, $countRegion_bed_path, $countRegion_info_hsh_ref, $ctss_bed_path
 #	output: 
 #	toCall: &runBedToolsIntersect($countRegion_bed_path, $ctss_bed_path, $countRegion_info_hsh_ref, $bedtools_bin);
-#	calledInLine: 133
+#	calledInLine: 135
 #....................................................................................................................................................#
 
 	my ($countRegion_bed_path, $ctss_bed_path, $countRegion_info_hsh_ref, $bedtools_bin) = @_;
 
-	&reportAndLogStatus("Start running bedtools intersect. Be patient.", 10, "\n");#->503
+	&reportAndLogStatus("Start running bedtools intersect. Be patient.", 10, "\n");#->560
 		
 	if ($countRegion_bed_path =~ m/\.gz$/) {
 		#---[2/18/15 19:54] sometimes will crash on ac2 if read gz directly
@@ -614,7 +667,7 @@ sub timeStamp {
 #	input: none
 #	output: $curntTimeStamp
 #	toCall: my ($curntTimeStamp) = &timeStamp();
-#	calledInLine: 82
+#	calledInLine: 84
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);

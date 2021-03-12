@@ -168,8 +168,8 @@ open $tmplog_fh, ">", "$result_dir/00_screen_log.$curntTimeStamp.log.txt";
 #	section 3_count
 #
 #<section ID="count" num="3">
+my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
 my ($chrom_size_path) = &checkChromSizePath($genome);#->191
-my ($bedGraphToBigWig_bin) = &checkBedGraphToBigWigVersion();#->161
 my ($total_count) = &getTotalCount($ctss_bed_path);#->311
 &convertCTSS($ctss_bed_path, $result_wig_dir, $result_bed_dir, $outputPrefix, $chrom_size_path, $bedGraphToBigWig_bin, $total_count);#->211
 
@@ -216,36 +216,85 @@ my ($total_count) = &getTotalCount($ctss_bed_path);#->311
 #
 #====================================================================================================================================================#
 
-sub checkBedGraphToBigWigVersion {
+sub checkAllExecutable {
 #....................................................................................................................................................#
-#	subroutineCategory: general, checkTools
-#	dependOnSub: reportAndLogStatus|561
+#	subroutineCategory: unassigned
+#	dependOnSub: reportAndLogStatus|1254
 #	appearInSub: >none
-#	primaryAppearInSection: 3_count|109
+#	primaryAppearInSection: 2_defineOutDirPath|129
 #	secondaryAppearInSection: >none
 #	input: none
-#	output: $bedGraphToBigWig_bin
-#	toCall: my ($bedGraphToBigWig_bin) = &checkBedGraphToBigWigVersion();
-#	calledInLine: 113
+#	output: $bedGraphToBigWig_bin, $bedtools_bin, $bigWigAverageOverBed_bin, $cut_sh_path, $paraclu_bin, $samtools_bin
+#	toCall: my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
+#	calledInLine: 144
 #....................................................................................................................................................#
-
-	my $dirPath = dirname(rel2abs($0));
-	my $bedGraphToBigWig_bin = "bedGraphToBigWig";
 	
-	my $stdOut = `$bedGraphToBigWig_bin 2>&1`;
-	if ($stdOut =~ m/bedGraphToBigWig v (\S+)/) {
-		&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->561
-	} else {
+	my $dirPath = dirname(rel2abs($0));
 
-		$bedGraphToBigWig_bin = "$dirPath/../resources/bin/bedGraphToBigWig/bedGraphToBigWig";
+	my $bedtools_bin = "$dirPath/../resources/bin/bedtools/bedtools";
+	my $samtools_bin = "$dirPath/../resources/bin/samtools/samtools";
+	my $paraclu_bin = "$dirPath/../resources/bin/paraclu/paraclu";
+	my $cut_sh_path = "$dirPath/../resources/bin/paraclu/paraclu-cut.sh";
+	my $bedGraphToBigWig_bin = "$dirPath/../resources/bin/bedGraphToBigWig/bedGraphToBigWig";
+	my $bigWigAverageOverBed_bin = "$dirPath/../resources/bin/bigWigAverageOverBed/bigWigAverageOverBed";
+	
+	&reportAndLogStatus("Checking all SCAFE executables", 10, "\n");#->1254
+	
+	{
+		my $stdOut = `$bedtools_bin --version 2>&1`;
+		if ($stdOut =~ m/bedtools v(\S+)/) {
+			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->1254
+		} else {
+			die "bedtools is not installed properly. Quitting.\n";
+		}
+	}
+
+	{
+		my $stdOut = `$samtools_bin 2>&1`;
+		if ($stdOut =~ m/\s+(Version: \S+)\s+/) {
+			&reportAndLogStatus("Checking: samtools version: $1", 0, "\n");#->1254
+		} else {
+			die "samtools is not installed properly. Quitting.\n";
+		}
+	}
+	
+	{
+		my $stdOut = `$paraclu_bin 2>&1`;
+		if ($stdOut =~ m/paraclu: I need a minValue and a fileName/) {
+			&reportAndLogStatus("Checking: paraclu found.", 0, "\n");#->1254
+		} else {
+			die "paraclu is not installed properly. Quitting.\n";
+		}
+	}
+	
+	{
+		my $stdOut = `$cut_sh_path 55C7128A 2>&1`;
+		if ($stdOut =~ m/awk: fatal: cannot open/) {
+			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->1254
+		} else {
+			die "paraclu-cut is not installed properly. Quitting.\n";
+		}
+	}
+
+	{
+		my $stdOut = `$bedGraphToBigWig_bin 2>&1`;
 		if ($stdOut =~ m/bedGraphToBigWig v (\S+)/) {
-			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->561
+			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->1254
 		} else {
 			die "bedGraphToBigWig not installed properly. Quitting.\n";
 		}
 	}
-	
-	return($bedGraphToBigWig_bin);
+
+	{
+		my $stdOut = `$bigWigAverageOverBed_bin 2>&1`;
+		if ($stdOut =~ m/bigWigAverageOverBed v(\S+)/) {
+			&reportAndLogStatus("Checking: bigWigAverageOverBed version: $1", 0, "\n");#->1254
+		} else {
+			die "bigWigAverageOverBed is not installed properly. Quitting.\n";
+		}
+	}
+
+	return ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin);
 }
 sub checkChromSizePath {
 #....................................................................................................................................................#

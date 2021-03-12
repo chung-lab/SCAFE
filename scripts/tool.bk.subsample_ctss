@@ -122,8 +122,8 @@ use Cwd 'abs_path';
 #<global>
 my $scriptDirPath = dirname(rel2abs($0));
 my $scriptAbsPath = abs_path($0);
-my ($curntTimeStamp) = &timeStamp();#->599
-my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->202
+my ($curntTimeStamp) = &timeStamp();#->656
+my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->259
 my $globalReadmeHsh_ref = {};
 our $tmplog_fh;
 #<\global>
@@ -137,7 +137,7 @@ our $tmplog_fh;
 #	section 0_startingTasks
 #
 #<section ID="startingTasks" num="0">
-my ($long_ctss_bed_path, $subsample_num, $outputPrefix, $outDir, $overwrite) = &readParameters();#->437
+my ($long_ctss_bed_path, $subsample_num, $outputPrefix, $outDir, $overwrite) = &readParameters();#->494
 #<\section>
 #====================================================================================================================================================#
 
@@ -161,8 +161,8 @@ my $result_script_dir = "$result_dir/script/"; push @mkDirAry, $result_script_di
 foreach my $dir (@mkDirAry) {system ("mkdir -pm 777 $dir");}
 
 open $tmplog_fh, ">", "$result_dir/00_screen_log.$curntTimeStamp.log.txt";
-&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->263
-&printStartOrFinishMessage("startMessage");#->403
+&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->320
+&printStartOrFinishMessage("startMessage");#->460
 #<\section>
 #====================================================================================================================================================#
 
@@ -170,9 +170,9 @@ open $tmplog_fh, ">", "$result_dir/00_screen_log.$curntTimeStamp.log.txt";
 #	section 3_subsample
 #
 #<section ID="subsample" num="3">
-my ($bedtools_bin) = &checkBedtoolsVersion();#->178
-my ($target_fraction) = &getTargetFraction($long_ctss_bed_path, $subsample_num);#->220
-&subsampleCTSS($long_ctss_bed_path, $result_bed_dir, $bedtools_bin, $target_fraction, $outputPrefix);#->503
+my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
+my ($target_fraction) = &getTargetFraction($long_ctss_bed_path, $subsample_num);#->277
+&subsampleCTSS($long_ctss_bed_path, $result_bed_dir, $bedtools_bin, $target_fraction, $outputPrefix);#->560
 #<\section>
 #====================================================================================================================================================#
 
@@ -187,8 +187,8 @@ my ($target_fraction) = &getTargetFraction($long_ctss_bed_path, $subsample_num);
 #	section 5_finishingTasks
 #
 #<section ID="finishingTasks" num="5">
-&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->288
-&printStartOrFinishMessage("finishMessage");#->403
+&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->345
+&printStartOrFinishMessage("finishMessage");#->460
 #<\section>
 #====================================================================================================================================================#
 
@@ -199,12 +199,9 @@ my ($target_fraction) = &getTargetFraction($long_ctss_bed_path, $subsample_num);
 #====================================================================================================================================================#
 #List of subroutines by category
 #
-#	checkTools [n=1]:
-#		checkBedtoolsVersion
-#
-#	general [n=6]:
-#		checkBedtoolsVersion, currentTime, logCalledCMDAndScript
-#		printStartOrFinishMessage, readParameters, timeStamp
+#	general [n=5]:
+#		currentTime, logCalledCMDAndScript, printStartOrFinishMessage
+#		readParameters, timeStamp
 #
 #	log [n=1]:
 #		reportAndLogStatus
@@ -215,46 +212,102 @@ my ($target_fraction) = &getTargetFraction($long_ctss_bed_path, $subsample_num);
 #	time [n=1]:
 #		timeStamp
 #
-#	unassigned [n=2]:
-#		getTargetFraction, subsampleCTSS
+#	unassigned [n=3]:
+#		checkAllExecutable, getTargetFraction, subsampleCTSS
 #
 #====================================================================================================================================================#
 
-sub checkBedtoolsVersion {
+sub checkAllExecutable {
 #....................................................................................................................................................#
-#	subroutineCategory: general, checkTools
-#	dependOnSub: reportAndLogStatus|481
+#	subroutineCategory: unassigned
+#	dependOnSub: reportAndLogStatus|538
 #	appearInSub: >none
-#	primaryAppearInSection: 3_subsample|124
+#	primaryAppearInSection: >none
 #	secondaryAppearInSection: >none
 #	input: none
-#	output: $bedtools_bin
-#	toCall: my ($bedtools_bin) = &checkBedtoolsVersion();
-#	calledInLine: 127
+#	output: $bedGraphToBigWig_bin, $bedtools_bin, $bigWigAverageOverBed_bin, $cut_sh_path, $paraclu_bin, $samtools_bin
+#	toCall: my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
+#	calledInLine: none
 #....................................................................................................................................................#
-
+	
 	my $dirPath = dirname(rel2abs($0));
+
 	my $bedtools_bin = "$dirPath/../resources/bin/bedtools/bedtools";
-	my $stdOut = `$bedtools_bin --version 2>&1`;
-	if ($stdOut =~ m/bedtools v(\S+)/) {
-		&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->481
-	} else {
-		die "bedtools not installed properly. Quitting.\n";
+	my $samtools_bin = "$dirPath/../resources/bin/samtools/samtools";
+	my $paraclu_bin = "$dirPath/../resources/bin/paraclu/paraclu";
+	my $cut_sh_path = "$dirPath/../resources/bin/paraclu/paraclu-cut.sh";
+	my $bedGraphToBigWig_bin = "$dirPath/../resources/bin/bedGraphToBigWig/bedGraphToBigWig";
+	my $bigWigAverageOverBed_bin = "$dirPath/../resources/bin/bigWigAverageOverBed/bigWigAverageOverBed";
+	
+	&reportAndLogStatus("Checking all SCAFE executables", 10, "\n");#->538
+	
+	{
+		my $stdOut = `$bedtools_bin --version 2>&1`;
+		if ($stdOut =~ m/bedtools v(\S+)/) {
+			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->538
+		} else {
+			die "bedtools is not installed properly. Quitting.\n";
+		}
+	}
+
+	{
+		my $stdOut = `$samtools_bin 2>&1`;
+		if ($stdOut =~ m/\s+(Version: \S+)\s+/) {
+			&reportAndLogStatus("Checking: samtools version: $1", 0, "\n");#->538
+		} else {
+			die "samtools is not installed properly. Quitting.\n";
+		}
 	}
 	
-	return($bedtools_bin);
+	{
+		my $stdOut = `$paraclu_bin 2>&1`;
+		if ($stdOut =~ m/paraclu: I need a minValue and a fileName/) {
+			&reportAndLogStatus("Checking: paraclu found.", 0, "\n");#->538
+		} else {
+			die "paraclu is not installed properly. Quitting.\n";
+		}
+	}
+	
+	{
+		my $stdOut = `$cut_sh_path 55C7128A 2>&1`;
+		if ($stdOut =~ m/awk: fatal: cannot open/) {
+			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->538
+		} else {
+			die "paraclu-cut is not installed properly. Quitting.\n";
+		}
+	}
+
+	{
+		my $stdOut = `$bedGraphToBigWig_bin 2>&1`;
+		if ($stdOut =~ m/bedGraphToBigWig v (\S+)/) {
+			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->538
+		} else {
+			die "bedGraphToBigWig not installed properly. Quitting.\n";
+		}
+	}
+
+	{
+		my $stdOut = `$bigWigAverageOverBed_bin 2>&1`;
+		if ($stdOut =~ m/bigWigAverageOverBed v(\S+)/) {
+			&reportAndLogStatus("Checking: bigWigAverageOverBed version: $1", 0, "\n");#->538
+		} else {
+			die "bigWigAverageOverBed is not installed properly. Quitting.\n";
+		}
+	}
+
+	return ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin);
 }
 sub currentTime {
 #....................................................................................................................................................#
 #	subroutineCategory: general
 #	dependOnSub: >none
-#	appearInSub: printStartOrFinishMessage|403, reportAndLogStatus|481
+#	appearInSub: printStartOrFinishMessage|460, reportAndLogStatus|538
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 2_defineOutDirPath|107, 5_finishingTasks|141
+#	secondaryAppearInSection: 2_defineOutDirPath|111, 5_finishingTasks|145
 #	input: none
 #	output: $runTime
 #	toCall: my ($runTime) = &currentTime();
-#	calledInLine: 80, 419, 423, 428, 432, 497, 498
+#	calledInLine: 84, 476, 480, 485, 489, 554, 555
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
@@ -265,18 +318,18 @@ sub currentTime {
 sub getTargetFraction {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|481
+#	dependOnSub: reportAndLogStatus|538
 #	appearInSub: >none
-#	primaryAppearInSection: 3_subsample|124
+#	primaryAppearInSection: 3_subsample|128
 #	secondaryAppearInSection: >none
 #	input: $long_ctss_bed_path, $subsample_num
 #	output: $target_fraction
 #	toCall: my ($target_fraction) = &getTargetFraction($long_ctss_bed_path, $subsample_num);
-#	calledInLine: 128
+#	calledInLine: 132
 #....................................................................................................................................................#
 	my ($long_ctss_bed_path, $subsample_num) = @_;
 	
-	&reportAndLogStatus("getting total num", 10, "\n");#->481
+	&reportAndLogStatus("getting total num", 10, "\n");#->538
 	my $total_num = 0;
 	my $ung_num = 0;
 	if ($long_ctss_bed_path =~ m/\.gz$/) {
@@ -294,14 +347,14 @@ sub getTargetFraction {
 	my $target_fraction = $subsample_num/$total_num;
 	if ($target_fraction > 1) {
 		$target_fraction = 1;
-		&reportAndLogStatus("subsample_num is greater than total_num", 10, "\n");#->481
-		&reportAndLogStatus("limiting target_fraction to 1", 10, "\n");#->481
+		&reportAndLogStatus("subsample_num is greater than total_num", 10, "\n");#->538
+		&reportAndLogStatus("limiting target_fraction to 1", 10, "\n");#->538
 	}
 	
-	&reportAndLogStatus("total_num=$total_num", 10, "\n");#->481
-	&reportAndLogStatus("unencoded_G_num=$ung_num", 10, "\n");#->481
-	&reportAndLogStatus("subsample_num=$subsample_num", 10, "\n");#->481
-	&reportAndLogStatus("target_fraction=$target_fraction", 10, "\n");#->481
+	&reportAndLogStatus("total_num=$total_num", 10, "\n");#->538
+	&reportAndLogStatus("unencoded_G_num=$ung_num", 10, "\n");#->538
+	&reportAndLogStatus("subsample_num=$subsample_num", 10, "\n");#->538
+	&reportAndLogStatus("target_fraction=$target_fraction", 10, "\n");#->538
 
 	return ($target_fraction);
 }
@@ -310,12 +363,12 @@ sub logCalledCMDAndScript {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|107
+#	primaryAppearInSection: 2_defineOutDirPath|111
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $result_script_dir, $scriptAbsPath
 #	output: 
 #	toCall: &logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);
-#	calledInLine: 118
+#	calledInLine: 122
 #....................................................................................................................................................#
 	my ($ARGVStr, $result_script_dir, $scriptAbsPath) = @_;
 
@@ -335,12 +388,12 @@ sub printOutputFileListAndReadme {
 #	subroutineCategory: output
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 5_finishingTasks|141
+#	primaryAppearInSection: 5_finishingTasks|145
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $outDir, $paramTag
 #	output: 
 #	toCall: &printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);
-#	calledInLine: 144
+#	calledInLine: 148
 #....................................................................................................................................................#
 	my ($ARGVStr, $paramTag, $outDir) = @_;
 	
@@ -448,34 +501,34 @@ sub printOutputFileListAndReadme {
 sub printStartOrFinishMessage {
 #....................................................................................................................................................#
 #	subroutineCategory: general
-#	dependOnSub: currentTime|202
+#	dependOnSub: currentTime|259
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|107, 5_finishingTasks|141
+#	primaryAppearInSection: 2_defineOutDirPath|111, 5_finishingTasks|145
 #	secondaryAppearInSection: >none
 #	input: $StartOrFinishMessage
 #	output: none
 #	toCall: &printStartOrFinishMessage($StartOrFinishMessage);
-#	calledInLine: 119, 145
+#	calledInLine: 123, 149
 #....................................................................................................................................................#
 
 	my ($StartOrFinishMessage) = @_;
 	
 	if ($StartOrFinishMessage eq "startMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] starts running ...... \n";#->202
+		print "[".&currentTime()."] starts running ...... \n";#->259
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->202
+		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->259
 		print $tmplog_fh "=========================================================================\n\n";
 
 	} elsif ($StartOrFinishMessage eq "finishMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] finished running .......\n";#->202
+		print "[".&currentTime()."] finished running .......\n";#->259
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->202
+		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->259
 		print $tmplog_fh "=========================================================================\n\n";
 	}
 }
@@ -484,12 +537,12 @@ sub readParameters {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startingTasks|91
+#	primaryAppearInSection: 0_startingTasks|95
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: $long_ctss_bed_path, $outDir, $outputPrefix, $overwrite, $subsample_num
 #	toCall: my ($long_ctss_bed_path, $subsample_num, $outputPrefix, $outDir, $overwrite) = &readParameters();
-#	calledInLine: 94
+#	calledInLine: 98
 #....................................................................................................................................................#
 	
 	my ($long_ctss_bed_path, $subsample_num, $outputPrefix, $outDir, $overwrite);
@@ -526,36 +579,36 @@ sub readParameters {
 sub reportAndLogStatus {
 #....................................................................................................................................................#
 #	subroutineCategory: log
-#	dependOnSub: currentTime|202
-#	appearInSub: checkBedtoolsVersion|178, getTargetFraction|220, subsampleCTSS|503
+#	dependOnSub: currentTime|259
+#	appearInSub: checkAllExecutable|179, getTargetFraction|277, subsampleCTSS|560
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 3_subsample|124
+#	secondaryAppearInSection: 3_subsample|128
 #	input: $lineEnd, $message, $numTrailingSpace
 #	output: 
 #	toCall: &reportAndLogStatus($message, $numTrailingSpace, $lineEnd);
-#	calledInLine: 194, 233, 251, 252, 255, 256, 257, 258, 566
+#	calledInLine: 200, 205, 214, 223, 232, 241, 250, 290, 308, 309, 312, 313, 314, 315, 623
 #....................................................................................................................................................#
 	my ($message, $numTrailingSpace, $lineEnd) = @_;
 
 	my $trailingSpaces = '';
 	$trailingSpaces .= " " for (1..$numTrailingSpace);
 	
-	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->202
-	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->202
+	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->259
+	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->259
 	
 	return ();
 }
 sub subsampleCTSS {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|481
+#	dependOnSub: reportAndLogStatus|538
 #	appearInSub: >none
-#	primaryAppearInSection: 3_subsample|124
+#	primaryAppearInSection: 3_subsample|128
 #	secondaryAppearInSection: >none
 #	input: $bedtools_bin, $long_ctss_bed_path, $outputPrefix, $result_bed_dir, $target_fraction
 #	output: 
 #	toCall: &subsampleCTSS($long_ctss_bed_path, $result_bed_dir, $bedtools_bin, $target_fraction, $outputPrefix);
-#	calledInLine: 129
+#	calledInLine: 133
 #....................................................................................................................................................#
 	my ($long_ctss_bed_path, $result_bed_dir, $bedtools_bin, $target_fraction, $outputPrefix) = @_;
 	
@@ -609,7 +662,7 @@ sub subsampleCTSS {
 			$last_strand = $strand;
 			$num_proc++;
 			if ($num_proc%10000 == 0) {
-				&reportAndLogStatus("$num_proc CTSS piled up", 10, "\n");#->481
+				&reportAndLogStatus("$num_proc CTSS piled up", 10, "\n");#->538
 			}
 		}
 	
@@ -651,7 +704,7 @@ sub timeStamp {
 #	input: none
 #	output: $curntTimeStamp
 #	toCall: my ($curntTimeStamp) = &timeStamp();
-#	calledInLine: 79
+#	calledInLine: 83
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
