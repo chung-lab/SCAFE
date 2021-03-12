@@ -33,7 +33,6 @@ SCAFE consists of [a set of perl programs](scripts/) for processing of single ce
 Blablabla
 
 ## Dependencies
-
 ### perl
 SCAFE is mainly written in perl (v5.24.1 or later). All scripts are standalone applications and **DO NOT require installations** of extra perl modules. Check whether perl is properly installed on your system.
 
@@ -43,31 +42,29 @@ perl --version
 ```
 
 ### R
-SCAFE relies on R for logistic regression, ROC analysis and graph plotting. Rscript (v3.6.1 or later) and the following R packages have to be properly installed:
+SCAFE relies on R for logistic regression, ROC analysis and graph plotting. Rscript **(v3.5.1 or later)** and the following R packages have to be properly installed:
 
-* [ROCR](https://cran.r-project.org/web/packages/ROCR/readme/README.html)
-* [PRROC](https://cran.r-project.org/web/packages/PRROC/index.html)
-* [caret](https://cran.r-project.org/web/packages/caret/index.html)
-* [e1071](https://cran.r-project.org/web/packages/e1071/index.html)
-* [ggplot2](https://ggplot2.tidyverse.org/)
-* [scales](https://cran.r-project.org/web/packages/scales/index.html)
-* [reshape2](https://cran.r-project.org/web/packages/reshape2/index.html)
+* [ROCR](https://cran.r-project.org/web/packages/ROCR/readme/README.html), [PRROC](https://cran.r-project.org/web/packages/PRROC/index.html), [caret](https://cran.r-project.org/web/packages/caret/index.html), [e1071](https://cran.r-project.org/web/packages/e1071/index.html), [ggplot2](https://ggplot2.tidyverse.org/), [scales](https://cran.r-project.org/web/packages/scales/index.html), [reshape2](https://cran.r-project.org/web/packages/reshape2/index.html)
 
-Failed to install these packages will crash ./scripts/tool.cm.filter.
+Rscript version must be (v3.5.1 or later), otherwise ./scripts/tool.cm.filter will crash.
 
 ```shell
-#--- Check your Rscript version
+#--- Check your Rscript version, must >3.5.1
 Rscript --version
+
+#--- Check your R packages, install if missing
+Rscript -e 'if (!require("ROCR")) install.packages("ROCR", repos = "http://cran.us.r-project.org")'
+Rscript -e 'if (!require("PRROC")) install.packages("PRROC", repos = "http://cran.us.r-project.org")'
+Rscript -e 'if (!require("caret")) install.packages("caret", repos = "http://cran.us.r-project.org")'
+Rscript -e 'if (!require("e1071")) install.packages("e1071", repos = "http://cran.us.r-project.org")'
+Rscript -e 'if (!require("ggplot2")) install.packages("ggplot2", repos = "http://cran.us.r-project.org")'
+Rscript -e 'if (!require("scales")) install.packages("scales", repos = "http://cran.us.r-project.org")'
+Rscript -e 'if (!require("reshape2")) install.packages("reshape2", repos = "http://cran.us.r-project.org")'
 ```
 ### Other 3rd party applications
 SCAFE also relies on a number of 3rd party applications. The binaries and executables (Linux) of these applications are distributed with this reprository in the directory ./resources/bin and **DO NOT require installations**.
 
-* [bigWigAverageOverBed](https://github.com/ENCODE-DCC/kentUtils)
-* [bedGraphToBigWig](https://github.com/ENCODE-DCC/kentUtils)
-* [bedtools](https://bedtools.readthedocs.io/en/latest/)
-* [samtools](http://www.htslib.org/)
-* [paraclu](http://cbrc3.cbrc.jp/~martin/paraclu/)
-* [paraclu-cut.sh](http://cbrc3.cbrc.jp/~martin/paraclu/)
+* [bigWigAverageOverBed](https://github.com/ENCODE-DCC/kentUtils), [bedGraphToBigWig](https://github.com/ENCODE-DCC/kentUtils),  [bedtools](https://bedtools.readthedocs.io/en/latest/), [samtools](http://www.htslib.org/), [paraclu](http://cbrc3.cbrc.jp/~martin/paraclu/), [paraclu-cut.sh](http://cbrc3.cbrc.jp/~martin/paraclu/)
 
 ### OS
 SCAFE was developed and tested on Debian GNU/Linux 9. Running SACFE on other OS are not guranteed.
@@ -90,6 +87,73 @@ cd SCAFE
 chmod 755 -R ./scripts/
 chmod 755 -R ./resources/bin/
 ```
+### Check on the dependencies
+SCAFE depends on perl, R and a number of 3rd party tools (as listed above). To secure the dependencies, please run ./scripts/check.dependencies
+
+```shell
+#--- run check.dependencies to check 
+./scripts/check.dependencies
+```
+If everything runs smoothly, you should see the following report on screen.
+
+```shell
+
+===============================
+start checking
+===============================
+Check Type           Check Item                          Check Status
+===============      ===============                     ===============
+perl executables     workflow.sc.subsample               successful
+perl executables     workflow.sc.solo                    successful
+perl executables     workflow.sc.pool                    successful
+perl executables     workflow.bk.subsample               successful
+perl executables     workflow.bk.solo                    successful
+perl executables     workflow.bk.pool                    successful
+perl executables     tool.sc.subsample_ctss              successful
+perl executables     tool.sc.pool                        successful
+perl executables     tool.sc.count                       successful
+perl executables     tool.sc.bam_to_ctss                 successful
+perl executables     tool.cm.remove_strand_invader       successful
+perl executables     tool.cm.prep_genome                 successful
+perl executables     tool.cm.filter                      successful
+perl executables     tool.cm.ctss_to_bigwig              successful
+perl executables     tool.cm.cluster                     successful
+perl executables     tool.cm.annotate                    successful
+perl executables     tool.bk.subsample_ctss              successful
+perl executables     tool.bk.pool                        successful
+perl executables     tool.bk.count                       successful
+perl executables     tool.bk.bam_to_ctss                 successful
+perl executables     download.resources.genome           successful
+perl executables     download.demo.input                 successful
+perl executables     demo.test.run                       successful
+perl executables     check.install.dependencies          successful
+dropbox access       wget tar data                       successful
+3rd-party apps       bedtools                            successful
+3rd-party apps       samtools                            successful
+3rd-party apps       paraclu                             successful
+3rd-party apps       paraclu-cut.sh                      successful
+3rd-party apps       bedGraphToBigWig                    successful
+3rd-party apps       bigWigAverageOverBed                successful
+R version            v3.5 or later                       successful
+R packages           ROCR                                successful
+R packages           PRROC                               successful
+R packages           caret                               successful
+R packages           e1071                               successful
+R packages           ggplot2                             successful
+R packages           scales                              successful
+R packages           reshape2                            successful
+R scripts            benchmark_roc.R                     successful
+R scripts            build_glm.R                         successful
+R scripts            predict_prob.R                      successful
+===============================
+Finished checking
+===============================
+
+Successful for all checks. SCAFE should run well.
+
+```
+
+
 ### Download demo data and reference genome
 
 ```shell
