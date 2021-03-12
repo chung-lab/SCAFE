@@ -14,10 +14,10 @@ get.args <- function () {
     } 
   } else {
     args <- c(
-      '/osc-fs_home/hon-chun/analysis/tenX_single_cell/scafe/dev/demo/out/solo/filter/demo/glm/tssCluster.glm.predictors.tsv',      
-      '/osc-fs_home/hon-chun/analysis/tenX_single_cell/scafe/v1.0/resources/genome/hg19.gencode_v32lift37/glm/combined.predictors.glm.model.RDS',
+      '/osc-fs_home/hon-chun/analysis/tenX_single_cell/scafe/dev/deploy/release/1.0/demo/output/sc.solo/filter/demo/glm/tssCluster.glm.predictors.tsv',      
+      '/osc-fs_home/hon-chun/analysis/tenX_single_cell/scafe/dev/deploy/release/1.0/demo/output/sc.solo/filter/demo/glm/build_glm/combined.predictors.glm.model.RDS',
       '0.5',
-      '/osc-fs_home/hon-chun/analysis/tenX_single_cell/scafe/dev/demo/out/solo/filter/demo/glm/predict_prob'      
+      '/osc-fs_home/hon-chun/analysis/tenX_single_cell/scafe/dev/deploy/release/1.0/demo/output/sc.solo/filter/demo/glm/predict_prob'      
     )
   }
   return(args)
@@ -45,7 +45,7 @@ set.custom.ggplot.theme <- function () {
 }
 load.packages <- function() {
   package.list = c(
-    'ROCR','PRROC', 'caret', 'e1071', 'ggplot2', 'scales'
+    'ROCR','PRROC', 'caret', 'e1071', 'ggplot2'
   )
   suppressMessages(suppressWarnings(sapply(package.list, library, character.only = TRUE, quietly = TRUE)))
   return()
@@ -140,13 +140,12 @@ predict.prob <- function() {
     custom.ggplot.theme
   
   all.hist.plot <- ggplot(all.tssCluster.df, aes(x=prob)) +
-    geom_histogram(aes(y = stat(width*density)), bins=100, alpha=0.8, size = 0.1, position="identity")+
-    ggtitle("Percentage of tssCluster with\nvarious logistic model probablity") +
+  	 geom_histogram(binwidth=0.005, alpha=0.5, size = 0.1, position="identity") +
+  	 ggtitle("Percentage of tssCluster with\nvarious logistic model probablity") +
     vline_robust_cutoff + vline_lenient_cutoff + vline_default_cutoff +
     #geom_text_default_cutoff + geom_text_robust_cutoff + geom_text_lenient_cutoff +
     xlab('Logistic model probablity') +
     ylab('Percentage of tssClusters') +
-    scale_y_continuous(labels = scales::percent_format(accuracy = 1L)) +
     scale_color_manual(name = "cutoff", values = c('robust'='#d95f02', 'lenient'='#7570b3', 'default'='#1b9e77'), labels= c('robust'='robust', 'lenient'='lenient', 'default'='default')) +
     custom.ggplot.theme
   

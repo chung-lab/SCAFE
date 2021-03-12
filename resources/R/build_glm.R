@@ -16,8 +16,8 @@ get.args <- function () {
     }
   } else {
     args <- c(
-      '/Users/chung/Documents/research/analysis/tenX_single_cell/test_logit/input/tssCluster.training_testing.predictors.tsv',      
-      '/Users/chung/Documents/research/analysis/tenX_single_cell/test_logit/output/build_glm'      
+      '/osc-fs_home/hon-chun/analysis/tenX_single_cell/scafe/dev/deploy/release/1.0/demo/output/sc.solo/filter/demo/glm/tssCluster.glm.predictors.tsv',      
+      '/osc-fs_home/hon-chun/analysis/tenX_single_cell/scafe/dev/deploy/release/1.0/demo/output/sc.solo/filter/demo/glm/build_glm'      
     )
   }
   return(args)
@@ -164,13 +164,12 @@ evaluate.glm.model <- function() {
     plot.data.df$predictors <- factor(plot.data.df$variable)
     plot <- ggplot(plot.data.df, aes(x=value, color=train_binary, fill=train_binary, group=train_binary)) +
       #geom_density(alpha = 0.4)+
-      geom_histogram(aes(y = stat(width*density)), bins=100, alpha=0.5, size = 0.1, position="identity") +
+      geom_histogram(binwidth=0.005, alpha=0.5, size = 0.1, position="identity") +
       facet_grid(
         predictors~., 
         scales = 'free_y',
         labeller = labeller(predictors = predictors.list)
       ) +
-      scale_y_continuous(labels = scales::percent_format(accuracy = 1L)) +
       ggtitle(plot.title.list[[predictor.comb]]) +
       xlab('scaled predictor values') +
       ylab('% of tssClusters') +
@@ -193,7 +192,7 @@ evaluate.glm.model <- function() {
         plot.title = element_text(size=12, hjust = 0.5)
       )
     
-    ggsave(paste0(predictor.comb.dir, "/predictor.distribution.pdf"), plot, width = 5, height = 6)
+    ggsave(paste0(predictor.comb.dir, "/predictor.distribution.pdf"), plot, width = 5, height = 8)
   }
   saveRDS(glm.model.list$combined.predictors, paste0(output.dir,"/combined.predictors.glm.model.RDS"))
 }
