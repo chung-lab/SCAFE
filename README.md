@@ -1,6 +1,7 @@
-# SCAFE *(Single Cell Analysis of Five'Ends)*
+<h1 align="center"> SCAFE (Single Cell Analysis of Five'Ends)</h1>
 
  ```shell
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                         O~~~AA      O~~         O~       O~~~~~~~AO~~~~~~~~A
                       O~~    O~~ O~~   O~~     O~O~~     O~~      O~~       
                        O~~      O~~           O~  O~~    O~~      O~~       
@@ -8,6 +9,8 @@
                             O~~ O~~         O~~~~~A O~~  O~~      O~~       
                       O~~    O~~ O~~   O~~ O~~       O~~ O~~      O~~       
                         O~~~~A     O~~~   O~~         O~~O~~      O~~~~~~~AA
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
  ```
 
 SCAFE (Single Cell Analysis of Five'Ends) is a tool suite for processing of single cell 5’end RNA-seq data. It takes a read alignment file (*.bam) from single-cell 5'end RNA sequencing, precisely identifies the read 5'ends and removes strand invasion artefacts, performs TSS clustering and filters for genuine TSS clusters using logistic regression, defines transcribed cis-regulatory elements (tCRE) and annotated them to gene models. It counts the UMI in tCRE in single cells and returns a tCRE UMI/cellbarcode matrix ready for downstream analyses. 
