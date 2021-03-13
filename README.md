@@ -1,3 +1,4 @@
+# SCAFE *(Single Cell Analysis of Five'Ends)*
 
  ```shell
                         O~~~AA      O~~         O~       O~~~~~~~AO~~~~~~~~A
@@ -9,30 +10,27 @@
                         O~~~~A     O~~~   O~~         O~~O~~      O~~~~~~~AA
  ```
 
-**SCAFE** (Single Cell Analysis of Five' End) is a tool suite for processing of single cell 5’end RNA-seq data. It takes a read alignment file (*.bam) from single-cell 5'end RNA sequencing, precisely identifies the read 5'ends and removes strand invasion artefacts, performs TSS clustering and filters for genuine TSS clusters using logistic regression, defines transcribed cis-regulatory elements (tCRE) and annotated them to gene models. It counts the UMI in tCRE in single cells and returns a tCRE UMI/cellbarcode matrix ready for downstream analyses. 
+SCAFE (Single Cell Analysis of Five'Ends) is a tool suite for processing of single cell 5’end RNA-seq data. It takes a read alignment file (*.bam) from single-cell 5'end RNA sequencing, precisely identifies the read 5'ends and removes strand invasion artefacts, performs TSS clustering and filters for genuine TSS clusters using logistic regression, defines transcribed cis-regulatory elements (tCRE) and annotated them to gene models. It counts the UMI in tCRE in single cells and returns a tCRE UMI/cellbarcode matrix ready for downstream analyses. 
 
 ## Citing SCAFE
 
 Profiling of transcribed cis-regulatory elements in single cells. _bioRxiv_, 2021, [XXXXXX](https://XXXXXXXXXX/)
 
 ## What does SCAFE do?
-### SCAFE detects tCRE activities in single-cells
 <div style="text-align:center"><img src=".github/images/tCRE_definition.png?" width="860"></div>
-<div style="text-align:center"><img src=".github/images/zenbu_locus.png?" width="860"></div>
 
+### SCAFE detects tCRE activities in single-cells
 Profiling of cis-regulatory elements (CREs, mostly promoters and enhancers) in single cells allows us to interrogate the cell-type specific contexts of gene regulation and genetic predisposition to diseases. Single-cell RNA-5’end-sequencing (sc-end5-seq) methods can detect transcribed CREs (tCREs), enabling the quantification of promoter and enhancer activities in single cells. To identify genuine tCREs, we implemented a workflow which effectively eliminates false positives from sc-end5-seq data.
 
 Blablabla
 
 ## How does SCAFE do it?
-### [SCAFE Core Tools and Workflows](scripts/)
 <div style="text-align:center"><img src=".github/images/flowchart.png?" width="860"></div>
 
+### SCAFE Core Tools and Workflows
 SCAFE consists of [a set of perl programs](scripts/) for processing of single cell 5’end RNA-seq data. Major tools are listed here. SCAFE accepts read alignment in .bam format from standard 10X GenomicsTM tool cellranger. Tool bam_to_ctss extracts the 5’ position of reads, taking the 5’ unencoded-Gs into account. Tool remove_strand_invader removes read 5’ends that are strand invasion artifacts by aligning the TS oligo sequence to the immediate upstream sequence of the read 5’end. Tool cluster performs clustering of read 5’ends using 3rd-party tool Paraclu. Tool filter extracts the properties of TSS clusters and performs multiple logistic regression to distinguish genuine TSS clusters from artifacts. Tool annotate define tCREs by merging closely located TSS clusters and annotate tCREs based on their proximity to known genes. Tool count counts the number of UMI within each tCRE in single cells and generates a tCRE-Cell UMI count matrix. SCAFE tools were also implemented workflows for processing of individual samples or pooling of multiple samples.
 
 ### SCAFE discovers *de novo* genunie TSS clusters and tCREs
-<div style="text-align:center"><img src=".github/images/AUC.png?" width="860"></div>
-
 SCAFE extracts the properties of gold-standard TSS clusters (left) and theirperformance as a TSS classifier measured as Area Under Receiver Operating Characteristic (ROC) Curve (AUC) (right). b, logistic probability of gold-standard TSS clusters (left) and its performance as a TSS classifier measured as AUC (right). c, performance of various metrics as a TSS classifier in (a) and (b) across various sequencing depth. d, histone marks at TSS clusters with logistic probability below (right) or above (right) threshold 0.5, at various genomic locations, including annotated gene TSS, exonic or intronic regions in sense or antisense orientations, or otherwise intergenic regions. n, number of TSS clusters. %, percentage of TSS clusters in all genomic locationsregardless of logistic probability threshold.
 
 ## Dependencies
