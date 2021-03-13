@@ -13,7 +13,7 @@
  ...===┴========================================================================================...
  ```
 
-SCAFE (Single Cell Analysis of Five'Ends) is a tool suite for processing of single cell 5’end RNA-seq data. It takes a read alignment file (*.bam) from single-cell 5'end RNA sequencing, precisely identifies the read 5'ends and removes strand invasion artefacts, performs TSS clustering and filters for genuine TSS clusters using logistic regression, defines transcribed cis-regulatory elements (tCRE) and annotated them to gene models. It counts the UMI in tCRE in single cells and returns a tCRE UMI/cellbarcode matrix ready for downstream analyses. 
+SCAFE (Single Cell Analysis of Five'Ends) is a tool suite for processing of single cell 5’end RNA-seq data. It takes a read alignment file (*.bam) from Single-cell RNA-5’end-sequencing (e.g. 10xGenomics Chromimum®), precisely identifies the 5'ends of cDNAs and removes strand invasion artefacts, performs TSS clustering and filters for genuine TSS clusters using logistic regression, defines transcribed cis-regulatory elements (tCRE) and annotated them to gene models. It counts the UMI in tCRE in single cells and returns a tCRE UMI/cellbarcode matrix ready for downstream analyses, e.g. cell-type clustering, linking promoters to enhancers etc.
 
 ## Citing SCAFE
 
@@ -22,10 +22,11 @@ Profiling of transcribed cis-regulatory elements in single cells. _bioRxiv_, 202
 ## What does SCAFE do?
 <div style="text-align:center"><img src=".github/images/tCRE_definition.png?" width="860"></div>
 
-### SCAFE detects tCRE activities in single-cells
-Profiling of cis-regulatory elements (CREs, mostly promoters and enhancers) in single cells allows us to interrogate the cell-type specific contexts of gene regulation and genetic predisposition to diseases. Single-cell RNA-5’end-sequencing (sc-end5-seq) methods can detect transcribed CREs (tCREs), enabling the quantification of promoter and enhancer activities in single cells. To identify genuine tCREs, we implemented a workflow which effectively eliminates false positives from sc-end5-seq data.
+### *SCAFE* extracts transcribed cis-regulatory elements from single-cell RNA-5’end-sequencing data
+Profiling of cis-regulatory elements (CREs, mostly promoters and enhancers) in single cells allows us to interrogate the cell-type specific contexts of gene regulation and genetic predisposition to diseases. Single-cell RNA-5’end-sequencing (sc-end5-seq) methods theorectically captures the 5'end of cDNA, which represents transcription start sites (TSS). Measuring the RNA output at TSS allows using to precisely locate transcribed CREs (tCREs) on the genome, enabling the quantification of promoter and enhancer activities in single cells. **Figure (a)** shows the sc-end5-seq data signal at the two promoters of gene *DHX30*. It highlights the consistency between sc-end5-seq and sc-ATAC-seq data, as well as the dynamic alternaitve TSS usage between resting and stimulated PBMCs. SCAFE consists of a set of tools and workflows to identify genuine TSS information from sc-end5-seq data. **Figure (b)** illustrates the stretagies of SCAFE to defined tCRE from TSS information. **Figure (c)** shows the tCREs defined by SCAFE
 
-Blablabla
+
+
 
 ## How does SCAFE do it?
 <div style="text-align:center"><img src=".github/images/flowchart.png?" width="860"></div>
@@ -92,7 +93,7 @@ chmod 755 -R ./scripts/
 chmod 755 -R ./resources/bin/
 ```
 ### Check the dependencies
-SCAFE depends on perl, R and a number of 3rd party tools (as listed above). To secure the dependencies, please run ./scripts/check.dependencies
+SCAFE depends on perl, R and a number of 3rd party tools (as listed above). To ensure the dependencies, please run ./scripts/check.dependencies
 
 ```shell
 #--- run check.dependencies to check 
