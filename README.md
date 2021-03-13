@@ -73,8 +73,8 @@ SCAFE also relies on a number of 3rd party applications. The binaries and execut
 ### OS
 SCAFE was developed and tested on Debian GNU/Linux 9. Running SACFE on other OS are not guranteed.
 
-## Getting started
-Once you ensured the above required R packages are installed, you are all set. Here's the instructions on getting SCAFE, downloading demo data and reference genome, and finally a couple of test runs on the demo data.
+## Installing SCAFE
+Once you ensured the above dependencies are met, you are ready to download SCAFE to your system.
 
 ### Clone this respository
 
@@ -91,7 +91,7 @@ cd SCAFE
 chmod 755 -R ./scripts/
 chmod 755 -R ./resources/bin/
 ```
-### Check on the dependencies
+### Check the dependencies
 SCAFE depends on perl, R and a number of 3rd party tools (as listed above). To secure the dependencies, please run ./scripts/check.dependencies
 
 ```shell
@@ -157,6 +157,8 @@ Successful for all checks. SCAFE should run well.
 
 ```
 
+## Getting started
+Now you have enssured all dependencies and downloaded SCAFE, time to get the demo data and test a few runs on the demo data.
 
 ### Download demo data and reference genome
 
