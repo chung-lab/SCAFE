@@ -56,7 +56,6 @@ use Getopt::Long 'HelpMessage';
 use List::Util qw (sum shuffle min max);
 use threads ('stack_size' => 64*4096);
 use threads::shared;
-use URI::Escape;
 use Cwd 'abs_path';
 #<\use>
 #====================================================================================================================================================#
@@ -65,13 +64,16 @@ use Cwd 'abs_path';
 #<doc>
 =head1 SYNOPSIS
 
-                      O~~~AA      O~~         O~       O~~~~~~~AO~~~~~~~~A
-                    O~~    O~~ O~~   O~~     O~ ~~     O~~      O~~       
-                     O~~      O~~           O~  O~~    O~~      O~~       
-                       O~~    O~~          O~~   O~~   O~~~~~AA O~~~~~~A  
-                          O~~ O~~         O~~~~~A O~~  O~~      O~~       
-                    O~~    O~~ O~~   O~~ O~~       O~~ O~~      O~~       
-                      O~~~~A     O~~~   O~~         O~~O~~      O~~~~~~~AA
+           5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~AAA-3'
+                        O~~~AA      O~~         O~       O~~~~~~~AO~~~~~~~~A
+                      O~~    O~~ O~~   O~~     O~O~~     O~~      O~~       
+                       O~~      O~~           O~  O~~    O~~      O~~       
+                         O~~    O~~          O~~   O~~   O~~~~~AA O~~~~~~A  
+                            O~~ O~~         O~~~~~A O~~  O~~      O~~       
+                      O~~    O~~ O~~   O~~ O~~       O~~ O~~      O~~       
+                        O~~~~A     O~~~   O~~         O~~O~~      O~~~~~~~AA
+       ┌─ᐅ 5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-3'
+ ...===┴========================================================================================...
 
                       Single Cell Analysis of Five'End (SCAFE) Tool Suite 
                            ---> tool.cm.remove_strand_invader <---
@@ -89,9 +91,12 @@ use Cwd 'abs_path';
    --genome             <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
    --outputPrefix       <required> [string]  prefix for the output files
    --outDir             <required> [string]  directory for the output files
-   --min_edit_distance  (optional) [integer] edit distance threshold to define strand invader (default=5)
-   --min_end_non_G_num  (optional) [integer] immediate upstream non-G number threshold to 
-                                             define strand invader (default=2)
+   --min_edit_distance  (optional) [integer] edit distance threshold to define strand invader 
+                                             the smaller value, the more stringent defintion of strand invader
+                                             (default=5)
+   --min_end_non_G_num  (optional) [integer] immediate upstream non-G number threshold to define strand invader
+                                             the smaller value, the more stringent defintion of strand invader
+                                             (default=2)
    --max_thread         (optional) [integer] maximum number of parallel threads, capped at 
                                              10 to avoid memory overflow (default=5)
    --TS_oligo_seq       (optional) [string]  Template switching oligo sequence for identification 

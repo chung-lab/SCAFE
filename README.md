@@ -412,8 +412,26 @@ For the sake of flexibiity, *SCAFE* allows users to run individual tools with cu
 --outputPrefix=demo \
 --outDir=./demo/output/sc.solo/cluster/
 ```
-* ***tool.cm.filter***: Then, we filter the TSS cluster using logistic regression implemented in . Please refer to [here](http://cbrc3.cbrc.jp/~martin/paraclu/) for the rationale of clustering. By default, the clusters with <5 UMI within cluster, <3 UMI at summit or expressed in <3 cells were removed. If the users would like to use a more stringent cutoff to remove more lowly expressed TSS clusters, e.g. --min_cluster_count=10, --min_summit_count=5 and --min_num_sample_expr_cluster=5,the user could run as the followings: 
+* ***tool.cm.filter***: Then, we filter the TSS cluster using logistic regression. By default, *tool.cm.filter* uses a pre-trained multiple logistic regression model from human iPSC cells using matched ATAC-Seq data. If the users would like to use their own matched ATAC-Seq data (–logP as *\*.bigwig* file) for training of the regression model using *--training_signal_path* and *--testing_signal_path* options. Also, the user can set a permissive logistic probablity threshold (default=0.5) using *--default_cutoff* option (e.g. 0.3). The user could run as the followings:
 
+```shell
+#--- check out the help message of tool.cm.filter
+./scripts/tool.cm.filter --help
+
+#--- run tool.cm.cluster with custom options
+./scripts/tool.cm.filter \
+--default_cutoff=0.3 \
+--overwrite=yes \
+--ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.collapse.ctss.bed.gz \
+--ung_ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.unencoded_G.collapse.ctss.bed.gz \
+--tssCluster_bed_path=./demo/output/sc.solo/cluster/demo/bed/demo.tssCluster.bed.gz \
+--training_signal_path=./demo/input/atac/demo.atac.bw \
+--testing_signal_path=./demo/input/atac/demo.atac.bw \
+--genome=hg19.gencode_v32lift37 \
+--outputPrefix=demo \
+--outDir=./demo/output/sc.solo/filter/
+```
+* ***tool.cm.annotate***: Finally, we will define and annotate tCREs based on the gene models in reference genome. By default, *tool.cm.annotate* merge TSS clusters located within +100nt and –400nt as a tCRE. If the users would like to use their own matched ATAC-Seq data (–logP as *\*.bigwig* file) for training of the regression model using *--training_signal_path* and *--testing_signal_path* options. Also, the user can set a permissive logistic probablity threshold (default=0.5) using *--default_cutoff* option (e.g. 0.3). The user could run as the followings:
 ### [<span style="color:green">For The Special Ones</span>] Making a custom reference genome
 Currently, four reference genomes ara available. See *./script/download.resources.genome* for downloading. Alternatively, some users might work on genomes of other organisms, or prefer to use custom gene models for annotating tCREs.  *tool.cm.prep_genome* converts user-supplied genome *\*.fasta* and gene model *\*.gtf* into necessary files for *SCAFE*. You can check out the help message for inputs of *tool.cm.prep_genome* and then test run a demo using TAIR10 genome with AtRTDv2 gene model.
 
@@ -431,7 +449,7 @@ Currently, four reference genomes ara available. See *./script/download.resource
 --outputPrefix=TAIR10.AtRTDv2 \
 --outDir=./demo/output/genome/
 ```
-### [<span style="color:#c5f015">For The Other Ones</span>] Run *SCAFE* with bulk CAGE data 
+### [<span style="color:green">For The Other Ones</span>] Run *SCAFE* with bulk CAGE data 
 *SCAFE* also accepts *.\*bam* files from bulk CAGE. The major difference between singel cell and bulk workflow is cellbarcode is not considered. Otherwise, the options between single cell and bulk workflow are large the same. Please check the help messages for details of running the workflows: 
 
 ```shell
@@ -441,7 +459,7 @@ Currently, four reference genomes ara available. See *./script/download.resource
 ./scripts/workflow.bk.subsample --help
 ```
 
-### <div class="text-purple">For The Confused Ones</div> We are here to help
+### [<span style="color:green">For The Confused Ones</span>] We are here to help
 Feel free to send us an [email](mailto:cchon.lab@gmail.com) if you have questions.
 
 ### [[<span style="color:blue">For The Wild Ones</span>](https://www.youtube.com/watch?v=d3BBsSdYze4)] Fork this repository

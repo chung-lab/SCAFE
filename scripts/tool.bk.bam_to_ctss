@@ -57,7 +57,6 @@ use threads ('stack_size' => 64*4096);
 use threads::shared;
 use List::Util qw (sum shuffle min max);
 use Cwd 'abs_path';
-use Math::Round qw (nearest);
 use AutoLoader qw/AUTOLOAD/;
 #<\use>
 #====================================================================================================================================================#
@@ -66,13 +65,16 @@ use AutoLoader qw/AUTOLOAD/;
 #<doc>
 =head1 SYNOPSIS
 
-                      O~~~AA      O~~         O~       O~~~~~~~AO~~~~~~~~A
-                    O~~    O~~ O~~   O~~     O~ ~~     O~~      O~~       
-                     O~~      O~~           O~  O~~    O~~      O~~       
-                       O~~    O~~          O~~   O~~   O~~~~~AA O~~~~~~A  
-                          O~~ O~~         O~~~~~A O~~  O~~      O~~       
-                    O~~    O~~ O~~   O~~ O~~       O~~ O~~      O~~       
-                      O~~~~A     O~~~   O~~         O~~O~~      O~~~~~~~AA
+           5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~AAA-3'
+                        O~~~AA      O~~         O~       O~~~~~~~AO~~~~~~~~A
+                      O~~    O~~ O~~   O~~     O~O~~     O~~      O~~       
+                       O~~      O~~           O~  O~~    O~~      O~~       
+                         O~~    O~~          O~~   O~~   O~~~~~AA O~~~~~~A  
+                            O~~ O~~         O~~~~~A O~~  O~~      O~~       
+                      O~~    O~~ O~~   O~~ O~~       O~~ O~~      O~~       
+                        O~~~~A     O~~~   O~~         O~~O~~      O~~~~~~~AA
+       ┌─ᐅ 5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-3'
+ ...===┴========================================================================================...
 
                       Single Cell Analysis of Five'End (SCAFE) Tool Suite 
                                 ---> tool.bk.bam_to_ctss <---
@@ -626,7 +628,7 @@ sub generateChunkSize {
 		$total_size += $out_chrom_size_hsh_ref->{$out_chrom};
 	}
 	
-	my $chunk_size = nearest (1000, $total_size/$num_chunk);
+	my $chunk_size = int ($total_size/$num_chunk);
 
 	return ($chunk_size);
 }

@@ -443,9 +443,12 @@ This folder contains the following tools and workflows. A tool perform a single 
    --genome             <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
    --outputPrefix       <required> [string]  prefix for the output files
    --outDir             <required> [string]  directory for the output files
-   --min_edit_distance  (optional) [integer] edit distance threshold to define strand invader (default=5)
-   --min_end_non_G_num  (optional) [integer] immediate upstream non-G number threshold to 
-                                             define strand invader (default=2)
+   --min_edit_distance  (optional) [integer] edit distance threshold to define strand invader 
+                                             the smaller value, the more stringent defintion of strand invader
+                                             (default=5)
+   --min_end_non_G_num  (optional) [integer] immediate upstream non-G number threshold to define strand invader
+                                             the smaller value, the more stringent defintion of strand invader
+                                             (default=2)
    --max_thread         (optional) [integer] maximum number of parallel threads, capped at 
                                              10 to avoid memory overflow (default=5)
    --TS_oligo_seq       (optional) [string]  Template switching oligo sequence for identification 
@@ -861,7 +864,7 @@ This folder contains the following tools and workflows. A tool perform a single 
 ```
 
 ### demo.test.run [[top]](#0)<a name="23"></a>
-   This scripts test run for demo data in the ./demo/input dir. It runs all six workflows.
+   This scripts test run for demo data in the ./demo/input dir. It runs user-selected workflows.
    Demo input data must be downloaded from using ./script/download.demo.input
    Genome reference hg19.gencode_v32lift37 must be downloaded using ./scripts/download.resources.genome
 
@@ -870,6 +873,16 @@ This folder contains the following tools and workflows. A tool perform a single 
    demo.test.run [options] --run_outDir
    
    --run_outDir           <required> [string]  directory for the output test runs
+   --workflow             (optional) [string]  comma delimited list of workflows, 
+                                               or use 'all' to run all workflows.
+                                               Available workflows includes,
+                                               workflow.sc.subsample ---> workflow, single-cell mode, subsample ctss
+                                               workflow.sc.solo ---> workflow, single-cell mode, process a single sample
+                                               workflow.sc.pool ---> workflow, single-cell mode, pool ctss of multiple samples
+                                               workflow.bk.subsample ---> workflow, bulk mode, subsample ctss
+                                               workflow.bk.solo ---> workflow, bulk mode, process a single sample
+                                               workflow.bk.pool ---> workflow, bulk mode, process a single sample
+                                               (default=all)
    --overwrite            (optional) [yes/no]  erase run_outDir before running (default=no)
 
  Dependencies:

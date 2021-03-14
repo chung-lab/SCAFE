@@ -58,20 +58,23 @@ use Cwd 'abs_path';
 #<doc>
 =head1 SYNOPSIS
 
-                      O~~~AA      O~~         O~       O~~~~~~~AO~~~~~~~~A
-                    O~~    O~~ O~~   O~~     O~ ~~     O~~      O~~       
-                     O~~      O~~           O~  O~~    O~~      O~~       
-                       O~~    O~~          O~~   O~~   O~~~~~AA O~~~~~~A  
-                          O~~ O~~         O~~~~~A O~~  O~~      O~~       
-                    O~~    O~~ O~~   O~~ O~~       O~~ O~~      O~~       
-                      O~~~~A     O~~~   O~~         O~~O~~      O~~~~~~~AA
+           5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~AAA-3'
+                        O~~~AA      O~~         O~       O~~~~~~~AO~~~~~~~~A
+                      O~~    O~~ O~~   O~~     O~O~~     O~~      O~~       
+                       O~~      O~~           O~  O~~    O~~      O~~       
+                         O~~    O~~          O~~   O~~   O~~~~~AA O~~~~~~A  
+                            O~~ O~~         O~~~~~A O~~  O~~      O~~       
+                      O~~    O~~ O~~   O~~ O~~       O~~ O~~      O~~       
+                        O~~~~A     O~~~   O~~         O~~O~~      O~~~~~~~AA
+       ┌─ᐅ 5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-3'
+ ...===┴========================================================================================...
 
                       Single Cell Analysis of Five'End (SCAFE) Tool Suite 
                                   ---> demo.test.run <---
                         <--- demo, run demo data for testing --->
 
  Description:
-   This scripts test run for demo data in the ./demo/input dir. It runs all six workflows.
+   This scripts test run for demo data in the ./demo/input dir. It runs user-selected workflows.
    Demo input data must be downloaded from using ./script/download.demo.input
    Genome reference hg19.gencode_v32lift37 must be downloaded using ./scripts/download.resources.genome
 
@@ -79,6 +82,16 @@ use Cwd 'abs_path';
    demo.test.run [options] --run_outDir
    
    --run_outDir           <required> [string]  directory for the output test runs
+   --workflow             (optional) [string]  comma delimited list of workflows, 
+                                               or use 'all' to run all workflows.
+                                               Available workflows includes,
+                                               workflow.sc.subsample ---> workflow, single-cell mode, subsample ctss
+                                               workflow.sc.solo ---> workflow, single-cell mode, process a single sample
+                                               workflow.sc.pool ---> workflow, single-cell mode, pool ctss of multiple samples
+                                               workflow.bk.subsample ---> workflow, bulk mode, subsample ctss
+                                               workflow.bk.solo ---> workflow, bulk mode, process a single sample
+                                               workflow.bk.pool ---> workflow, bulk mode, process a single sample
+                                               (default=all)
    --overwrite            (optional) [yes/no]  erase run_outDir before running (default=no)
 
  Dependencies:
@@ -127,9 +140,10 @@ use Cwd 'abs_path';
 #
 #<section ID="startTasks" num="0">
 my $ARGV_ary_ref = [@ARGV];
-my ($run_outDir, $overwrite) = &readParameters();#->313
-my ($scafe_dir, $script_dir, $result_script_dir, $ARGVStr, $scriptAbsPath) = &prepDir($run_outDir, $ARGV_ary_ref);#->285
-&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->260
+my ($run_outDir, $workflow, $overwrite) = &readParameters();#->395
+my ($user_workflow_hsh_ref) = &parseWorkflowChoice($workflow);#->324
+my ($scafe_dir, $script_dir, $result_script_dir, $ARGVStr, $scriptAbsPath) = &prepDir($run_outDir, $ARGV_ary_ref);#->367
+&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->299
 #<\section>
 #====================================================================================================================================================#
 
@@ -139,9 +153,9 @@ my ($scafe_dir, $script_dir, $result_script_dir, $ARGVStr, $scriptAbsPath) = &pr
 #<section ID="run" num="1">
 my $genome='hg19.gencode_v32lift37';
 my $run_tag='demo';
-my ($path_hsh_ref) = &define_path($run_outDir, $script_dir, $scafe_dir);#->141
-my ($task_info_hsh_ref) = &define_task($genome, $path_hsh_ref, $run_tag, $run_outDir);#->170
-&run_task($task_info_hsh_ref, $path_hsh_ref, $result_script_dir);#->346
+my ($path_hsh_ref) = &define_path($run_outDir, $script_dir, $scafe_dir);#->155
+my ($task_info_hsh_ref) = &define_task($genome, $path_hsh_ref, $run_tag, $run_outDir, $user_workflow_hsh_ref);#->184
+&run_task($task_info_hsh_ref, $path_hsh_ref, $result_script_dir);#->430
 #<\section>
 #====================================================================================================================================================#
 
@@ -155,9 +169,9 @@ my ($task_info_hsh_ref) = &define_task($genome, $path_hsh_ref, $run_tag, $run_ou
 #	general [n=3]:
 #		currentTime, logCalledCMDAndScript, readParameters
 #
-#	unassigned [n=4]:
-#		define_path, define_task, prepDir
-#		run_task
+#	unassigned [n=5]:
+#		define_path, define_task, parseWorkflowChoice
+#		prepDir, run_task
 #
 #====================================================================================================================================================#
 
@@ -165,13 +179,13 @@ sub currentTime {
 #....................................................................................................................................................#
 #	subroutineCategory: general
 #	dependOnSub: >none
-#	appearInSub: prepDir|285
+#	appearInSub: prepDir|367
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 0_startTasks|84
+#	secondaryAppearInSection: 0_startTasks|97
 #	input: none
 #	output: $runTime
 #	toCall: my ($runTime) = &currentTime();
-#	calledInLine: 299
+#	calledInLine: 381
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
@@ -184,12 +198,12 @@ sub define_path {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 1_run|95
+#	primaryAppearInSection: 1_run|109
 #	secondaryAppearInSection: >none
 #	input: $run_outDir, $scafe_dir, $script_dir
 #	output: $path_hsh_ref
 #	toCall: my ($path_hsh_ref) = &define_path($run_outDir, $script_dir, $scafe_dir);
-#	calledInLine: 100
+#	calledInLine: 114
 #....................................................................................................................................................#
 
 	my ($run_outDir, $script_dir, $scafe_dir) = @_;
@@ -213,94 +227,113 @@ sub define_task {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 1_run|95
+#	primaryAppearInSection: 1_run|109
 #	secondaryAppearInSection: >none
-#	input: $genome, $path_hsh_ref, $run_outDir, $run_tag
+#	input: $genome, $path_hsh_ref, $run_outDir, $run_tag, $user_workflow_hsh_ref
 #	output: $task_info_hsh_ref
-#	toCall: my ($task_info_hsh_ref) = &define_task($genome, $path_hsh_ref, $run_tag, $run_outDir);
-#	calledInLine: 101
+#	toCall: my ($task_info_hsh_ref) = &define_task($genome, $path_hsh_ref, $run_tag, $run_outDir, $user_workflow_hsh_ref);
+#	calledInLine: 115
 #....................................................................................................................................................#
 
-	my ($genome, $path_hsh_ref, $run_tag, $run_outDir) = @_;
+	my ($genome, $path_hsh_ref, $run_tag, $run_outDir, $user_workflow_hsh_ref) = @_;
+	
+	my $task_num = 0;
+	my $task_info_hsh_ref = {};
 
-	my $task_info_hsh_ref = {
-		1 => {
-			'task_name' => 'bk.pool',
-			'script_name' => 'workflow.bk.pool',
-			'task_log_path' => $run_outDir."/bk.pool/script/task.log.txt",
-			'param' => [
-				['overwrite', 'yes'],
-				['lib_list_path', $path_hsh_ref->{'bk.lib_list_path'}],
-				['genome', $genome],
-				['run_tag', $run_tag],
-				['run_outDir', $run_outDir."/bk.pool"],
-			],
-		},
-		2 => {
-			'task_name' => 'bk.solo',
-			'script_name' => 'workflow.bk.solo',
-			'task_log_path' => $run_outDir."/bk.solo/script/task.log.txt",
-			'param' => [
-				['overwrite', 'yes'],
-				['run_bam_path', $path_hsh_ref->{'bk.run_bam_path'}],
-				['genome', $genome],
-				['run_tag', $run_tag],
-				['run_outDir', $run_outDir."/bk.solo"],
-			],
-		},
-		3 => {
-			'task_name' => 'bk.subsample',
-			'script_name' => 'workflow.bk.subsample',
-			'task_log_path' => $run_outDir."/bk.subsample/script/task.log.txt",
-			'param' => [
-				['overwrite', 'yes'],
-				['long_ctss_bed_path', $path_hsh_ref->{'long_ctss_bed_path'}],
-				['subsample_num', 100000],
-				['genome', $genome],
-				['run_tag', $run_tag],
-				['run_outDir', $run_outDir."/bk.subsample"],
-			],
-		},
-		4 => {
-			'task_name' => 'sc.pool',
-			'script_name' => 'workflow.sc.pool',
-			'task_log_path' => $run_outDir."/sc.pool/script/task.log.txt",
-			'param' => [
-				['overwrite', 'yes'],
-				['lib_list_path', $path_hsh_ref->{'sc.lib_list_path'}],
-				['genome', $genome],
-				['run_tag', $run_tag],
-				['run_outDir', $run_outDir."/sc.pool"],
-			],
-		},
-		5 => {
-			'task_name' => 'sc.solo',
-			'script_name' => 'workflow.sc.solo',
-			'task_log_path' => $run_outDir."/sc.solo/script/task.log.txt",
-			'param' => [
-				['overwrite', 'yes'],
-				['run_bam_path', $path_hsh_ref->{'sc.run_bam_path'}],
-				['run_cellbarcode_path', $path_hsh_ref->{'run_cellbarcode_path'}],
-				['genome', $genome],
-				['run_tag', $run_tag],
-				['run_outDir', $run_outDir."/sc.solo"],
-			],
-		},
-		6 => {
-			'task_name' => 'sc.subsample',
-			'script_name' => 'workflow.sc.subsample',
-			'task_log_path' => $run_outDir."/sc.subsample/script/task.log.txt",
-			'param' => [
-				['overwrite', 'yes'],
-				['UMI_CB_ctss_bed_path', $path_hsh_ref->{'UMI_CB_ctss_bed_path'}],
-				['run_cellbarcode_path', $path_hsh_ref->{'run_cellbarcode_path'}],
-				['subsample_num', 100000],
-				['genome', $genome],
-				['run_tag', $run_tag],
-				['run_outDir', $run_outDir."/sc.subsample"],
-			],
-		},
-	};
+	foreach my $workflow_choice (sort keys %{$user_workflow_hsh_ref}) {
+		$task_num++;
+		if ($workflow_choice eq 'workflow.bk.pool') {
+			$task_info_hsh_ref->{$task_num} = {
+				'task_name' => 'bk.pool',
+				'script_name' => 'workflow.bk.pool',
+				'task_log_path' => $run_outDir."/bk.pool/script/task.log.txt",
+				'param' => [
+					['overwrite', 'yes'],
+					['lib_list_path', $path_hsh_ref->{'bk.lib_list_path'}],
+					['genome', $genome],
+					['run_tag', $run_tag],
+					['run_outDir', $run_outDir."/bk.pool"],
+				],
+			};
+
+		} elsif ($workflow_choice eq 'workflow.bk.solo') {
+			$task_info_hsh_ref->{$task_num} = {
+				'task_name' => 'bk.solo',
+				'script_name' => 'workflow.bk.solo',
+				'task_log_path' => $run_outDir."/bk.solo/script/task.log.txt",
+				'param' => [
+					['overwrite', 'yes'],
+					['run_bam_path', $path_hsh_ref->{'bk.run_bam_path'}],
+					['genome', $genome],
+					['run_tag', $run_tag],
+					['run_outDir', $run_outDir."/bk.solo"],
+				],
+			};
+
+		} elsif ($workflow_choice eq 'workflow.bk.subsample') {
+			$task_info_hsh_ref->{$task_num} = {
+				'task_name' => 'bk.subsample',
+				'script_name' => 'workflow.bk.subsample',
+				'task_log_path' => $run_outDir."/bk.subsample/script/task.log.txt",
+				'param' => [
+					['overwrite', 'yes'],
+					['long_ctss_bed_path', $path_hsh_ref->{'long_ctss_bed_path'}],
+					['subsample_num', 100000],
+					['genome', $genome],
+					['run_tag', $run_tag],
+					['run_outDir', $run_outDir."/bk.subsample"],
+				],
+			};
+
+		} elsif ($workflow_choice eq 'workflow.sc.pool') {
+			$task_info_hsh_ref->{$task_num} = {
+				'task_name' => 'sc.pool',
+				'script_name' => 'workflow.sc.pool',
+				'task_log_path' => $run_outDir."/sc.pool/script/task.log.txt",
+				'param' => [
+					['overwrite', 'yes'],
+					['lib_list_path', $path_hsh_ref->{'sc.lib_list_path'}],
+					['genome', $genome],
+					['run_tag', $run_tag],
+					['run_outDir', $run_outDir."/sc.pool"],
+				],
+			};
+
+		} elsif ($workflow_choice eq 'workflow.sc.solo') {
+			$task_info_hsh_ref->{$task_num} = {
+				'task_name' => 'sc.solo',
+				'script_name' => 'workflow.sc.solo',
+				'task_log_path' => $run_outDir."/sc.solo/script/task.log.txt",
+				'param' => [
+					['overwrite', 'yes'],
+					['run_bam_path', $path_hsh_ref->{'sc.run_bam_path'}],
+					['run_cellbarcode_path', $path_hsh_ref->{'run_cellbarcode_path'}],
+					['genome', $genome],
+					['run_tag', $run_tag],
+					['run_outDir', $run_outDir."/sc.solo"],
+				],
+			};
+
+		} elsif ($workflow_choice eq 'workflow.sc.subsample') {
+			$task_info_hsh_ref->{$task_num} = {
+				'task_name' => 'sc.subsample',
+				'script_name' => 'workflow.sc.subsample',
+				'task_log_path' => $run_outDir."/sc.subsample/script/task.log.txt",
+				'param' => [
+					['overwrite', 'yes'],
+					['UMI_CB_ctss_bed_path', $path_hsh_ref->{'UMI_CB_ctss_bed_path'}],
+					['run_cellbarcode_path', $path_hsh_ref->{'run_cellbarcode_path'}],
+					['subsample_num', 100000],
+					['genome', $genome],
+					['run_tag', $run_tag],
+					['run_outDir', $run_outDir."/sc.subsample"],
+				],
+			};
+		
+		} else {
+			die "Undefined workflow parameters\n";
+		}
+	}
 	
 	return($task_info_hsh_ref);
 }
@@ -309,12 +342,12 @@ sub logCalledCMDAndScript {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|84
+#	primaryAppearInSection: 0_startTasks|97
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $result_script_dir, $scriptAbsPath
 #	output: 
 #	toCall: &logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);
-#	calledInLine: 90
+#	calledInLine: 104
 #....................................................................................................................................................#
 	my ($ARGVStr, $result_script_dir, $scriptAbsPath) = @_;
 
@@ -329,22 +362,70 @@ sub logCalledCMDAndScript {
 	
 	return ();
 }
+sub parseWorkflowChoice {
+#....................................................................................................................................................#
+#	subroutineCategory: unassigned
+#	dependOnSub: >none
+#	appearInSub: >none
+#	primaryAppearInSection: 0_startTasks|97
+#	secondaryAppearInSection: >none
+#	input: $workflow
+#	output: $user_workflow_hsh_ref
+#	toCall: my ($user_workflow_hsh_ref) = &parseWorkflowChoice($workflow);
+#	calledInLine: 102
+#....................................................................................................................................................#
+	my ($workflow) = @_;
+	
+	my $user_workflow_hsh_ref = {};
+	my $available_workflow_hsh_ref = {
+		'workflow.sc.subsample' => '1',
+		'workflow.sc.solo' => '1',
+		'workflow.sc.pool' => '1',
+		'workflow.bk.subsample' => '1',
+		'workflow.bk.solo' => '1',
+		'workflow.bk.pool' => '1',
+	};
+	print "\n";
+	print "#=======================#\n";
+	print "Start running demo test\n";
+	print "#=======================#\n";
+	print "\n";
+	
+	if ($workflow eq 'all') {
+		print "Adding all available workflow choices\n";
+		foreach my $workflow_choice (keys %{$available_workflow_hsh_ref}) {
+			$user_workflow_hsh_ref->{$workflow_choice}++;
+			print "$workflow_choice added\n";
+		}
+	} else {
+		print "Adding user defined workflow choices\n";
+		foreach my $workflow_choice (split /,/, $workflow) {
+			$user_workflow_hsh_ref->{$workflow_choice}++ if exists $available_workflow_hsh_ref->{$workflow_choice};
+			print "$workflow_choice added\n";
+		}
+	}
+	
+	my $num_workflow = keys %{$user_workflow_hsh_ref};
+	die "No workflow selected\n" if $num_workflow == 0;
+	
+	return ($user_workflow_hsh_ref);
+}
 sub prepDir {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: currentTime|123
+#	dependOnSub: currentTime|137
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|84
+#	primaryAppearInSection: 0_startTasks|97
 #	secondaryAppearInSection: >none
 #	input: $ARGV_ary_ref, $run_outDir
 #	output: $ARGVStr, $result_script_dir, $scafe_dir, $scriptAbsPath, $script_dir
 #	toCall: my ($scafe_dir, $script_dir, $result_script_dir, $ARGVStr, $scriptAbsPath) = &prepDir($run_outDir, $ARGV_ary_ref);
-#	calledInLine: 89
+#	calledInLine: 103
 #....................................................................................................................................................#
 	my ($run_outDir, $ARGV_ary_ref) = @_;
 
 	my $scriptAbsPath = abs_path($0);
-	my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @{$ARGV_ary_ref});#->123
+	my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @{$ARGV_ary_ref});#->137
 	my @path_split = split /\//, $scriptAbsPath;
 	my $scafe_dir_index = $#path_split-2;
 	my $script_dir_index = $#path_split-1;
@@ -362,21 +443,23 @@ sub readParameters {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|84
+#	primaryAppearInSection: 0_startTasks|97
 #	secondaryAppearInSection: >none
 #	input: none
-#	output: $overwrite, $run_outDir
-#	toCall: my ($run_outDir, $overwrite) = &readParameters();
-#	calledInLine: 88
+#	output: $overwrite, $run_outDir, $workflow
+#	toCall: my ($run_outDir, $workflow, $overwrite) = &readParameters();
+#	calledInLine: 101
 #....................................................................................................................................................#
 	
-	my ($run_outDir, $overwrite);
+	my ($run_outDir, $workflow, $overwrite);
 	
 	$overwrite = 'no';
+	$workflow = 'all';
 
 	GetOptions 	(
-		"overwrite:s"		=>	\$overwrite,
+		"workflow:s"		=>	\$workflow,
 		"run_outDir=s"		=>	\$run_outDir,
+		"overwrite:s"		=>	\$overwrite,
 		'help'				=>	sub { HelpMessage(0) },
 	) or HelpMessage(1);
 
@@ -387,7 +470,7 @@ sub readParameters {
 	chop $run_outDir if ($run_outDir =~ m/\/$/); #---remove the last slash
 	system "mkdir -p -m 755 $run_outDir/";
 	
-	return($run_outDir, $overwrite);
+	return($run_outDir, $workflow, $overwrite);
 
 }
 sub run_task {
@@ -395,12 +478,12 @@ sub run_task {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 1_run|95
+#	primaryAppearInSection: 1_run|109
 #	secondaryAppearInSection: >none
 #	input: $path_hsh_ref, $result_script_dir, $task_info_hsh_ref
 #	output: none
 #	toCall: &run_task($task_info_hsh_ref, $path_hsh_ref, $result_script_dir);
-#	calledInLine: 102
+#	calledInLine: 116
 #....................................................................................................................................................#
 	
 	my ($task_info_hsh_ref, $path_hsh_ref, $result_script_dir) = @_;
@@ -432,15 +515,19 @@ sub run_task {
 		close TASKLOG;
 	}
 	
+	print "\n";
 	print "#=======================#\n";
 	print "Results of Demo Test Run.\n";
 	print "#=======================#\n";
+	print "\n";
 	
+	printf ("%-30s %-30s %-10s\n", 'workflow', 'tool', 'status');
+	printf ("%-30s %-30s %-10s\n", '==============', '==============', '==============');
 	foreach my $script_name (sort keys %{$task_log_info_hsh_ref}) {
 		foreach my $workflow_task_num (sort {$a <=> $b} keys %{$task_log_info_hsh_ref->{$script_name}}) {
 			my ($workflow_task_name, $workflow_script_name, $status, $time) = @{$task_log_info_hsh_ref->{$script_name}{$workflow_task_num}};
 			if ($status ne 'started') {
-				print join "", (join "\t", ($script_name, $workflow_script_name, $status)), "\n";
+				printf ("%-30s %-30s %-10s\n", $script_name, $workflow_script_name, $status);
 			}
 		}
 	}
