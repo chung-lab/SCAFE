@@ -272,6 +272,8 @@ ls -alh ./demo/output/sc.solo/count/demo/matrix
 ```
 
 ### Test run all workflows on bulk and single cell data
+Finally, we recommended a test run for all 6 available workflows on the demo data. It will take around ~20 minutes on a regular system running at 5 threads (default).
+
 ```shell
 #--- check out the help message of demo.test.run
 ./scripts/demo.test.run --help
@@ -342,19 +344,22 @@ workflow.sc.subsample          tool.sc.count                  successful
 
 ## Run *SCAFE* on your own data 
 
-### Running *SCAFE* workflows with default options
+### Input *\*.bam* files
+*SCAFE* maps the cDNA 5'end by identifying the junction between the TS oligo and the cDNA on **Read 1** of sc-end5-seq data on the 10xGenomics Chromimum® platform. Therefore, **Read 1** must be sequenced long enough (e.g. >50nt) to allow mappnig to genome. The *\*.bam* files are commonly generated from 10xGenomics Chromimum® *cellranger count* pipeline. When running [*cellranger count*](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/count), the *--chemistry*  option must be either *fiveprime* (Read 1 only) or *SC5P-PE* (Pair-end). 
 
-We recommend most users to run *SCAFE* on their own data using workflows with default options. There are 3 types of workflow: **(1)** "solo" for processing of a single library, **(2)** "pool" for pooling of multiple libraries and **(3)** "subsample" for down-sampling a single library.
+### Running *SCAFE* workflows on single cell data with default options
 
-
-The basic input for *SCAFE* is a *\*.bam* file and a list of cellbarcode. Its 
+We recommend most users to run *SCAFE* using workflows with default options. There are 3 types of workflow: **(1)** "***solo***" for processing of a single library, **(2)** "***pool***" for pooling of multiple libraries and **(3)** "***subsample***" for down-sampling a single library (for assessment of sequencing depth). "***solo***" accepts *\*.bam* while "***pool***"/"***subsample***" accepts *\*.ctss.bed* files (generated from *tool.sc.bam\_to\_ctss*). For multiple libraries, we recommend users to first run either *workflow.sc.solo* or *tool.sc.bam\_to\_ctss* on indiviudal libraries, and then take the *\*.ctss.bed* file from all libraries to run *workflow.sc.pool*. Pooling of libraries for defining tCRE is recommended because **(1)** it generally increases the sensitivity of tCRE detection and **(2)** it produces a common set of tCREs for all libraries so the IDs are portable between libraries. Please check the help messages for details of running the workflows: 
 
 ```shell
-run demo
+#--- check out the help message of the three single cell workflows
+./scripts/workflow.sc.solo --help
+./scripts/workflow.sc.pool --help
+./scripts/workflow.sc.subsample --help
 
 ```
 ### Running *SCAFE* individual tools with custom options 
-Some users might want to run *SCAFE* using individual tools with default options. 
+To provide flexibiity, *SCAFE* allow users to run individual tools with custom options for exploring the effect of cutoffs or supplyin alternative intermediate inputs. See [here](scripts/) for the full list of tools and their usage.
 
 ### Making a custom reference genome
 Currently, four reference genomes ara available. See *./script/download.resources.genome* for downloading. Alternatively, some users might work on genomes of other organisms, or prefer to use custom gene models for annotating tCREs.  *tool.cm.prep_genome* converts user-supplied genome *\*.fasta* and gene model *\*.gtf* into necessary files for *SCAFE*. You can check out the help message for inputs of *tool.cm.prep_genome* and then test run a demo using TAIR10 genome with AtRTDv2 gene model.
