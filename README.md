@@ -441,7 +441,7 @@ Currently, four reference genomes ara available. See *./script/download.resource
 ./scripts/workflow.bk.subsample --help
 ```
 
-### [<span style="color: green">For The Confused Ones</span>] We are here to help
+### <div class="text-purple">For The Confused Ones</div> We are here to help
 Feel free to send us an [email](mailto:cchon.lab@gmail.com) if you have questions.
 
 ### [[<span style="color:blue">For The Wild Ones</span>](https://www.youtube.com/watch?v=d3BBsSdYze4)] Fork this repository
