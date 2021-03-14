@@ -156,7 +156,7 @@ Successful for all checks. SCAFE should run well.
 
 ```
 
-## Getting started
+## Getting started with demo data
 Now you have enssured all dependencies and downloaded SCAFE, time to get the demo data and test a few runs on the demo data.
 
 ### Download demo data and reference genome
@@ -344,6 +344,9 @@ workflow.sc.subsample          tool.sc.count                  successful
 
 ### Running *SCAFE* workflows with default options
 
+We recommend most users to run *SCAFE* on their own data using workflows with default options. There are 3 types of workflow: **(1)** "solo" for processing of a single library, **(2)** "pool" for pooling of multiple libraries and **(3)** "subsample" for down-sampling a single library.
+
+
 The basic input for *SCAFE* is a *\*.bam* file and a list of cellbarcode. Its 
 
 ```shell
@@ -351,6 +354,7 @@ run demo
 
 ```
 ### Running *SCAFE* individual tools with custom options 
+Some users might want to run *SCAFE* using individual tools with default options. 
 
 ### Making a custom reference genome
 Currently, four reference genomes ara available. See *./script/download.resources.genome* for downloading. Alternatively, some users might work on genomes of other organisms, or prefer to use custom gene models for annotating tCREs.  *tool.cm.prep_genome* converts user-supplied genome *\*.fasta* and gene model *\*.gtf* into necessary files for *SCAFE*. You can check out the help message for inputs of *tool.cm.prep_genome* and then test run a demo using TAIR10 genome with AtRTDv2 gene model.
@@ -369,3 +373,13 @@ Currently, four reference genomes ara available. See *./script/download.resource
 --outputPrefix=TAIR10.AtRTDv2 \
 --outDir=./demo/output/genome/
 ```
+### Running *SCAFE* with bulk CAGE data 
+
+
+
+
+
+
+
+
+
