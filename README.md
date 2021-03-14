@@ -486,7 +486,7 @@ Currently, four reference genomes ara available. See *./script/download.resource
 ### [<span style="color:green">For The Confused Ones</span>] We are here to help
 Feel free to send us an [email](mailto:cchon.lab@gmail.com) if you have questions.
 
-### [[<span style="color:blue">For The Wild Ones</span>](https://www.youtube.com/watch?v=d3BBsSdYze4)] Fork this repository
+### [[<span style="color:blue">For The Wild Ones</span>](https://www.youtube.com/watch?v=NphkKvkGvaI)] Fork this repository
 Feel free to contribute if you any ideas to make *SCAFE* better.
 
 
