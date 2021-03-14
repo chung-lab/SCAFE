@@ -45,7 +45,7 @@ unshift @INC, bless \%fatpacked, $class;
 #====================================================================================================================================================#
 #<use>
 $|++; #---turn on the auto flush for the progress bar
-use open ':std', ':encoding(UTF-8)';
+no warnings 'utf8';
 use warnings;
 use strict;
 use File::Path;
