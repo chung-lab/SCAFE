@@ -180,63 +180,63 @@ Now, let's test *SCAFE* with a workflow (*workflow.sc.solo*) that processes one 
 It should print the help message as the followings:
 
 ```shell
-               5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~AAA-3'
-                            O~~~AA      O~~         O~       O~~~~~~~AO~~~~~~~~A
-                          O~~    O~~ O~~   O~~     O~O~~     O~~      O~~       
-                           O~~      O~~           O~  O~~    O~~      O~~       
-                             O~~    O~~          O~~   O~~   O~~~~~AA O~~~~~~A  
-                                O~~ O~~         O~~~~~A O~~  O~~      O~~       
-                          O~~    O~~ O~~   O~~ O~~       O~~ O~~      O~~       
-                            O~~~~A     O~~~   O~~         O~~O~~      O~~~~~~~AA
-           ┌─ᐅ 5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-3'
-     ...===┴========================================================================================...
+          5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~AAA-3'
+                       O~~~AA      O~~         O~       O~~~~~~~AO~~~~~~~~A
+                     O~~    O~~ O~~   O~~     O~O~~     O~~      O~~       
+                      O~~      O~~           O~  O~~    O~~      O~~       
+                        O~~    O~~          O~~   O~~   O~~~~~AA O~~~~~~A  
+                           O~~ O~~         O~~~~~A O~~  O~~      O~~       
+                     O~~    O~~ O~~   O~~ O~~       O~~ O~~      O~~       
+                       O~~~~A     O~~~   O~~         O~~O~~      O~~~~~~~AA
+      ┌─ᐅ 5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-3'
+...===┴========================================================================================...
 
-                          Single Cell Analysis of Five'End (SCAFE) Tool Suite 
-                                    ---> workflow.sc.solo <---
-                      <--- workflow, single-cell mode, process a single sample --->
+                     Single Cell Analysis of Five'End (SCAFE) Tool Suite 
+                               ---> workflow.sc.solo <---
+                 <--- workflow, single-cell mode, process a single sample --->
 
-     Description:
-       This workflow process a single sample, from a cellranger bam file to tCRE UMI/cellbarcode count matrix
+Description:
+  This workflow process a single sample, from a cellranger bam file to tCRE UMI/cellbarcode count matrix
 
-     Usage:
-       workflow.sc.solo [options] --run_bam_path --run_cellbarcode_path --genome --run_tag --run_outDir
-   
-       --run_bam_path         <required> [string]  bam file from cellranger, can be read 1 only or pair-end
-       --run_cellbarcode_path <required> [string]  tsv file contains a list of cell barcodes,
-                                                   barcodes.tsv.gz from cellranger
-       --genome               <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
-       --run_tag              <required> [string]  prefix for the output files
-       --run_outDir           <required> [string]  directory for the output files
-       --training_signal_path (optional) [string]  quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
-                                                   regions (e.g. annotated CRE, in bed format) used for training of logical 
-                                                   regression model If null, $usr_glm_model_path must be supplied for 
-                                                   pre-built logical regression model. It overrides usr_glm_model_path 
-                                                   (default=null)
-       --testing_signal_path  (optional) [string]  quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
-                                                   regions (e.g. annotated CRE, in bed format) used for testing the performance 
-                                                   of the logical regression model. If null, annotated TSS from $genome will be 
-                                                   used as binary genomic regions. (default=null)
-       --max_thread           (optional) [integer] maximum number of parallel threads, capped at 10 to 
-                                                   avoid memory overflow (default=5)
-       --overwrite            (optional) [yes/no]  erase run_outDir before running (default=no)
+Usage:
+  workflow.sc.solo [options] --run_bam_path --run_cellbarcode_path --genome --run_tag --run_outDir
 
-     Dependencies:
-       R packages: 'ROCR','PRROC', 'caret', 'e1071', 'ggplot2', 'scales', 'reshape2'
-       bigWigAverageOverBed
-       bedGraphToBigWig
-       bedtools
-       samtools
-       paraclu
-       paraclu-cut.sh
+  --run_bam_path         <required> [string]  bam file from cellranger, can be read 1 only or pair-end
+  --run_cellbarcode_path <required> [string]  tsv file contains a list of cell barcodes,
+                                              barcodes.tsv.gz from cellranger
+  --genome               <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
+  --run_tag              <required> [string]  prefix for the output files
+  --run_outDir           <required> [string]  directory for the output files
+  --training_signal_path (optional) [string]  quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
+                                              regions (e.g. annotated CRE, in bed format) used for training of logical 
+                                              regression model If null, $usr_glm_model_path must be supplied for 
+                                              pre-built logical regression model. It overrides usr_glm_model_path 
+                                              (default=null)
+  --testing_signal_path  (optional) [string]  quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
+                                              regions (e.g. annotated CRE, in bed format) used for testing the performance 
+                                              of the logical regression model. If null, annotated TSS from $genome will be 
+                                              used as binary genomic regions. (default=null)
+  --max_thread           (optional) [integer] maximum number of parallel threads, capped at 10 to 
+                                              avoid memory overflow (default=5)
+  --overwrite            (optional) [yes/no]  erase run_outDir before running (default=no)
 
-     For demo, cd to SCAFE dir and run,
-       ./scripts/workflow.sc.solo \
-       --overwrite=yes \
-       --run_bam_path=./demo/input/sc.solo/demo.cellranger.bam \
-       --run_cellbarcode_path=./demo/input/sc.solo/demo.barcodes.tsv.gz \
-       --genome=hg19.gencode_v32lift37 \
-       --run_tag=demo \
-       --run_outDir=./demo/output/sc.solo/
+Dependencies:
+  R packages: 'ROCR','PRROC', 'caret', 'e1071', 'ggplot2', 'scales', 'reshape2'
+  bigWigAverageOverBed
+  bedGraphToBigWig
+  bedtools
+  samtools
+  paraclu
+  paraclu-cut.sh
+
+For demo, cd to SCAFE dir and run,
+  ./scripts/workflow.sc.solo \
+  --overwrite=yes \
+  --run_bam_path=./demo/input/sc.solo/demo.cellranger.bam \
+  --run_cellbarcode_path=./demo/input/sc.solo/demo.barcodes.tsv.gz \
+  --genome=hg19.gencode_v32lift37 \
+  --run_tag=demo \
+  --run_outDir=./demo/output/sc.solo/
 
 ```
 
