@@ -153,7 +153,13 @@ Finished checking
 ===============================
 
 Successful for all checks. SCAFE should run well.
+```
+### Docker image
+If you have docker installed on your system, you might also consider loading *SCAFE* as a docker image
 
+```shell
+#---load the docker image (Not implemented yet)
+./scripts/XXX.XXX.XXX
 ```
 
 ## Getting started with demo data
@@ -431,7 +437,25 @@ For the sake of flexibiity, *SCAFE* allows users to run individual tools with cu
 --outputPrefix=demo \
 --outDir=./demo/output/sc.solo/filter/
 ```
-* ***tool.cm.annotate***: Finally, we will define and annotate tCREs based on the gene models in reference genome. By default, *tool.cm.annotate* merge TSS clusters located within +100nt and –400nt as a tCRE. If the users would like to use their own matched ATAC-Seq data (–logP as *\*.bigwig* file) for training of the regression model using *--training_signal_path* and *--testing_signal_path* options. Also, the user can set a permissive logistic probablity threshold (default=0.5) using *--default_cutoff* option (e.g. 0.3). The user could run as the followings:
+* ***tool.cm.annotate***: Finally, we will define and annotate tCREs based on the gene models in reference genome. By default, *tool.cm.annotate* merge TSS clusters located within +100nt and –400nt as a tCRE (defined by combination of option *--CRE_extend_size* and *--CRE_extend_upstrm_ratio*). Also, the tCREs with +/-500nt of annotated gene TSS will be assigned as proximal tCRE (defined by option *--proximity_slop_rng*). If the users would like to define tCRE by merging more distant TSS clusters (e.g. +200nt and –600nt) and assign tCRE further away (+/-1000nt) from gene TSS as proximal, the user could run as the followings:
+
+```shell
+#--- check out the help message of tool.cm.annotate
+./scripts/tool.cm.annotate --help
+
+#--- run tool.cm.annotate with custom options
+./scripts/tool.cm.annotate \
+--CRE_extend_size=800 \
+--CRE_extend_upstrm_ratio=3 \
+--proximity_slop_rng=1000 \
+--overwrite=yes \
+--tssCluster_bed_path=./demo/output/sc.solo/filter/demo/bed/demo.tssCluster.default.filtered.bed.gz \
+--tssCluster_info_path=./demo/output/sc.solo/filter/demo/log/demo.tssCluster.log.tsv \
+--genome=hg19.gencode_v32lift37 \
+--outputPrefix=demo \
+--outDir=./demo/output/sc.solo/annotate/
+```
+
 ### [<span style="color:green">For The Special Ones</span>] Making a custom reference genome
 Currently, four reference genomes ara available. See *./script/download.resources.genome* for downloading. Alternatively, some users might work on genomes of other organisms, or prefer to use custom gene models for annotating tCREs.  *tool.cm.prep_genome* converts user-supplied genome *\*.fasta* and gene model *\*.gtf* into necessary files for *SCAFE*. You can check out the help message for inputs of *tool.cm.prep_genome* and then test run a demo using TAIR10 genome with AtRTDv2 gene model.
 
