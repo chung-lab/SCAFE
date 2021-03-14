@@ -431,7 +431,7 @@ Currently, four reference genomes ara available. See *./script/download.resource
 --outputPrefix=TAIR10.AtRTDv2 \
 --outDir=./demo/output/genome/
 ```
-### [<span style="color: green">For The Other Ones</span>] Run *SCAFE* with bulk CAGE data 
+### [<span style="color:#c5f015">For The Other Ones</span>] Run *SCAFE* with bulk CAGE data 
 *SCAFE* also accepts *.\*bam* files from bulk CAGE. The major difference between singel cell and bulk workflow is cellbarcode is not considered. Otherwise, the options between single cell and bulk workflow are large the same. Please check the help messages for details of running the workflows: 
 
 ```shell
