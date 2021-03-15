@@ -70,7 +70,7 @@ use Cwd 'abs_path';
        ┌─ᐅ 5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-3'
  ...===┴========================================================================================...
 
-                      Single Cell Analysis of Five'End (SCAFE) Tool Suite 
+                      Single Cell Analysis of Five-prime End (SCAFE) Tool Suite 
                                ---> workflow.sc.pool <---
                    <--- workflow, single-cell mode, pool ctss of multiple samples --->
 

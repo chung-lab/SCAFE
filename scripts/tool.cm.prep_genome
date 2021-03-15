@@ -75,7 +75,7 @@ use Cwd 'abs_path';
        ┌─ᐅ 5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-3'
  ...===┴========================================================================================...
 
-                      Single Cell Analysis of Five'End (SCAFE) Tool Suite 
+                      Single Cell Analysis of Five-prime End (SCAFE) Tool Suite 
                                 ---> tool.cm.prep_genome <---
                   <--- tool, common mode, prepare custom reference genome --->
 
@@ -300,7 +300,7 @@ sub checkAllExecutable {
 	
 	{
 		my $stdOut = `$cut_sh_path 55C7128A 2>&1`;
-		if ($stdOut =~ m/awk: fatal: cannot open/) {
+		if ($stdOut =~ m/awk:/) {
 			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->1254
 		} else {
 			die "paraclu-cut is not installed properly. Quitting.\n";
