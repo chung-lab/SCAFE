@@ -41,7 +41,7 @@ SCAFE relies on parsed reference genome files for data processing. Please use ./
    --mask_bed_path    <required> [string] a bed file specific the CRE regions. For human or mouse, consider 
                                           using ENCODE CREs. for other species, consider using merged ATAC-seq
                                           from multiple tissues. If ATAC is not available, use the +/- 500nt of 
-                                          gene model 5'end.
+                                          gene model 5' end.
    --outputPrefix     <required> [string] prefix for the output files (should be name of the genome reference)
    --outDir           <required> [string] directory for the output files (should be resource dir in scafe dir)
    --overwrite        (optional) [yes/no] erase outDir/outputPrefix before running (default=no)
