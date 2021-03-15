@@ -92,8 +92,8 @@ git clone https://github.com/chung-lab/SCAFE
 cd SCAFE
 
 #--- export SCAFE scripts dir to PATH for system-wide call of SCAFE commands 
-echo "export PATH=$PATH:$(pwd)/scripts" >>~/.profile
-source ~/.profile
+echo "export PATH=\$PATH:$(pwd)/scripts" >>~/.bashrc
+source ~/.bashrc
 
 #--- making sure the scripts and binaries are executable
 chmod 755 -R ./scripts/
