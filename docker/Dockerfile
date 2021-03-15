@@ -12,3 +12,8 @@ RUN echo "deb http://cloud.r-project.org/bin/linux/debian stretch-cran35/" >>/et
  && Rscript -e 'install.packages("scales")' \
  && Rscript -e 'install.packages("reshape2")' \
  && git clone https://github.com/chung-lab/SCAFE
+WORKDIR ./SCAFE
+RUN chmod 755 -R ./scripts/ \
+ && chmod 755 -R ./resources/bin/ \
+ && ./scripts/download.demo.input \
+ && ./scripts/download.resources.genome --genome=hg19.gencode_v32lift37
