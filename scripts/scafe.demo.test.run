@@ -86,12 +86,12 @@ use Cwd 'abs_path';
    --workflow             (optional) [string]  comma delimited list of workflows, 
                                                or use 'all' to run all workflows.
                                                Available workflows includes,
-                                               workflow.sc.subsample ---> workflow, single-cell mode, subsample ctss
-                                               workflow.sc.solo ---> workflow, single-cell mode, process a single sample
-                                               workflow.sc.pool ---> workflow, single-cell mode, pool ctss of multiple samples
-                                               workflow.bk.subsample ---> workflow, bulk mode, subsample ctss
-                                               workflow.bk.solo ---> workflow, bulk mode, process a single sample
-                                               workflow.bk.pool ---> workflow, bulk mode, process a single sample
+                                               scafe.workflow.sc.subsample ---> workflow, single-cell mode, subsample ctss
+                                               scafe.workflow.sc.solo ---> workflow, single-cell mode, process a single sample
+                                               scafe.workflow.sc.pool ---> workflow, single-cell mode, pool ctss of multiple samples
+                                               scafe.workflow.bk.subsample ---> workflow, bulk mode, subsample ctss
+                                               scafe.workflow.bk.solo ---> workflow, bulk mode, process a single sample
+                                               scafe.workflow.bk.pool ---> workflow, bulk mode, process a single sample
                                                (default=all)
    --overwrite            (optional) [yes/no]  erase run_outDir before running (default=no)
 
@@ -105,7 +105,7 @@ use Cwd 'abs_path';
    paraclu-cut.sh
 
  For demo, cd to SCAFE dir and run,
-   ./scripts/demo.test.run \
+   scafe.demo.test.run \
    --overwrite=yes \
    --run_outDir=./demo/output/
 
@@ -243,10 +243,10 @@ sub define_task {
 
 	foreach my $workflow_choice (sort keys %{$user_workflow_hsh_ref}) {
 		$task_num++;
-		if ($workflow_choice eq 'workflow.bk.pool') {
+		if ($workflow_choice eq 'scafe.workflow.bk.pool') {
 			$task_info_hsh_ref->{$task_num} = {
 				'task_name' => 'bk.pool',
-				'script_name' => 'workflow.bk.pool',
+				'script_name' => 'scafe.workflow.bk.pool',
 				'task_log_path' => $run_outDir."/bk.pool/script/task.log.txt",
 				'param' => [
 					['overwrite', 'yes'],
@@ -257,10 +257,10 @@ sub define_task {
 				],
 			};
 
-		} elsif ($workflow_choice eq 'workflow.bk.solo') {
+		} elsif ($workflow_choice eq 'scafe.workflow.bk.solo') {
 			$task_info_hsh_ref->{$task_num} = {
 				'task_name' => 'bk.solo',
-				'script_name' => 'workflow.bk.solo',
+				'script_name' => 'scafe.workflow.bk.solo',
 				'task_log_path' => $run_outDir."/bk.solo/script/task.log.txt",
 				'param' => [
 					['overwrite', 'yes'],
@@ -271,10 +271,10 @@ sub define_task {
 				],
 			};
 
-		} elsif ($workflow_choice eq 'workflow.bk.subsample') {
+		} elsif ($workflow_choice eq 'scafe.workflow.bk.subsample') {
 			$task_info_hsh_ref->{$task_num} = {
 				'task_name' => 'bk.subsample',
-				'script_name' => 'workflow.bk.subsample',
+				'script_name' => 'scafe.workflow.bk.subsample',
 				'task_log_path' => $run_outDir."/bk.subsample/script/task.log.txt",
 				'param' => [
 					['overwrite', 'yes'],
@@ -286,10 +286,10 @@ sub define_task {
 				],
 			};
 
-		} elsif ($workflow_choice eq 'workflow.sc.pool') {
+		} elsif ($workflow_choice eq 'scafe.workflow.sc.pool') {
 			$task_info_hsh_ref->{$task_num} = {
 				'task_name' => 'sc.pool',
-				'script_name' => 'workflow.sc.pool',
+				'script_name' => 'scafe.workflow.sc.pool',
 				'task_log_path' => $run_outDir."/sc.pool/script/task.log.txt",
 				'param' => [
 					['overwrite', 'yes'],
@@ -300,10 +300,10 @@ sub define_task {
 				],
 			};
 
-		} elsif ($workflow_choice eq 'workflow.sc.solo') {
+		} elsif ($workflow_choice eq 'scafe.workflow.sc.solo') {
 			$task_info_hsh_ref->{$task_num} = {
 				'task_name' => 'sc.solo',
-				'script_name' => 'workflow.sc.solo',
+				'script_name' => 'scafe.workflow.sc.solo',
 				'task_log_path' => $run_outDir."/sc.solo/script/task.log.txt",
 				'param' => [
 					['overwrite', 'yes'],
@@ -315,10 +315,10 @@ sub define_task {
 				],
 			};
 
-		} elsif ($workflow_choice eq 'workflow.sc.subsample') {
+		} elsif ($workflow_choice eq 'scafe.workflow.sc.subsample') {
 			$task_info_hsh_ref->{$task_num} = {
 				'task_name' => 'sc.subsample',
-				'script_name' => 'workflow.sc.subsample',
+				'script_name' => 'scafe.workflow.sc.subsample',
 				'task_log_path' => $run_outDir."/sc.subsample/script/task.log.txt",
 				'param' => [
 					['overwrite', 'yes'],
@@ -379,12 +379,12 @@ sub parseWorkflowChoice {
 	
 	my $user_workflow_hsh_ref = {};
 	my $available_workflow_hsh_ref = {
-		'workflow.sc.subsample' => '1',
-		'workflow.sc.solo' => '1',
-		'workflow.sc.pool' => '1',
-		'workflow.bk.subsample' => '1',
-		'workflow.bk.solo' => '1',
-		'workflow.bk.pool' => '1',
+		'scafe.workflow.sc.subsample' => '1',
+		'scafe.workflow.sc.solo' => '1',
+		'scafe.workflow.sc.pool' => '1',
+		'scafe.workflow.bk.subsample' => '1',
+		'scafe.workflow.bk.solo' => '1',
+		'scafe.workflow.bk.pool' => '1',
 	};
 	print "\n";
 	print "#=======================#\n";

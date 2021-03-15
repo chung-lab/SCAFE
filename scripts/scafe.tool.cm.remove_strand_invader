@@ -77,7 +77,7 @@ use Cwd 'abs_path';
  ...===┴========================================================================================...
 
                       Single Cell Analysis of Five-prime End (SCAFE) Tool Suite 
-                           ---> tool.cm.remove_strand_invader <---
+                           ---> scafe.tool.cm.remove_strand_invader <---
                   <--- tool, common mode, remove strand invader artefact --->
 
  Description:
@@ -85,9 +85,9 @@ use Cwd 'abs_path';
    by aligning the sequence immediate upstream of a ctss to TS oligo sequence
 
  Usage:
-   tool.cm.remove_strand_invader [options] --ctss_bed_path --genome --outputPrefix --outDir
+   scafe.tool.cm.remove_strand_invader [options] --ctss_bed_path --genome --outputPrefix --outDir
    
-   --ctss_bed_path      <required> [string]  "collapse" ctss file from tool.sc.bam_to_ctss.pl, 
+   --ctss_bed_path      <required> [string]  "collapse" ctss file from scafe.tool.sc.bam_to_ctss.pl, 
                                              4th column is number of cells and 5th column is number UMI
    --genome             <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
    --outputPrefix       <required> [string]  prefix for the output files
@@ -108,7 +108,7 @@ use Cwd 'abs_path';
    bedtools
 
  For demo, cd to SCAFE dir and run,
-   ./scripts/tool.cm.remove_strand_invader \
+   scafe.tool.cm.remove_strand_invader \
    --overwrite=yes \
    --ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.collapse.ctss.bed.gz \
    --genome=hg19.gencode_v32lift37 \

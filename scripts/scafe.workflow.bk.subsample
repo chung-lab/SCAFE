@@ -71,7 +71,7 @@ use Cwd 'abs_path';
  ...===┴========================================================================================...
 
                       Single Cell Analysis of Five-prime End (SCAFE) Tool Suite 
-                               ---> workflow.bk.subsample <---
+                               ---> scafe.workflow.bk.subsample <---
                         <--- workflow, bulk mode, subsample ctss --->
 
  Description:
@@ -79,10 +79,10 @@ use Cwd 'abs_path';
    Subsampling is useful to investigate the effect of sequencing depth to tCRE definition
 
  Usage:
-   workflow.bk.subsample [options] --long_ctss_bed_path --subsample_num --genome --run_tag --run_outDir
+   scafe.workflow.bk.subsample [options] --long_ctss_bed_path --subsample_num --genome --run_tag --run_outDir
    
    --long_ctss_bed_path    <required> [string] ctss file for subsampling, one line one read
-                                               *long.ctss.bed.gz from tool.bk.bam_to_ctss.pl, 
+                                               *long.ctss.bed.gz from scafe.tool.bk.bam_to_ctss.pl, 
    --subsample_num        <required> [integer] number of UMI to be subsampled
    --genome               <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
    --run_tag              <required> [string]  prefix for the output files
@@ -110,7 +110,7 @@ use Cwd 'abs_path';
    paraclu-cut.sh
 
  For demo, cd to SCAFE dir and run,
-   ./scripts/workflow.bk.subsample \
+   scafe.workflow.bk.subsample \
    --overwrite=yes \
    --long_ctss_bed_path=./demo/input/bk.subsample/demo.long.ctss.bed.gz \
    --subsample_num=100000 \
@@ -263,7 +263,7 @@ sub define_task {
 	my $task_info_hsh_ref = {
 		1 => {
 			'task_name' => 'subsample_ctss',
-			'script_name' => 'tool.bk.subsample_ctss',
+			'script_name' => 'scafe.tool.bk.subsample_ctss',
 			'param' => [
 				['subsample_num', $subsample_num],
 				['long_ctss_bed_path', $path_hsh_ref->{'long_ctss_bed_path'}],
@@ -277,7 +277,7 @@ sub define_task {
 		},
 		2 => {
 			'task_name' => 'cluster',
-			'script_name' => 'tool.cm.cluster',
+			'script_name' => 'scafe.tool.cm.cluster',
 			'param' => [
 				['cluster_ctss_bed_path', $path_hsh_ref->{'collapse_ctss_bed_path'}],
 				['count_ctss_bed_path_list', $path_hsh_ref->{'collapse_ctss_bed_path'}],
@@ -291,7 +291,7 @@ sub define_task {
 		},
 		3 => {
 			'task_name' => 'filter',
-			'script_name' => 'tool.cm.filter',
+			'script_name' => 'scafe.tool.cm.filter',
 			'param' => [
 				['genome', $genome],
 				['training_signal_path', $path_hsh_ref->{'training_signal_path'}],
@@ -310,7 +310,7 @@ sub define_task {
 		},
 		4 => {
 			'task_name' => 'ctss_to_bigwig',
-			'script_name' => 'tool.cm.ctss_to_bigwig',
+			'script_name' => 'scafe.tool.cm.ctss_to_bigwig',
 			'param' => [
 				['genome', $genome],
 				['ctss_bed_path', $path_hsh_ref->{'collapse_ctss_bed_path'}],
@@ -326,7 +326,7 @@ sub define_task {
 		},
 		5 => {
 			'task_name' => 'annotate',
-			'script_name' => 'tool.cm.annotate',
+			'script_name' => 'scafe.tool.cm.annotate',
 			'param' => [
 				['genome', $genome],
 				['tssCluster_bed_path', $path_hsh_ref->{"default.filtered_tssCluster_bed_path"}],
@@ -343,7 +343,7 @@ sub define_task {
 		},
 		6 => {
 			'task_name' => 'count',
-			'script_name' => 'tool.bk.count',
+			'script_name' => 'scafe.tool.bk.count',
 			'param' => [
 				['countRegion_bed_path', $path_hsh_ref->{"tCRE_bed_path"}],
 				['ctss_bed_path', $path_hsh_ref->{'collapse_ctss_bed_path'}],

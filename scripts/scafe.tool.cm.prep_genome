@@ -76,14 +76,14 @@ use Cwd 'abs_path';
  ...===┴========================================================================================...
 
                       Single Cell Analysis of Five-prime End (SCAFE) Tool Suite 
-                                ---> tool.cm.prep_genome <---
+                                ---> scafe.tool.cm.prep_genome <---
                   <--- tool, common mode, prepare custom reference genome --->
 
  Description:
    This tool prepares a reference genome assembly and its gene models for others tools in scafe.
 
  Usage:
-   tool.cm.prep_genome [options] --gtf_path --fasta_path --chrom_list_path --mask_bed_path --outputPrefix --outDir
+   scafe.tool.cm.prep_genome [options] --gtf_path --fasta_path --chrom_list_path --mask_bed_path --outputPrefix --outDir
    
    --gtf_path         <required> [string] gtf of the gene models
    --fasta_path       <required> [string] fasta of the genome assembly
@@ -106,7 +106,7 @@ use Cwd 'abs_path';
    samtools
 
  For demo, cd to SCAFE dir and run,
-   ./scripts/tool.cm.prep_genome \
+   scafe.tool.cm.prep_genome \
    --overwrite=yes \
    --gtf_path=./demo/input/genome/TAIR10.AtRTDv2.gtf.gz \
    --fasta_path=./demo/input/genome/TAIR10.genome.fa.gz \

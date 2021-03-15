@@ -91,7 +91,7 @@ use Cwd 'abs_path';
    tar
 
  For demo, cd to SCAFE dir and run,
-   ./scripts/download.resources.genome \
+   scafe.download.resources.genome \
    --genome=hg19.gencode_v32lift37
 
 =head1 VERSION

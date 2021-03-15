@@ -76,7 +76,7 @@ use AutoLoader qw/AUTOLOAD/;
  ...===┴========================================================================================...
 
                       Single Cell Analysis of Five-prime End (SCAFE) Tool Suite 
-                                  ---> tool.cm.filter <---
+                                  ---> scafe.tool.cm.filter <---
                   <--- tool, common mode, filter for genuine TSS clusters --->
 
  Description:
@@ -84,16 +84,16 @@ use AutoLoader qw/AUTOLOAD/;
    This tool filter for genuine TSS clusters based on a logistic regression model on TSS cluster properties.
 
  Usage:
-   tool.cm.filter [options] --ctss_bed_path --ung_ctss_bed_path --tssCluster_bed_path --genome --outputPrefix --outDir
+   scafe.tool.cm.filter [options] --ctss_bed_path --ung_ctss_bed_path --tssCluster_bed_path --genome --outputPrefix --outDir
    
    --ctss_bed_path           <required> [string]  ctss file contains all ctss,
-                                                  *.collapse.ctss.bed.gz from tool.sc.bam_to_ctss.pl, 
+                                                  *.collapse.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
                                                   5th column is number reads/UMI
    --ung_ctss_bed_path       <required> [string]  ctss file contains only ctss with unencoded G,
-                                                  *.unencoded_G.collapse.ctss.bed.gz from tool.sc.bam_to_ctss.pl, 
+                                                  *.unencoded_G.collapse.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
                                                   5th column is number reads/UMI
    --tssCluster_bed_path     <required> [string]  bed file contains all TSS clusters,
-                                                  *.tssCluster.bed.gz from tool.cm.cluster.pl
+                                                  *.tssCluster.bed.gz from scafe.tool.cm.cluster.pl
    --genome                  <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
    --outputPrefix            <required> [string]  prefix for the output files
    --outDir                  <required> [string]  directory for the output files
@@ -131,7 +131,7 @@ use AutoLoader qw/AUTOLOAD/;
    bigWigAverageOverBed
 
  For demo, cd to SCAFE dir and run,
-   ./scripts/tool.cm.filter \
+   scafe.tool.cm.filter \
    --overwrite=yes \
    --ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.collapse.ctss.bed.gz \
    --ung_ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.unencoded_G.collapse.ctss.bed.gz \

@@ -1,42 +1,42 @@
 ## SCAFE Tools and Workflows<a name="0"></a>
 This folder contains the following tools and workflows. A tool perform a single task and a workflow runs multiple tools. Some scripts are seperately implemented as bulk (.bk.) and single-cell (.sc.) mode, while others are common (.cm.) for both.
 
-* [**workflow.sc.subsample**](#1) ---> workflow, single-cell mode, subsample ctss
-* [**workflow.sc.solo**](#2) ---> workflow, single-cell mode, process a single sample
-* [**workflow.sc.pool**](#3) ---> workflow, single-cell mode, pool ctss of multiple samples
-* [**workflow.bk.subsample**](#4) ---> workflow, bulk mode, subsample ctss
-* [**workflow.bk.solo**](#5) ---> workflow, bulk mode, process a single sample
-* [**workflow.bk.pool**](#6) ---> workflow, bulk mode, process a single sample
-* [**tool.sc.subsample\_ctss**](#7) ---> tool, single-cell mode, subsample ctss
-* [**tool.sc.pool**](#8) ---> tool, single-cell mode, pool ctss of multiple samples
-* [**tool.sc.count**](#9) ---> tool, single-cell mode, count of UMI within tCRE
-* [**tool.sc.bam\_to\_ctss**](#10) ---> tool, single-cell mode, convert bam to ctss
-* [**tool.cm.remove\_strand\_invader**](#11) ---> tool, common mode, remove strand invader artefact
-* [**tool.cm.prep\_genome**](#12) ---> tool, common mode, prepare custom reference genome
-* [**tool.cm.filter**](#13) ---> tool, common mode, filter for genuine TSS clusters
-* [**tool.cm.ctss\_to\_bigwig**](#14) ---> tool, common mode, convert ctss to bigwig
-* [**tool.cm.cluster**](#15) ---> tool, common mode, cluster ctss
-* [**tool.cm.annotate**](#16) ---> tool, common mode, define and annotate tCRE
-* [**tool.bk.subsample\_ctss**](#17) ---> tool, bulk mode, subsample ctss
-* [**tool.bk.pool**](#18) ---> tool, bulk mode, pool ctss of multiple samples
-* [**tool.bk.count**](#19) ---> tool, bulk mode, count ctss within tCREs
-* [**tool.bk.bam\_to\_ctss**](#20) ---> tool, bulk mode, convert bam to ctss bed
-* [**download.resources.genome**](#21) ---> download, reference genome to resources dir
-* [**download.demo.input**](#22) ---> download, demo input data for testing
-* [**demo.test.run**](#23) ---> demo, run demo data for testing
-* [**check.dependencies**](#24) ---> check dependencies
+* [**scafe.workflow.sc.subsample**](#1) ---> workflow, single-cell mode, subsample ctss
+* [**scafe.workflow.sc.solo**](#2) ---> workflow, single-cell mode, process a single sample
+* [**scafe.workflow.sc.pool**](#3) ---> workflow, single-cell mode, pool ctss of multiple samples
+* [**scafe.workflow.bk.subsample**](#4) ---> workflow, bulk mode, subsample ctss
+* [**scafe.workflow.bk.solo**](#5) ---> workflow, bulk mode, process a single sample
+* [**scafe.workflow.bk.pool**](#6) ---> workflow, bulk mode, process a single sample
+* [**scafe.tool.sc.subsample\_ctss**](#7) ---> tool, single-cell mode, subsample ctss
+* [**scafe.tool.sc.pool**](#8) ---> tool, single-cell mode, pool ctss of multiple samples
+* [**scafe.tool.sc.count**](#9) ---> tool, single-cell mode, count of UMI within tCRE
+* [**scafe.tool.sc.bam\_to\_ctss**](#10) ---> tool, single-cell mode, convert bam to ctss
+* [**scafe.tool.cm.remove\_strand\_invader**](#11) ---> tool, common mode, remove strand invader artefact
+* [**scafe.tool.cm.prep\_genome**](#12) ---> tool, common mode, prepare custom reference genome
+* [**scafe.tool.cm.filter**](#13) ---> tool, common mode, filter for genuine TSS clusters
+* [**scafe.tool.cm.ctss\_to\_bigwig**](#14) ---> tool, common mode, convert ctss to bigwig
+* [**scafe.tool.cm.cluster**](#15) ---> tool, common mode, cluster ctss
+* [**scafe.tool.cm.annotate**](#16) ---> tool, common mode, define and annotate tCRE
+* [**scafe.tool.bk.subsample\_ctss**](#17) ---> tool, bulk mode, subsample ctss
+* [**scafe.tool.bk.pool**](#18) ---> tool, bulk mode, pool ctss of multiple samples
+* [**scafe.tool.bk.count**](#19) ---> tool, bulk mode, count ctss within tCREs
+* [**scafe.tool.bk.bam\_to\_ctss**](#20) ---> tool, bulk mode, convert bam to ctss bed
+* [**scafe.download.resources.genome**](#21) ---> download, reference genome to resources dir
+* [**scafe.download.demo.input**](#22) ---> download, demo input data for testing
+* [**scafe.demo.test.run**](#23) ---> demo, run demo data for testing
+* [**scafe.check.dependencies**](#24) ---> check dependencies
 
 
-### workflow.sc.subsample [[top]](#0)<a name="1"></a>
+### scafe.workflow.sc.subsample [[top]](#0)<a name="1"></a>
    This workflow subsamples a ctss file, defines tCRE and generate a tCRE UMI/cellbarcode count matrix
    Subsampling is useful to investigate the effect of sequencing depth to tCRE definition
 
 ```
  Usage:
-   workflow.sc.subsample [options] --UMI_CB_ctss_bed_path --run_cellbarcode_path --subsample_num --genome --run_tag --run_outDir
+   scafe.workflow.sc.subsample [options] --UMI_CB_ctss_bed_path --run_cellbarcode_path --subsample_num --genome --run_tag --run_outDir
    
    --UMI_CB_ctss_bed_path <required> [string]  ctss file for subsampling, one line one cellbarcode-UMI combination,
-                                               *UMI_CB.ctss.bed.gz from tool.sc.bam_to_ctss.pl, 
+                                               *UMI_CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
                                                4th column cellbarcode-UMI and 5th column is number of unencoded-G
    --run_cellbarcode_path <required> [string]  tsv file contains a list of cell barcodes,
                                                barcodes.tsv.gz from cellranger
@@ -67,7 +67,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    paraclu-cut.sh
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/workflow.sc.subsample \
+   scafe.workflow.sc.subsample \
    --overwrite=yes \
    --UMI_CB_ctss_bed_path=./demo/input/sc.subsample/demo.UMI_CB.ctss.bed.gz \
    --run_cellbarcode_path=./demo/input/sc.subsample/demo.barcodes.tsv.gz \
@@ -77,12 +77,12 @@ This folder contains the following tools and workflows. A tool perform a single 
    --run_outDir=./demo/output/sc.subsample/
 ```
 
-### workflow.sc.solo [[top]](#0)<a name="2"></a>
+### scafe.workflow.sc.solo [[top]](#0)<a name="2"></a>
    This workflow process a single sample, from a cellranger bam file to tCRE UMI/cellbarcode count matrix
 
 ```
  Usage:
-   workflow.sc.solo [options] --run_bam_path --run_cellbarcode_path --genome --run_tag --run_outDir
+   scafe.workflow.sc.solo [options] --run_bam_path --run_cellbarcode_path --genome --run_tag --run_outDir
    
    --run_bam_path         <required> [string]  bam file from cellranger, can be read 1 only or pair-end
    --run_cellbarcode_path <required> [string]  tsv file contains a list of cell barcodes,
@@ -113,7 +113,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    paraclu-cut.sh
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/workflow.sc.solo \
+   scafe.workflow.sc.solo \
    --overwrite=yes \
    --run_bam_path=./demo/input/sc.solo/demo.cellranger.bam \
    --run_cellbarcode_path=./demo/input/sc.solo/demo.barcodes.tsv.gz \
@@ -122,19 +122,19 @@ This folder contains the following tools and workflows. A tool perform a single 
    --run_outDir=./demo/output/sc.solo/
 ```
 
-### workflow.sc.pool [[top]](#0)<a name="3"></a>
+### scafe.workflow.sc.pool [[top]](#0)<a name="3"></a>
    This workflow process a single sample, from a cellranger bam file to tCRE UMI/cellbarcode count matrix
 
 ```
  Usage:
-   workflow.sc.pool [options] --lib_list_path --genome --run_tag --run_outDir
+   scafe.workflow.sc.pool [options] --lib_list_path --genome --run_tag --run_outDir
    
    --lib_list_path        <required> [string] a list of libraries, in formation of 
                                               <lib_ID><\t><suffix><\t><UMI_CB_ctss_bed><\t><cellbarcode><\t><CB_ctss_bed>
                                               lib_ID = Unique ID of the cellbarcode
                                               suffix = an unique integer to be used as for suffix of cellbarcode
-                                              UMI_CB_ctss_bed = *UMI_CB.ctss.bed.gz from tool.sc.bam_to_ctss.pl, 
-                                              CB_ctss_bed = *CB.ctss.bed.gz from tool.sc.bam_to_ctss.pl, 
+                                              UMI_CB_ctss_bed = *UMI_CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
+                                              CB_ctss_bed = *CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
    --genome               <required> [string] name of genome reference, e.g. hg19.gencode_v32lift37
    --run_tag              <required> [string] prefix for the output files
    --run_outDir           <required> [string] directory for the output files
@@ -161,7 +161,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    paraclu-cut.sh
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/workflow.sc.pool \
+   scafe.workflow.sc.pool \
    --overwrite=yes \
    --lib_list_path=./demo/input/sc.pool/lib_list_path.txt \
    --genome=hg19.gencode_v32lift37 \
@@ -169,16 +169,16 @@ This folder contains the following tools and workflows. A tool perform a single 
    --run_outDir=./demo/output/sc.pool/
 ```
 
-### workflow.bk.subsample [[top]](#0)<a name="4"></a>
+### scafe.workflow.bk.subsample [[top]](#0)<a name="4"></a>
    This workflow subsamples a ctss file, defines tCRE and generate tCRE read count
    Subsampling is useful to investigate the effect of sequencing depth to tCRE definition
 
 ```
  Usage:
-   workflow.bk.subsample [options] --long_ctss_bed_path --subsample_num --genome --run_tag --run_outDir
+   scafe.workflow.bk.subsample [options] --long_ctss_bed_path --subsample_num --genome --run_tag --run_outDir
    
    --long_ctss_bed_path    <required> [string] ctss file for subsampling, one line one read
-                                               *long.ctss.bed.gz from tool.bk.bam_to_ctss.pl, 
+                                               *long.ctss.bed.gz from scafe.tool.bk.bam_to_ctss.pl, 
    --subsample_num        <required> [integer] number of UMI to be subsampled
    --genome               <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
    --run_tag              <required> [string]  prefix for the output files
@@ -206,7 +206,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    paraclu-cut.sh
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/workflow.bk.subsample \
+   scafe.workflow.bk.subsample \
    --overwrite=yes \
    --long_ctss_bed_path=./demo/input/bk.subsample/demo.long.ctss.bed.gz \
    --subsample_num=100000 \
@@ -215,12 +215,12 @@ This folder contains the following tools and workflows. A tool perform a single 
    --run_outDir=./demo/output/bk.subsample/
 ```
 
-### workflow.bk.solo [[top]](#0)<a name="5"></a>
+### scafe.workflow.bk.solo [[top]](#0)<a name="5"></a>
    This workflow process a single sample, from a bulk CAGE bam file to read count per tCRE 
 
 ```
  Usage:
-   workflow.bk.solo [options] --run_bam_path --genome --run_tag --run_outDir
+   scafe.workflow.bk.solo [options] --run_bam_path --genome --run_tag --run_outDir
    
    --run_bam_path         <required> [string]  bam file (of CAGE reads), can be read 1 only or pair-end
    --genome               <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
@@ -249,7 +249,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    paraclu-cut.sh
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/workflow.bk.solo \
+   scafe.workflow.bk.solo \
    --overwrite=yes \
    --run_bam_path=./demo/input/bk.solo/demo.CAGE.bam \
    --genome=hg19.gencode_v32lift37 \
@@ -257,18 +257,18 @@ This folder contains the following tools and workflows. A tool perform a single 
    --run_outDir=./demo/output/bk.solo/
 ```
 
-### workflow.bk.pool [[top]](#0)<a name="6"></a>
+### scafe.workflow.bk.pool [[top]](#0)<a name="6"></a>
    This workflow process a single sample, from a bulk CAGE bam file to read count per tCRE per sample
 
 ```
  Usage:
-   workflow.bk.pool [options] --lib_list_path --genome --run_tag --run_outDir
+   scafe.workflow.bk.pool [options] --lib_list_path --genome --run_tag --run_outDir
    
    --lib_list_path         <required> [string] a list of libraries, in formation of 
                                                <lib_ID><\t><long_ctss_bed><\t><collapse_ctss_bed>
                                                lib_ID = Unique ID of the cellbarcode
-                                               long_ctss_bed = *long.ctss.bed.gz from tool.bk.bam_to_ctss.pl, 
-                                               collapse_ctss_bed = *collapse.ctss.bed.gz from tool.bk.bam_to_ctss.pl, 
+                                               long_ctss_bed = *long.ctss.bed.gz from scafe.tool.bk.bam_to_ctss.pl, 
+                                               collapse_ctss_bed = *collapse.ctss.bed.gz from scafe.tool.bk.bam_to_ctss.pl, 
    --genome                <required> [string] name of genome reference, e.g. hg19.gencode_v32lift37
    --run_tag               <required> [string] prefix for the output files
    --run_outDir            <required> [string] directory for the output files
@@ -295,7 +295,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    paraclu-cut.sh
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/workflow.bk.pool \
+   scafe.workflow.bk.pool \
    --overwrite=yes \
    --lib_list_path=./demo/input/bk.pool/lib_list_path.txt \
    --genome=hg19.gencode_v32lift37 \
@@ -303,15 +303,15 @@ This folder contains the following tools and workflows. A tool perform a single 
    --run_outDir=./demo/output/bk.pool/
 ```
 
-### tool.sc.subsample\_ctss [[top]](#0)<a name="7"></a>
+### scafe.tool.sc.subsample\_ctss [[top]](#0)<a name="7"></a>
    This tool subsample a ctss bed file and maintains the cellbarcode and UMI information
 
 ```
  Usage:
-   tool.sc.subsample_ctss [options] --UMI_CB_ctss_bed_path --subsample_num --outputPrefix --outDir
+   scafe.tool.sc.subsample_ctss [options] --UMI_CB_ctss_bed_path --subsample_num --outputPrefix --outDir
    
    --UMI_CB_ctss_bed_path <required> [string]  ctss file for subsampling, one line one cellbarcode-UMI combination,
-                                               *UMI_CB.ctss.bed.gz from tool.sc.bam_to_ctss.pl, 
+                                               *UMI_CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
                                                4th column cellbarcode-UMI and 5th column is number of unencoded-G
    --subsample_num        <required> [integer] number of UMI to be subsampled
    --outputPrefix         <required> [string]  prefix for the output files
@@ -322,7 +322,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    bedtools
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/tool.sc.subsample_ctss \
+   scafe.tool.sc.subsample_ctss \
    --overwrite=yes \
    --UMI_CB_ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.UMI_CB.ctss.bed.gz \
    --subsample_num=100000 \
@@ -330,19 +330,19 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.subsample/subsample_ctss/
 ```
 
-### tool.sc.pool [[top]](#0)<a name="8"></a>
+### scafe.tool.sc.pool [[top]](#0)<a name="8"></a>
    This tool pool multiple ctss bed file and maintains the unique (suffixed) cellbarcode and UMI information
 
 ```
  Usage:
-   tool.sc.pool [options] --lib_list_path --genome --outputPrefix --outDir
+   scafe.tool.sc.pool [options] --lib_list_path --genome --outputPrefix --outDir
    
    --lib_list_path <required> [string]  a list of libraries, in formation of 
                                         <lib_ID><\t><suffix><\t><UMI_CB_ctss_bed><\t><cellbarcode><\t><CB_ctss_bed>
                                         lib_ID = Unique ID of the cellbarcode
                                         suffix = an unique integer to be used as for suffix of cellbarcode
-                                        UMI_CB_ctss_bed = *UMI_CB.ctss.bed.gz from tool.sc.bam_to_ctss.pl, 
-                                        CB_ctss_bed = *CB.ctss.bed.gz from tool.sc.bam_to_ctss.pl, 
+                                        UMI_CB_ctss_bed = *UMI_CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
+                                        CB_ctss_bed = *CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
    --genome        <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
    --outputPrefix  <required> [string]  prefix for the output files
    --outDir        <required> [string]  directory for the output files
@@ -354,7 +354,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    bedtools
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/tool.sc.pool \
+   scafe.tool.sc.pool \
    --overwrite=yes \
    --lib_list_path=./demo/input/sc.pool/lib_list_path.txt \
    --genome=hg19.gencode_v32lift37 \
@@ -362,19 +362,19 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.pool/pool/
 ```
 
-### tool.sc.count [[top]](#0)<a name="9"></a>
+### scafe.tool.sc.count [[top]](#0)<a name="9"></a>
    This tool counts the UMI within a set of user-defined regions, e.g. tCRE, and returns a UMI/cellbarcode matrix
 
 ```
  Usage:
-   tool.sc.count [options] --countRegion_bed_path --cellBarcode_list_path --ctss_bed_path --outputPrefix --outDir
+   scafe.tool.sc.count [options] --countRegion_bed_path --cellBarcode_list_path --ctss_bed_path --outputPrefix --outDir
    
    --countRegion_bed_path   <required> [string] bed file contains the regions for counting CTSS, e.g. tCRE ranges, 
-                                                *.CRE.coord.bed.gz from tool.cm.annotate.pl
+                                                *.CRE.coord.bed.gz from scafe.tool.cm.annotate.pl
    --cellBarcode_list_path  <required> [string] tsv file contains a list of cell barcodes,
                                                 barcodes.tsv.gz from cellranger
    --ctss_bed_path          <required> [string] ctss file for counting,
-                                                *CB.ctss.bed.gz from tool.sc.bam_to_ctss.pl, 
+                                                *CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
                                                 4th column cellbarcode and 5th column is number UMI
    --outputPrefix           <required> [string] prefix for the output files
    --outDir                 <required> [string] directory for the output files
@@ -384,7 +384,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    bedtools
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/tool.sc.count \
+   scafe.tool.sc.count \
    --overwrite=yes \
    --countRegion_bed_path=./demo/output/sc.solo/annotate/demo/bed/demo.CRE.annot.bed.gz \
    --cellBarcode_list_path=./demo/input/sc.solo/demo.barcodes.tsv.gz \
@@ -393,13 +393,13 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/count/
 ```
 
-### tool.sc.bam\_to\_ctss [[top]](#0)<a name="10"></a>
+### scafe.tool.sc.bam\_to\_ctss [[top]](#0)<a name="10"></a>
    This tool converts a bam file to a ctss bed file, identifies read 5'end (capped TSS, i.e. ctss),
    extracts the unencoded G information, pileup ctss, and deduplicate the UMI
 
 ```
  Usage:
-   tool.sc.bam_to_ctss [options] --bamPath --genome --outputPrefix --outDir
+   scafe.tool.sc.bam_to_ctss [options] --bamPath --genome --outputPrefix --outDir
    
    --bamPath      <required> [string]  bam file from cellranger, can be read 1 only or pair-end
    --genome       <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
@@ -422,7 +422,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    samtools
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/tool.sc.bam_to_ctss \
+   scafe.tool.sc.bam_to_ctss \
    --overwrite=yes \
    --bamPath=./demo/input/sc.solo/demo.cellranger.bam \
    --genome=hg19.gencode_v32lift37 \
@@ -430,15 +430,15 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/bam_to_ctss/
 ```
 
-### tool.cm.remove\_strand\_invader [[top]](#0)<a name="11"></a>
+### scafe.tool.cm.remove\_strand\_invader [[top]](#0)<a name="11"></a>
    This tool identify and remove strand invader artefact from a ctss bed file, 
    by aligning the sequence immediate upstream of a ctss to TS oligo sequence
 
 ```
  Usage:
-   tool.cm.remove_strand_invader [options] --ctss_bed_path --genome --outputPrefix --outDir
+   scafe.tool.cm.remove_strand_invader [options] --ctss_bed_path --genome --outputPrefix --outDir
    
-   --ctss_bed_path      <required> [string]  "collapse" ctss file from tool.sc.bam_to_ctss.pl, 
+   --ctss_bed_path      <required> [string]  "collapse" ctss file from scafe.tool.sc.bam_to_ctss.pl, 
                                              4th column is number of cells and 5th column is number UMI
    --genome             <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
    --outputPrefix       <required> [string]  prefix for the output files
@@ -459,7 +459,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    bedtools
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/tool.cm.remove_strand_invader \
+   scafe.tool.cm.remove_strand_invader \
    --overwrite=yes \
    --ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.collapse.ctss.bed.gz \
    --genome=hg19.gencode_v32lift37 \
@@ -467,12 +467,12 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/remove_strand_invader/
 ```
 
-### tool.cm.prep\_genome [[top]](#0)<a name="12"></a>
+### scafe.tool.cm.prep\_genome [[top]](#0)<a name="12"></a>
    This tool prepares a reference genome assembly and its gene models for others tools in scafe.
 
 ```
  Usage:
-   tool.cm.prep_genome [options] --gtf_path --fasta_path --chrom_list_path --mask_bed_path --outputPrefix --outDir
+   scafe.tool.cm.prep_genome [options] --gtf_path --fasta_path --chrom_list_path --mask_bed_path --outputPrefix --outDir
    
    --gtf_path         <required> [string] gtf of the gene models
    --fasta_path       <required> [string] fasta of the genome assembly
@@ -495,7 +495,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    samtools
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/tool.cm.prep_genome \
+   scafe.tool.cm.prep_genome \
    --overwrite=yes \
    --gtf_path=./demo/input/genome/TAIR10.AtRTDv2.gtf.gz \
    --fasta_path=./demo/input/genome/TAIR10.genome.fa.gz \
@@ -505,20 +505,20 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/genome/
 ```
 
-### tool.cm.filter [[top]](#0)<a name="13"></a>
+### scafe.tool.cm.filter [[top]](#0)<a name="13"></a>
 
 ```
  Usage:
-   tool.cm.filter [options] --ctss_bed_path --ung_ctss_bed_path --tssCluster_bed_path --genome --outputPrefix --outDir
+   scafe.tool.cm.filter [options] --ctss_bed_path --ung_ctss_bed_path --tssCluster_bed_path --genome --outputPrefix --outDir
    
    --ctss_bed_path           <required> [string]  ctss file contains all ctss,
-                                                  *.collapse.ctss.bed.gz from tool.sc.bam_to_ctss.pl, 
+                                                  *.collapse.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
                                                   5th column is number reads/UMI
    --ung_ctss_bed_path       <required> [string]  ctss file contains only ctss with unencoded G,
-                                                  *.unencoded_G.collapse.ctss.bed.gz from tool.sc.bam_to_ctss.pl, 
+                                                  *.unencoded_G.collapse.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
                                                   5th column is number reads/UMI
    --tssCluster_bed_path     <required> [string]  bed file contains all TSS clusters,
-                                                  *.tssCluster.bed.gz from tool.cm.cluster.pl
+                                                  *.tssCluster.bed.gz from scafe.tool.cm.cluster.pl
    --genome                  <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
    --outputPrefix            <required> [string]  prefix for the output files
    --outDir                  <required> [string]  directory for the output files
@@ -556,7 +556,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    bigWigAverageOverBed
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/tool.cm.filter \
+   scafe.tool.cm.filter \
    --overwrite=yes \
    --ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.collapse.ctss.bed.gz \
    --ung_ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.unencoded_G.collapse.ctss.bed.gz \
@@ -568,14 +568,14 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/filter/
 ```
 
-### tool.cm.ctss\_to\_bigwig [[top]](#0)<a name="14"></a>
+### scafe.tool.cm.ctss\_to\_bigwig [[top]](#0)<a name="14"></a>
    This tool converts a ctss bed file into two bigwig file, one for each strand, for visualization purpose 
 
 ```
  Usage:
-   tool.cm.ctss_to_bigwig [options] --ctss_bed_path --genome --outputPrefix --outDir
+   scafe.tool.cm.ctss_to_bigwig [options] --ctss_bed_path --genome --outputPrefix --outDir
    
-   --ctss_bed_path  <required> [string] "collapse" ctss file from tool.sc.bam_to_ctss.pl
+   --ctss_bed_path  <required> [string] "collapse" ctss file from scafe.tool.sc.bam_to_ctss.pl
    --genome         <required> [string] name of genome reference, e.g. hg19.gencode_v32lift37
    --outputPrefix   <required> [string] prefix for the output files
    --outDir         <required> [string] directory for the output files
@@ -585,22 +585,22 @@ This folder contains the following tools and workflows. A tool perform a single 
    bedGraphToBigWig
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/tool.cm.ctss_to_bigwig \
+   scafe.tool.cm.ctss_to_bigwig \
    --ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.collapse.ctss.bed.gz \
    --genome=hg19.gencode_v32lift37 \
    --outputPrefix=demo \
    --outDir=./demo/output/sc.solo/ctss_to_bigwig/
 ```
 
-### tool.cm.cluster [[top]](#0)<a name="15"></a>
+### scafe.tool.cm.cluster [[top]](#0)<a name="15"></a>
    This tool generate TSS cluster from a ctss bed file, using an external tool paraclu with user-defined cutoffs
 
 ```
  Usage:
-   tool.cm.cluster [options] --cluster_ctss_bed_path --outputPrefix --outDir
+   scafe.tool.cm.cluster [options] --cluster_ctss_bed_path --outputPrefix --outDir
    
    --cluster_ctss_bed_path       <required> [string]  ctss file used for clustering,
-                                                      "collapse" ctss file from tool.sc.bam_to_ctss.pl, 
+                                                      "collapse" ctss file from scafe.tool.sc.bam_to_ctss.pl, 
                                                       4th column is number of cells and 5th column is number UMI
    --outputPrefix                <required> [string]  prefix for the output files
    --outDir                      <required> [string]  directory for the output files
@@ -629,24 +629,24 @@ This folder contains the following tools and workflows. A tool perform a single 
    bedtools
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/tool.cm.cluster \
+   scafe.tool.cm.cluster \
    --overwrite=yes \
    --cluster_ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.collapse.ctss.bed.gz \
    --outputPrefix=demo \
    --outDir=./demo/output/sc.solo/cluster/
 ```
 
-### tool.cm.annotate [[top]](#0)<a name="16"></a>
+### scafe.tool.cm.annotate [[top]](#0)<a name="16"></a>
    This tool defines tCRE from TSS clusters and annotates them based their overlap with gene models.
 
 ```
  Usage:
-   tool.cm.annotate [options] --tssCluster_bed_path --tssCluster_info_path --genome --outputPrefix --outDir
+   scafe.tool.cm.annotate [options] --tssCluster_bed_path --tssCluster_info_path --genome --outputPrefix --outDir
    
    --tssCluster_bed_path     <required> [string]  bed file contains the ranges of filtered TSS clusters,
-                                                  *.tssCluster.*.filtered.bed.gz from tool.cm.filter.pl
+                                                  *.tssCluster.*.filtered.bed.gz from scafe.tool.cm.filter.pl
    --tssCluster_info_path    <required> [string]  tsv file contains the information of all TSS clusters,
-                                                  *.tssCluster.log.tsv from tool.cm.filter.pl
+                                                  *.tssCluster.log.tsv from scafe.tool.cm.filter.pl
    --genome                  <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
    --outputPrefix            <required> [string]  prefix for the output files
    --outDir                  <required> [string]  directory for the output files
@@ -695,7 +695,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    bedtools
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/tool.cm.annotate \
+   scafe.tool.cm.annotate \
    --overwrite=yes \
    --tssCluster_bed_path=./demo/output/sc.solo/filter/demo/bed/demo.tssCluster.default.filtered.bed.gz \
    --tssCluster_info_path=./demo/output/sc.solo/filter/demo/log/demo.tssCluster.log.tsv \
@@ -704,15 +704,15 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/annotate/
 ```
 
-### tool.bk.subsample\_ctss [[top]](#0)<a name="17"></a>
+### scafe.tool.bk.subsample\_ctss [[top]](#0)<a name="17"></a>
    This tool subsample a ctss bed file from bulk CAGE ctss
 
 ```
  Usage:
-   tool.bk.subsample_ctss [options] --UMI_CB_ctss_bed_path --subsample_num --outputPrefix --outDir
+   scafe.tool.bk.subsample_ctss [options] --UMI_CB_ctss_bed_path --subsample_num --outputPrefix --outDir
    
    --long_ctss_bed_path <required> [string]  ctss file for subsampling, one line read in "long" format,
-                                             *long.ctss.bed.gz from tool.bk.bam_to_ctss.pl, 
+                                             *long.ctss.bed.gz from scafe.tool.bk.bam_to_ctss.pl, 
    --subsample_num      <required> [integer] number of UMI to be subsampled
    --outputPrefix       <required> [string]  prefix for the output files
    --outDir             <required> [string]  directory for the output files
@@ -722,7 +722,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    bedtools
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/tool.bk.subsample_ctss \
+   scafe.tool.bk.subsample_ctss \
    --overwrite=yes \
    --long_ctss_bed_path=./demo/output/bk.solo/bam_to_ctss/demo/bed/demo.long.ctss.bed.gz \
    --subsample_num=100000 \
@@ -730,18 +730,18 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/bk.subsample/subsample_ctss/
 ```
 
-### tool.bk.pool [[top]](#0)<a name="18"></a>
+### scafe.tool.bk.pool [[top]](#0)<a name="18"></a>
    This tool pools multiple bulk CAGE ctss bed file
 
 ```
  Usage:
-   tool.bk.pool [options] --lib_list_path --genome --outputPrefix --outDir
+   scafe.tool.bk.pool [options] --lib_list_path --genome --outputPrefix --outDir
    
    --lib_list_path <required> [string]  a list of libraries, in formation of 
                                         <lib_ID><\t><long_ctss_bed><\t><collapse_ctss_bed>
                                         lib_ID = Unique ID of the cellbarcode
-                                        long_ctss_bed = *long.ctss.bed.gz from tool.bk.bam_to_ctss.pl, 
-                                        collapse_ctss_bed = *collapse.ctss.bed.gz from tool.bk.bam_to_ctss.pl, 
+                                        long_ctss_bed = *long.ctss.bed.gz from scafe.tool.bk.bam_to_ctss.pl, 
+                                        collapse_ctss_bed = *collapse.ctss.bed.gz from scafe.tool.bk.bam_to_ctss.pl, 
    --genome        <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
    --outputPrefix  <required> [string]  prefix for the output files
    --outDir        <required> [string]  directory for the output files
@@ -753,7 +753,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    bedtools
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/tool.bk.pool \
+   scafe.tool.bk.pool \
    --overwrite=yes \
    --lib_list_path=./demo/input/bk.pool/lib_list_path.txt \
    --genome=hg19.gencode_v32lift37 \
@@ -761,18 +761,18 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/bk.pool/pool/
 ```
 
-### tool.bk.count [[top]](#0)<a name="19"></a>
+### scafe.tool.bk.count [[top]](#0)<a name="19"></a>
    This tool counts the CAGE reads within a set of user-defined regions, e.g. tCRE, and 
    returns the reads per regions
 
 ```
  Usage:
-   tool.bk.count [options] --countRegion_bed_path --ctss_bed_path --outputPrefix --outDir
+   scafe.tool.bk.count [options] --countRegion_bed_path --ctss_bed_path --outputPrefix --outDir
    
    --countRegion_bed_path   <required> [string] bed file contains the regions for counting CTSS, e.g. tCRE ranges, 
-                                                *.CRE.coord.bed.gz from tool.cm.annotate.pl
+                                                *.CRE.coord.bed.gz from scafe.tool.cm.annotate.pl
    --ctss_bed_path          <required> [string] ctss file for counting,
-                                                *CB.ctss.bed.gz from tool.sc.bam_to_ctss.pl, 
+                                                *CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
                                                 4th column cellbarcode and 5th column is number UMI
    --outputPrefix           <required> [string] prefix for the output files
    --outDir                 <required> [string] directory for the output files
@@ -782,7 +782,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    bedtools
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/tool.bk.count \
+   scafe.tool.bk.count \
    --overwrite=yes \
    --countRegion_bed_path=./demo/output/bk.solo/annotate/demo/bed/demo.CRE.annot.bed.gz \
    --ctss_bed_path=./demo/output/bk.solo/bam_to_ctss/demo/bed/demo.collapse.ctss.bed.gz \
@@ -790,14 +790,14 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/bk.solo/count/
 ```
 
-### tool.bk.bam\_to\_ctss [[top]](#0)<a name="20"></a>
+### scafe.tool.bk.bam\_to\_ctss [[top]](#0)<a name="20"></a>
    This tool converts a bulk CAGE bam file to a ctss bed file, identifies read 5'end 
    (capped TSS, i.e. ctss), extracts the unencoded G information, pileup ctss, 
    and deduplicate the UMI
 
 ```
  Usage:
-   tool.bk.bam_to_ctss [options] --bamPath --genome --outputPrefix --outDir
+   scafe.tool.bk.bam_to_ctss [options] --bamPath --genome --outputPrefix --outDir
    
    --bamPath      <required> [string]  bam file (of CAGE reads), can be read 1 only or pair-end
    --genome       <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
@@ -818,7 +818,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    samtools
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/tool.bk.bam_to_ctss \
+   scafe.tool.bk.bam_to_ctss \
    --overwrite=yes \
    --bamPath=./demo/input/bk.solo/demo.CAGE.bam \
    --genome=hg19.gencode_v32lift37 \
@@ -826,7 +826,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/bk.solo/bam_to_ctss/
 ```
 
-### download.resources.genome [[top]](#0)<a name="21"></a>
+### scafe.download.resources.genome [[top]](#0)<a name="21"></a>
    This script download reference genome data and save in ./resources/genome.
 
 ```
@@ -844,11 +844,11 @@ This folder contains the following tools and workflows. A tool perform a single 
    tar
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/download.resources.genome \
+   scafe.download.resources.genome \
    --genome=hg19.gencode_v32lift37
 ```
 
-### download.demo.input [[top]](#0)<a name="22"></a>
+### scafe.download.demo.input [[top]](#0)<a name="22"></a>
    This scripts download demo data and save in ./demo/input dir.
 
 ```
@@ -860,10 +860,10 @@ This folder contains the following tools and workflows. A tool perform a single 
    tar
 
  To demo run, cd to SCAFE dir and run:
-   ./script/download.demo.input
+   scafe.download.demo.input
 ```
 
-### demo.test.run [[top]](#0)<a name="23"></a>
+### scafe.demo.test.run [[top]](#0)<a name="23"></a>
    This scripts test run for demo data in the ./demo/input dir. It runs user-selected workflows.
    Demo input data must be downloaded from using ./script/download.demo.input
    Genome reference hg19.gencode_v32lift37 must be downloaded using ./scripts/download.resources.genome
@@ -876,12 +876,12 @@ This folder contains the following tools and workflows. A tool perform a single 
    --workflow             (optional) [string]  comma delimited list of workflows, 
                                                or use 'all' to run all workflows.
                                                Available workflows includes,
-                                               workflow.sc.subsample ---> workflow, single-cell mode, subsample ctss
-                                               workflow.sc.solo ---> workflow, single-cell mode, process a single sample
-                                               workflow.sc.pool ---> workflow, single-cell mode, pool ctss of multiple samples
-                                               workflow.bk.subsample ---> workflow, bulk mode, subsample ctss
-                                               workflow.bk.solo ---> workflow, bulk mode, process a single sample
-                                               workflow.bk.pool ---> workflow, bulk mode, process a single sample
+                                               scafe.workflow.sc.subsample ---> workflow, single-cell mode, subsample ctss
+                                               scafe.workflow.sc.solo ---> workflow, single-cell mode, process a single sample
+                                               scafe.workflow.sc.pool ---> workflow, single-cell mode, pool ctss of multiple samples
+                                               scafe.workflow.bk.subsample ---> workflow, bulk mode, subsample ctss
+                                               scafe.workflow.bk.solo ---> workflow, bulk mode, process a single sample
+                                               scafe.workflow.bk.pool ---> workflow, bulk mode, process a single sample
                                                (default=all)
    --overwrite            (optional) [yes/no]  erase run_outDir before running (default=no)
 
@@ -895,12 +895,12 @@ This folder contains the following tools and workflows. A tool perform a single 
    paraclu-cut.sh
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/demo.test.run \
+   scafe.demo.test.run \
    --overwrite=yes \
    --run_outDir=./demo/output/
 ```
 
-### check.dependencies [[top]](#0)<a name="24"></a>
+### scafe.check.dependencies [[top]](#0)<a name="24"></a>
    This scripts check the integrity of tools and workflow scripts, 3rd executable dependencies and R packages.
 
 ```
@@ -913,5 +913,5 @@ This folder contains the following tools and workflows. A tool perform a single 
    Rscript
 
  To demo run, cd to SCAFE dir and run:
-   ./script/check.dependencies
+   scafe.check.dependencies
 ```

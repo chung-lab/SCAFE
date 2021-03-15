@@ -86,7 +86,7 @@ use Cwd 'abs_path';
    Rscript
 
  For demo, cd to SCAFE dir and run,
-   ./script/check.dependencies
+   scafe.check.dependencies
 
 =head1 VERSION
 

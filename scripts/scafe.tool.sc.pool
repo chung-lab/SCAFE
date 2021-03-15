@@ -78,21 +78,21 @@ use AutoLoader qw/AUTOLOAD/;
  ...===┴========================================================================================...
 
                       Single Cell Analysis of Five-prime End (SCAFE) Tool Suite 
-                                  ---> tool.sc.pool <---
+                                  ---> scafe.tool.sc.pool <---
                 <--- tool, single-cell mode, pool ctss of multiple samples --->
 
  Description:
    This tool pool multiple ctss bed file and maintains the unique (suffixed) cellbarcode and UMI information
 
  Usage:
-   tool.sc.pool [options] --lib_list_path --genome --outputPrefix --outDir
+   scafe.tool.sc.pool [options] --lib_list_path --genome --outputPrefix --outDir
    
    --lib_list_path <required> [string]  a list of libraries, in formation of 
                                         <lib_ID><\t><suffix><\t><UMI_CB_ctss_bed><\t><cellbarcode><\t><CB_ctss_bed>
                                         lib_ID = Unique ID of the cellbarcode
                                         suffix = an unique integer to be used as for suffix of cellbarcode
-                                        UMI_CB_ctss_bed = *UMI_CB.ctss.bed.gz from tool.sc.bam_to_ctss.pl, 
-                                        CB_ctss_bed = *CB.ctss.bed.gz from tool.sc.bam_to_ctss.pl, 
+                                        UMI_CB_ctss_bed = *UMI_CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
+                                        CB_ctss_bed = *CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
    --genome        <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
    --outputPrefix  <required> [string]  prefix for the output files
    --outDir        <required> [string]  directory for the output files
@@ -104,7 +104,7 @@ use AutoLoader qw/AUTOLOAD/;
    bedtools
 
  For demo, cd to SCAFE dir and run,
-   ./scripts/tool.sc.pool \
+   scafe.tool.sc.pool \
    --overwrite=yes \
    --lib_list_path=./demo/input/sc.pool/lib_list_path.txt \
    --genome=hg19.gencode_v32lift37 \

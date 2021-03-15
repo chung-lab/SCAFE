@@ -54,9 +54,7 @@ use File::Basename;
 use File::Spec::Functions qw(rel2abs abs2rel);
 use Time::HiRes qw( time );
 use Getopt::Long 'HelpMessage';
-use threads ('stack_size' => 64*4096);
-use threads::shared;
-use List::Util qw (sum shuffle min max);
+use threads;
 use Cwd 'abs_path';
 #<\use>
 #====================================================================================================================================================#
@@ -77,39 +75,36 @@ use Cwd 'abs_path';
  ...===┴========================================================================================...
 
                       Single Cell Analysis of Five-prime End (SCAFE) Tool Suite 
-                               ---> tool.sc.subsample_ctss <---
-                      <--- tool, single-cell mode, subsample ctss --->
+                                ---> scafe.tool.cm.ctss_to_bigwig <---
+                      <--- tool, common mode, convert ctss to bigwig --->
 
  Description:
-   This tool subsample a ctss bed file and maintains the cellbarcode and UMI information
+   This tool converts a ctss bed file into two bigwig file, one for each strand, for visualization purpose 
 
  Usage:
-   tool.sc.subsample_ctss [options] --UMI_CB_ctss_bed_path --subsample_num --outputPrefix --outDir
+   scafe.tool.cm.ctss_to_bigwig [options] --ctss_bed_path --genome --outputPrefix --outDir
    
-   --UMI_CB_ctss_bed_path <required> [string]  ctss file for subsampling, one line one cellbarcode-UMI combination,
-                                               *UMI_CB.ctss.bed.gz from tool.sc.bam_to_ctss.pl, 
-                                               4th column cellbarcode-UMI and 5th column is number of unencoded-G
-   --subsample_num        <required> [integer] number of UMI to be subsampled
-   --outputPrefix         <required> [string]  prefix for the output files
-   --outDir               <required> [string]  directory for the output files
-   --overwrite            (optional) [yes/no]  erase outDir/outputPrefix before running (default=no)
+   --ctss_bed_path  <required> [string] "collapse" ctss file from scafe.tool.sc.bam_to_ctss.pl
+   --genome         <required> [string] name of genome reference, e.g. hg19.gencode_v32lift37
+   --outputPrefix   <required> [string] prefix for the output files
+   --outDir         <required> [string] directory for the output files
+   --overwrite      (optional) [yes/no] erase outDir/outputPrefix before running (default=no)
 
  Dependencies:
-   bedtools
+   bedGraphToBigWig
 
  For demo, cd to SCAFE dir and run,
-   ./scripts/tool.sc.subsample_ctss \
-   --overwrite=yes \
-   --UMI_CB_ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.UMI_CB.ctss.bed.gz \
-   --subsample_num=100000 \
+   scafe.tool.cm.ctss_to_bigwig \
+   --ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.collapse.ctss.bed.gz \
+   --genome=hg19.gencode_v32lift37 \
    --outputPrefix=demo \
-   --outDir=./demo/output/sc.subsample/subsample_ctss/
+   --outDir=./demo/output/sc.solo/ctss_to_bigwig/
 
 =head1 VERSION
 
 1.0
 
-=cut
+=cut#
 #<\doc>
 #====================================================================================================================================================#
 
@@ -127,8 +122,8 @@ use Cwd 'abs_path';
 #<global>
 my $scriptDirPath = dirname(rel2abs($0));
 my $scriptAbsPath = abs_path($0);
-my ($curntTimeStamp) = &timeStamp();#->642
-my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->210
+my ($curntTimeStamp) = &timeStamp();#->583
+my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->293
 my $globalReadmeHsh_ref = {};
 our $tmplog_fh;
 #<\global>
@@ -142,7 +137,7 @@ our $tmplog_fh;
 #	section 0_startingTasks
 #
 #<section ID="startingTasks" num="0">
-my ($UMI_CB_ctss_bed_path, $subsample_num, $outputPrefix, $outDir, $overwrite) = &readParameters();#->445
+my ($ctss_bed_path, $genome, $outputPrefix, $outDir) = &readParameters();#->521
 #<\section>
 #====================================================================================================================================================#
 
@@ -159,41 +154,38 @@ my $paramTag = "$outputPrefix";
 #
 #<section ID="defineOutDirPath" num="2">
 my @mkDirAry;
-my $result_dir = "$outDir/$paramTag"; push @mkDirAry, $result_dir;
-system "rm -rf $result_dir" if ($overwrite eq 'yes');
+my $result_dir = "$outDir/$paramTag/"; push @mkDirAry, $result_dir;
 my $result_bed_dir = "$result_dir/bed/"; push @mkDirAry, $result_bed_dir;
+my $result_wig_dir = "$result_dir/wig/"; push @mkDirAry, $result_wig_dir;
+my $result_log_dir = "$result_dir/log/"; push @mkDirAry, $result_log_dir;
 my $result_script_dir = "$result_dir/script/"; push @mkDirAry, $result_script_dir;
+#my $resultEdgeRDir = "$result_dir/edgeR/"; push @mkDirAry, $resultEdgeRDir;
 foreach my $dir (@mkDirAry) {system ("mkdir -pm 777 $dir");}
 
 open $tmplog_fh, ">", "$result_dir/00_screen_log.$curntTimeStamp.log.txt";
-&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->271
-&printStartOrFinishMessage("startMessage");#->411
+&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->342
+&printStartOrFinishMessage("startMessage");#->487
 #<\section>
 #====================================================================================================================================================#
 
 #====================================================================================================================================================#
-#	section 3_subsample
+#	section 3_count
 #
-#<section ID="subsample" num="3">
+#<section ID="count" num="3">
 my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
-my ($target_fraction) = &getTargetFraction($UMI_CB_ctss_bed_path, $subsample_num);#->228
-&subsampleCTSS($UMI_CB_ctss_bed_path, $result_bed_dir, $bedtools_bin, $target_fraction, $outputPrefix);#->511
+my ($chrom_size_path) = &checkChromSizePath($genome);#->191
+my ($total_count) = &getTotalCount($ctss_bed_path);#->311
+&convertCTSS($ctss_bed_path, $result_wig_dir, $result_bed_dir, $outputPrefix, $chrom_size_path, $bedGraphToBigWig_bin, $total_count);#->211
+
 #<\section>
 #====================================================================================================================================================#
 
 #====================================================================================================================================================#
-#	section 4_convert
+#	section 4_finishingTasks
 #
-#<section ID="convert" num="4">
-#<\section>
-#====================================================================================================================================================#
-
-#====================================================================================================================================================#
-#	section 5_finishingTasks
-#
-#<section ID="finishingTasks" num="5">
-&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->296
-&printStartOrFinishMessage("finishMessage");#->411
+#<section ID="finishingTasks" num="4">
+&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->367
+&printStartOrFinishMessage("finishMessage");#->487
 #<\section>
 #====================================================================================================================================================#
 
@@ -205,10 +197,10 @@ my ($target_fraction) = &getTargetFraction($UMI_CB_ctss_bed_path, $subsample_num
 #List of subroutines by category
 #
 #	checkTools [n=1]:
-#		checkBedtoolsVersion
+#		checkBedGraphToBigWigVersion
 #
 #	general [n=6]:
-#		checkBedtoolsVersion, currentTime, logCalledCMDAndScript
+#		checkBedGraphToBigWigVersion, currentTime, logCalledCMDAndScript
 #		printStartOrFinishMessage, readParameters, timeStamp
 #
 #	log [n=1]:
@@ -217,11 +209,14 @@ my ($target_fraction) = &getTargetFraction($UMI_CB_ctss_bed_path, $subsample_num
 #	output [n=1]:
 #		printOutputFileListAndReadme
 #
+#	range [n=1]:
+#		convertCTSS
+#
 #	time [n=1]:
 #		timeStamp
 #
 #	unassigned [n=2]:
-#		getTargetFraction, subsampleCTSS
+#		checkChromSizePath, getTotalCount
 #
 #====================================================================================================================================================#
 
@@ -305,17 +300,119 @@ sub checkAllExecutable {
 
 	return ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin);
 }
+sub checkChromSizePath {
+#....................................................................................................................................................#
+#	subroutineCategory: unassigned
+#	dependOnSub: >none
+#	appearInSub: >none
+#	primaryAppearInSection: 3_count|109
+#	secondaryAppearInSection: >none
+#	input: $genome
+#	output: $chrom_size_path
+#	toCall: my ($chrom_size_path) = &checkChromSizePath($genome);
+#	calledInLine: 112
+#....................................................................................................................................................#
+	my ($genome) = @_;
+	
+	my $dirPath = dirname(rel2abs($0));
+	my $chrom_size_path = "$dirPath/../resources/genome/$genome/tsv/chrom.sizes.tsv";
+	die "genome $genome does not have chrom_size_path. Please rerun prep_genome step\n" if not -s $chrom_size_path;
+	
+	return ($chrom_size_path);
+}
+sub convertCTSS {
+#....................................................................................................................................................#
+#	subroutineCategory: range
+#	dependOnSub: reportAndLogStatus|561
+#	appearInSub: >none
+#	primaryAppearInSection: 3_count|109
+#	secondaryAppearInSection: >none
+#	input: $bedGraphToBigWig_bin, $chrom_size_path, $ctss_bed_path, $outputPrefix, $result_bed_dir, $result_wig_dir, $total_count
+#	output: 
+#	toCall: &convertCTSS($ctss_bed_path, $result_wig_dir, $result_bed_dir, $outputPrefix, $chrom_size_path, $bedGraphToBigWig_bin, $total_count);
+#	calledInLine: 115
+#....................................................................................................................................................#
+
+	my ($ctss_bed_path, $result_wig_dir, $result_bed_dir, $outputPrefix, $chrom_size_path, $bedGraphToBigWig_bin, $total_count) = @_;
+	
+	my %strand_mode_hsh = (
+		'fwd.count' => ['fwd', '+', 'count'],
+		'rev.count' => ['rev', '-', 'count'],
+		'fwd.cpm' => ['fwd', '+', 'cpm'],
+		'rev.cpm' => ['rev', '-', 'cpm'],
+	);
+	
+	my %threadHsh =();
+	
+	foreach my $strand_mode (keys %strand_mode_hsh) {
+		my ($fwd_rev, $strand, $mode) = @{$strand_mode_hsh{$strand_mode}};
+		($threadHsh{$strand_mode}) = threads->new(#---refer to http://www.perlmonks.org/?node_id=966781, the 
+	
+			sub {
+				my ($fwd_rev, $strand, $mode) = @_;
+				
+				my $bedGraphPath = "$result_bed_dir/$outputPrefix.$mode.$fwd_rev.bedGraph";
+				my $bigwigPath = "$result_wig_dir/$outputPrefix.$mode.$fwd_rev.bw";
+
+				my @pipeToBedGraphAry = ();
+				if ($ctss_bed_path =~ m/\.gz$/) {
+					push @pipeToBedGraphAry, "gzip -dc $ctss_bed_path | sort -k1,1 -k2,2n |";
+				} else {
+					push @pipeToBedGraphAry, "cat $ctss_bed_path | sort -k1,1 -k2,2n |";
+				}
+				push @pipeToBedGraphAry, "grep \"$strand\" |";
+				push @pipeToBedGraphAry, "cut -f 1,2,3,5 |";
+				
+				&reportAndLogStatus("printing bedgraph for $strand strand in $mode mode", 10, "\n");#->561
+				my $pipeToBedGraphCmd = join " ", @pipeToBedGraphAry;
+				open (OUTBEDGRAPH, ">", $bedGraphPath);
+				open (INBEDGRAPH, $pipeToBedGraphCmd);
+				while (<INBEDGRAPH>) {
+					chomp;
+					my ($chrom, $chromStart, $chromEnd, $count) = split /\t/;
+					my $score = $count;
+					$score = sprintf "%.2e", $count/($total_count/1000000) if $mode eq 'cpm';
+					print OUTBEDGRAPH join "", (join "\t", ($chrom, $chromStart, $chromEnd, $score)), "\n";
+				}
+				close INBEDGRAPH;
+				close OUTBEDGRAPH;
+				
+				&reportAndLogStatus("converting bedgraph to bigwig $strand strand $mode mode", 10, "\n");#->561
+				system ("$bedGraphToBigWig_bin $bedGraphPath $chrom_size_path $bigwigPath;");
+				
+				&reportAndLogStatus("removing bedgraph", 10, "\n");#->561
+				system ("rm -f $bedGraphPath;");
+				
+				return ();
+			}
+			,($fwd_rev, $strand, $mode)
+		);
+	}
+	
+	while (keys %threadHsh) {
+		foreach my $strand (keys %threadHsh) {
+			my $thr = $threadHsh{$strand};
+			if (not $thr->is_running()) {
+				$thr->join;
+				delete $threadHsh{$strand};
+			}
+		}
+		sleep 1;
+	}
+	
+	return ();
+}
 sub currentTime {
 #....................................................................................................................................................#
 #	subroutineCategory: general
 #	dependOnSub: >none
-#	appearInSub: printStartOrFinishMessage|411, reportAndLogStatus|489
+#	appearInSub: printStartOrFinishMessage|487, reportAndLogStatus|561
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 2_defineOutDirPath|108, 5_finishingTasks|142
+#	secondaryAppearInSection: 2_defineOutDirPath|90, 4_finishingTasks|121
 #	input: none
 #	output: $runTime
 #	toCall: my ($runTime) = &currentTime();
-#	calledInLine: 81, 427, 431, 436, 440, 505, 506
+#	calledInLine: 63, 503, 507, 512, 516, 577, 578
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
@@ -323,60 +420,48 @@ sub currentTime {
 	
 	return $runTime;
 }
-sub getTargetFraction {
+sub getTotalCount {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|489
+#	dependOnSub: reportAndLogStatus|561
 #	appearInSub: >none
-#	primaryAppearInSection: 3_subsample|125
+#	primaryAppearInSection: 3_count|109
 #	secondaryAppearInSection: >none
-#	input: $UMI_CB_ctss_bed_path, $subsample_num
-#	output: $target_fraction
-#	toCall: my ($target_fraction) = &getTargetFraction($UMI_CB_ctss_bed_path, $subsample_num);
-#	calledInLine: 129
+#	input: $ctss_bed_path
+#	output: $total_count
+#	toCall: my ($total_count) = &getTotalCount($ctss_bed_path);
+#	calledInLine: 114
 #....................................................................................................................................................#
-	my ($UMI_CB_ctss_bed_path, $subsample_num) = @_;
+	my ($ctss_bed_path) = @_;
 	
-	&reportAndLogStatus("getting total num", 10, "\n");#->489
-	my $total_num = 0;
-	my $ung_num = 0;
-	if ($UMI_CB_ctss_bed_path =~ m/\.gz$/) {
-		open (FILEIN, " gzip -dc $UMI_CB_ctss_bed_path | cut -f 5 |");
+	&reportAndLogStatus("getting total count", 10, "\n");#->561
+	my $total_count = 0;
+	if ($ctss_bed_path =~ m/\.gz$/) {
+		open CTSS, "gzip -dc $ctss_bed_path | cut -f 5 |";
 	} else {
-		open (FILEIN, "cut -f 5 $UMI_CB_ctss_bed_path |");
+		open CTSS, "cut -f 5 $ctss_bed_path |";
 	}
-	while (<FILEIN>) {
-		chomp (my $ung = $_);
-		$total_num++;
-		$ung_num++ if $ung > 0;
+	while (<CTSS>) {
+		chomp;
+		$total_count+=$_;
 	}
-	close FILEIN;
-	
-	my $target_fraction = $subsample_num/$total_num;
-	if ($target_fraction > 1) {
-		$target_fraction = 1;
-		&reportAndLogStatus("subsample_num is greater than total_num", 10, "\n");#->489
-		&reportAndLogStatus("limiting target_fraction to 1", 10, "\n");#->489
-	}
-	
-	&reportAndLogStatus("total_num=$total_num", 10, "\n");#->489
-	&reportAndLogStatus("unencoded_G_num=$ung_num", 10, "\n");#->489
-	&reportAndLogStatus("subsample_num=$subsample_num", 10, "\n");#->489
-	&reportAndLogStatus("target_fraction=$target_fraction", 10, "\n");#->489
+	close CTSS;
 
-	return ($target_fraction);
+	&reportAndLogStatus("total count = $total_count", 10, "\n");#->561
+
+	return ($total_count);
 }
 sub logCalledCMDAndScript {
 #....................................................................................................................................................#
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|108
+#	primaryAppearInSection: 2_defineOutDirPath|90
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $result_script_dir, $scriptAbsPath
 #	output: 
 #	toCall: &logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);
-#	calledInLine: 119
+#	calledInLine: 103
 #....................................................................................................................................................#
 	my ($ARGVStr, $result_script_dir, $scriptAbsPath) = @_;
 
@@ -396,12 +481,12 @@ sub printOutputFileListAndReadme {
 #	subroutineCategory: output
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 5_finishingTasks|142
+#	primaryAppearInSection: 4_finishingTasks|121
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $outDir, $paramTag
 #	output: 
 #	toCall: &printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);
-#	calledInLine: 145
+#	calledInLine: 124
 #....................................................................................................................................................#
 	my ($ARGVStr, $paramTag, $outDir) = @_;
 	
@@ -414,7 +499,7 @@ sub printOutputFileListAndReadme {
 	push @{$filelistLenCountHsh{'name'}}, length 'Name';
 	push @{$filelistLenCountHsh{'description'}}, length 'Description';
 	
-	foreach my $outputFilePath (sort {$a cmp $b} keys %{$globalReadmeHsh_ref}) {
+	foreach my $outputFilePath (sort keys %{$globalReadmeHsh_ref}) {
 		my $fileDescription =  $globalReadmeHsh_ref->{$outputFilePath}{'description'};
 		my $cleandOutputFilePath = $outputFilePath;
 		$cleandOutputFilePath =~ s/\/+/\//g;
@@ -436,7 +521,8 @@ sub printOutputFileListAndReadme {
 		if (exists $globalReadmeHsh_ref->{$outputFilePath}{'headerAry'}) {
 			my @colLenCountHsh = (length 'column');
 			push @colLenCountHsh, length $_ foreach (@{$globalReadmeHsh_ref->{$outputFilePath}{'headerAry'}});
-			my $headerColLen = max(@colLenCountHsh)+2;
+			@colLenCountHsh = sort {$b <=> $a} @colLenCountHsh;
+			my $headerColLen = $colLenCountHsh[0]+2;
 			print README "\n";
 			print README "\n";
 			print README "===================\n";
@@ -480,10 +566,14 @@ sub printOutputFileListAndReadme {
 		print README "\n";
 		close README;
 	}
+	
+	@{$filelistLenCountHsh{'dir'}} = sort {$b <=> $a} @{$filelistLenCountHsh{'dir'}};
+	@{$filelistLenCountHsh{'name'}} = sort {$b <=> $a} @{$filelistLenCountHsh{'name'}};
+	@{$filelistLenCountHsh{'description'}} = sort {$b <=> $a} @{$filelistLenCountHsh{'description'}};
 
-	my $fileDir_colLen = max(@{$filelistLenCountHsh{'dir'}})+2;
-	my $fileName_colLen = max(@{$filelistLenCountHsh{'name'}})+2;
-	my $fileDescription_colLen = max(@{$filelistLenCountHsh{'description'}})+2;
+	my $fileDir_colLen = $filelistLenCountHsh{'dir'}[0]+2;
+	my $fileName_colLen = $filelistLenCountHsh{'name'}[0]+2;
+	my $fileDescription_colLen = $filelistLenCountHsh{'description'}[0]+2;
 	printf OUTFILELIST ("%-".$fileDir_colLen."s %-".$fileName_colLen."s %-".$fileDescription_colLen."s\n", 'directory', 'name', 'description');
 	printf OUTFILELIST ("%-".$fileDir_colLen."s %-".$fileName_colLen."s %-".$fileDescription_colLen."s\n", '=========', '====', '===========');
 	foreach my $fileDir (sort {$a cmp $b} keys %dirHsh) {
@@ -509,34 +599,34 @@ sub printOutputFileListAndReadme {
 sub printStartOrFinishMessage {
 #....................................................................................................................................................#
 #	subroutineCategory: general
-#	dependOnSub: currentTime|210
+#	dependOnSub: currentTime|293
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|108, 5_finishingTasks|142
+#	primaryAppearInSection: 2_defineOutDirPath|90, 4_finishingTasks|121
 #	secondaryAppearInSection: >none
 #	input: $StartOrFinishMessage
 #	output: none
 #	toCall: &printStartOrFinishMessage($StartOrFinishMessage);
-#	calledInLine: 120, 146
+#	calledInLine: 104, 125
 #....................................................................................................................................................#
 
 	my ($StartOrFinishMessage) = @_;
 	
 	if ($StartOrFinishMessage eq "startMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] starts running ...... \n";#->210
+		print "[".&currentTime()."] starts running ...... \n";#->293
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->210
+		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->293
 		print $tmplog_fh "=========================================================================\n\n";
 
 	} elsif ($StartOrFinishMessage eq "finishMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] finished running .......\n";#->210
+		print "[".&currentTime()."] finished running .......\n";#->293
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->210
+		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->293
 		print $tmplog_fh "=========================================================================\n\n";
 	}
 }
@@ -545,32 +635,29 @@ sub readParameters {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startingTasks|92
+#	primaryAppearInSection: 0_startingTasks|74
 #	secondaryAppearInSection: >none
 #	input: none
-#	output: $UMI_CB_ctss_bed_path, $outDir, $outputPrefix, $overwrite, $subsample_num
-#	toCall: my ($UMI_CB_ctss_bed_path, $subsample_num, $outputPrefix, $outDir, $overwrite) = &readParameters();
-#	calledInLine: 95
+#	output: $ctss_bed_path, $genome, $outDir, $outputPrefix
+#	toCall: my ($ctss_bed_path, $genome, $outputPrefix, $outDir) = &readParameters();
+#	calledInLine: 77
 #....................................................................................................................................................#
 	
-	my ($UMI_CB_ctss_bed_path, $subsample_num, $outputPrefix, $outDir, $overwrite);
-	
-	$overwrite = 'no';
+	my ($ctss_bed_path, $genome, $outputPrefix, $outDir);
 	
 	GetOptions 	(
-		"UMI_CB_ctss_bed_path=s"	=>	\$UMI_CB_ctss_bed_path,
-		"subsample_num=s"				=>	\$subsample_num,
-		"outputPrefix=s"				=>	\$outputPrefix,
-		"outDir:s"						=>	\$outDir,
-		"overwrite:s"					=>	\$overwrite,
-		'help'							=>	sub { HelpMessage(0) },
+		"ctss_bed_path=s"		=>	\$ctss_bed_path,
+		"genome=s"				=>	\$genome,
+		"outputPrefix=s"		=>	\$outputPrefix,
+		"outDir:s"				=>	\$outDir,
+		'help'					=>	sub { HelpMessage(0) },
 	) or HelpMessage(1);
 
-	HelpMessage(1) unless $UMI_CB_ctss_bed_path;
+	HelpMessage(1) unless $ctss_bed_path;
 	
 	#---check file
 	my $file_check_hsh_ref = {
-		'UMI_CB_ctss_bed_path' => $UMI_CB_ctss_bed_path,
+		'ctss_bed_path' => $ctss_bed_path,
 	};
 	
 	foreach my $option_name (keys %{$file_check_hsh_ref}) {
@@ -580,161 +667,29 @@ sub readParameters {
 	
 	chop $outDir if ($outDir =~ m/\/$/); #---remove the last slash
 	system "mkdir -p -m 755 $outDir/";
-	
-	return($UMI_CB_ctss_bed_path, $subsample_num, $outputPrefix, $outDir, $overwrite);
-
+		
+	return($ctss_bed_path, $genome, $outputPrefix, $outDir);
 }
 sub reportAndLogStatus {
 #....................................................................................................................................................#
 #	subroutineCategory: log
-#	dependOnSub: currentTime|210
-#	appearInSub: checkBedtoolsVersion|179, getTargetFraction|228, subsampleCTSS|511
+#	dependOnSub: currentTime|293
+#	appearInSub: checkBedGraphToBigWigVersion|161, convertCTSS|211, getTotalCount|311
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 3_subsample|125
+#	secondaryAppearInSection: 3_count|109
 #	input: $lineEnd, $message, $numTrailingSpace
 #	output: 
 #	toCall: &reportAndLogStatus($message, $numTrailingSpace, $lineEnd);
-#	calledInLine: 197, 201, 241, 259, 260, 263, 264, 265, 266, 550
+#	calledInLine: 177, 182, 253, 267, 270, 324, 337
 #....................................................................................................................................................#
 	my ($message, $numTrailingSpace, $lineEnd) = @_;
 
 	my $trailingSpaces = '';
 	$trailingSpaces .= " " for (1..$numTrailingSpace);
 	
-	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->210
-	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->210
+	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->293
+	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->293
 	
-	return ();
-}
-sub subsampleCTSS {
-#....................................................................................................................................................#
-#	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|489
-#	appearInSub: >none
-#	primaryAppearInSection: 3_subsample|125
-#	secondaryAppearInSection: >none
-#	input: $UMI_CB_ctss_bed_path, $bedtools_bin, $outputPrefix, $result_bed_dir, $target_fraction
-#	output: 
-#	toCall: &subsampleCTSS($UMI_CB_ctss_bed_path, $result_bed_dir, $bedtools_bin, $target_fraction, $outputPrefix);
-#	calledInLine: 130
-#....................................................................................................................................................#
-	my ($UMI_CB_ctss_bed_path, $result_bed_dir, $bedtools_bin, $target_fraction, $outputPrefix) = @_;
-	
-	my $sub_collapse_ctss_bed_path = "$result_bed_dir/$outputPrefix.subsample.collapse.ctss.bed";
-	my $sub_ung_collapse_ctss_bed_path = "$result_bed_dir/$outputPrefix.subsample.unencoded_G.collapse.ctss.bed";
-	my $sub_CB_ctss_bed_path = "$result_bed_dir/$outputPrefix.subsample.CB.ctss.bed";
-
-	my $num_proc = 0;
-	my $tmp_CTSS_hsh_ref = {};
-	my $last_chrom = 'initial';
-	my $last_start = 'initial';
-	my $last_strand = 'initial';
-	if ($UMI_CB_ctss_bed_path =~ m/\.gz$/) {
-		open (INCTSS, " gzip -dc $UMI_CB_ctss_bed_path|");
-	} else {
-		open (INCTSS, "<", $UMI_CB_ctss_bed_path);
-	}
-	
-	open SUBCBCTSS, ">$sub_CB_ctss_bed_path";
-	open SUBCOLLAPSECTSS, ">$sub_collapse_ctss_bed_path";
-	open SUBUNGCOLLAPSECTSS, ">$sub_ung_collapse_ctss_bed_path";
-	while (<INCTSS>) {
-		chomp;
-		my ($chrom, $start, $end, $ID, $num_unencoded_G, $strand) = split /\t/;
-		
-		next if (rand() > $target_fraction);
-		
-		$num_proc++;
-		if ($num_proc%10000 == 0) {
-			&reportAndLogStatus("$num_proc CTSS subsampled", 10, "\n");#->489
-		}
-
-		{
-			my ($CB, $UMI) = split /_/, $ID;
-			$tmp_CTSS_hsh_ref->{$chrom}{$start}{$strand}{$CB}{'all'}{$UMI}++;
-			$tmp_CTSS_hsh_ref->{$chrom}{$start}{$strand}{$CB}{'ung'}{$UMI}++ if $num_unencoded_G > 0;
-		}
-	
-		if ($last_chrom eq 'initial') {
-			$last_chrom = $chrom;
-			$last_start = $start;
-			$last_strand = $strand;
-		}
-		if (($chrom ne $last_chrom or $start ne $last_start or $strand ne $last_strand)) {
-			my $last_end = $last_start + 1;
-			my $CB_collapse_num_umi = 0;
-			my $num_CB = 0;
-
-			my $ung_CB_collapse_num_umi = 0;
-			my $ung_num_CB = 0;
-
-			foreach my $CB (sort keys %{$tmp_CTSS_hsh_ref->{$last_chrom}{$last_start}{$last_strand}}) {
-				my $num_umi = keys %{$tmp_CTSS_hsh_ref->{$last_chrom}{$last_start}{$last_strand}{$CB}{'all'}};
-				$CB_collapse_num_umi += $num_umi;
-				$num_CB++;
-				print SUBCBCTSS join "", (join "\t", ($last_chrom, $last_start, $last_end, $CB, $num_umi, $last_strand)), "\n";
-
-				if (exists $tmp_CTSS_hsh_ref->{$last_chrom}{$last_start}{$last_strand}{$CB}{'ung'}) {
-					my $ung_num_umi = keys %{$tmp_CTSS_hsh_ref->{$last_chrom}{$last_start}{$last_strand}{$CB}{'ung'}};
-					$ung_CB_collapse_num_umi += $ung_num_umi;
-					$ung_num_CB++;
-				}
-			}
-			print SUBCOLLAPSECTSS join "", (join "\t", ($last_chrom, $last_start, $last_end, $num_CB, $CB_collapse_num_umi, $last_strand)), "\n";
-			
-			if ($ung_CB_collapse_num_umi > 0) {
-				print SUBUNGCOLLAPSECTSS join "", (join "\t", ($last_chrom, $last_start, $last_end, $ung_num_CB, $ung_CB_collapse_num_umi, $last_strand)), "\n";
-			}
-			
-			delete $tmp_CTSS_hsh_ref->{$last_chrom}{$last_start}{$last_strand};
-			$last_chrom = $chrom;
-			$last_start = $start;
-			$last_strand = $strand;
-		}
-	
-		if (eof(INCTSS)) {
-			foreach my $chrom (keys %{$tmp_CTSS_hsh_ref}) {
-				foreach my $start (keys %{$tmp_CTSS_hsh_ref->{$chrom}}) {
-					my $end = $start + 1;
-					foreach my $strand (keys %{$tmp_CTSS_hsh_ref->{$chrom}{$start}}) {
-						my $CB_collapse_num_umi = 0;
-						my $num_CB = 0;
-
-						my $ung_CB_collapse_num_umi = 0;
-						my $ung_num_CB = 0;
-
-						foreach my $CB (sort keys  %{$tmp_CTSS_hsh_ref->{$chrom}{$start}{$strand}}) {
-							my $num_umi = keys %{$tmp_CTSS_hsh_ref->{$chrom}{$start}{$strand}{$CB}{'all'}};
-							$CB_collapse_num_umi += $num_umi;
-							$num_CB++;
-							print SUBCBCTSS join "", (join "\t", ($chrom, $start, $end, $CB, $num_umi, $strand)), "\n";
-
-							if (exists $tmp_CTSS_hsh_ref->{$chrom}{$start}{$strand}{$CB}{'ung'}) {
-								my $ung_num_umi = keys %{$tmp_CTSS_hsh_ref->{$last_chrom}{$last_start}{$last_strand}{$CB}{'ung'}};
-								$ung_CB_collapse_num_umi += $ung_num_umi;
-								$ung_num_CB++;
-							}
-
-						}
-						print SUBCOLLAPSECTSS join "", (join "\t", ($chrom, $start, $end, "$num_CB", $CB_collapse_num_umi, $strand)), "\n";
-
-						if ($ung_CB_collapse_num_umi > 0) {
-							print SUBUNGCOLLAPSECTSS join "", (join "\t", ($chrom, $start, $end, "$ung_num_CB", $ung_CB_collapse_num_umi, $strand)), "\n";
-						}
-					}
-				}
-			}
-		}
-	}
-	close INCTSS;
-	close SUBCBCTSS;
-	close SUBCOLLAPSECTSS;
-	close SUBUNGCOLLAPSECTSS;
-
-	system "gzip $sub_collapse_ctss_bed_path";
-	system "gzip $sub_ung_collapse_ctss_bed_path";
-	system "gzip $sub_CB_ctss_bed_path";
-
 	return ();
 }
 sub timeStamp {
@@ -747,7 +702,7 @@ sub timeStamp {
 #	input: none
 #	output: $curntTimeStamp
 #	toCall: my ($curntTimeStamp) = &timeStamp();
-#	calledInLine: 80
+#	calledInLine: 62
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);

@@ -39,10 +39,10 @@ A fraction of TSS identified based on read 5′ends from template switching (TS)
 
 ## Dependencies
 ### TL;DR
-Go straight to the [Docker Image](#1) section if you already have [docker](https://www.docker.com/) installed and do not want to hassle with dependencies and installation.
+Go straight to the [Docker Image](#1) section if you do not want to deal with dependencies and already have [docker](https://www.docker.com/) installed.
 
 ### perl
-*SCAFE* is mainly written in perl (v5.24.1 or later). All scripts are standalone applications and **DO NOT require installations** of extra perl modules. Check whether perl is properly installed on your system.
+*SCAFE* is mainly written in perl (**v5.24.1 or later**). All scripts are standalone applications and **DO NOT require installations** of extra perl modules. Check whether perl is properly installed on your system.
 
 ```shell
 #--- Check your perl version
@@ -50,12 +50,12 @@ perl --version
 ```
 
 ### R
-*SCAFE* relies on R for logistic regression, ROC analysis and graph plotting. Rscript **(v3.5.1 or later)** and the following R packages have to be properly installed:
+*SCAFE* relies on R for logistic regression, ROC analysis and graph plotting. Rscript **(v3.6.1 or later)** and the following R packages have to be properly installed:
 
 * [ROCR](https://cran.r-project.org/web/packages/ROCR/readme/README.html), [PRROC](https://cran.r-project.org/web/packages/PRROC/index.html), [caret](https://cran.r-project.org/web/packages/caret/index.html), [e1071](https://cran.r-project.org/web/packages/e1071/index.html), [ggplot2](https://ggplot2.tidyverse.org/), [scales](https://cran.r-project.org/web/packages/scales/index.html), [reshape2](https://cran.r-project.org/web/packages/reshape2/index.html)
 
 ```shell
-#--- Check your Rscript version, must be >3.5.1
+#--- Check your Rscript version, must be 3.6.1 ot later
 Rscript --version
 
 #--- Check your R packages, install if missing
@@ -73,10 +73,12 @@ Rscript -e 'if (!require("reshape2")) install.packages("reshape2", repos = "http
 * [bigWigAverageOverBed](https://github.com/ENCODE-DCC/kentUtils), [bedGraphToBigWig](https://github.com/ENCODE-DCC/kentUtils),  [bedtools](https://bedtools.readthedocs.io/en/latest/), [samtools](http://www.htslib.org/), [paraclu](http://cbrc3.cbrc.jp/~martin/paraclu/), [paraclu-cut.sh](http://cbrc3.cbrc.jp/~martin/paraclu/)
 
 ### OS
-SCAFE was developed and tested on Debian GNU/Linux 9. Running SACFE on other OS are not guranteed.
+SCAFE was developed and tested on Debian GNU/Linux 9, with R (3.6.1) and perl (5.24.1) installed. Running SACFE on other OS with other version of R and perl are not guranteed. In you want to run *SCAFE* on other OS, we would recommend running it from docker container, see [below](#1). If you would like to run *SCAFE* natively on other OS, you have to ensure the R and perl versions, and might consider downloading and compiling the other 3rd party applications from their own sources. The binaries of 3rd party applications have to be execuatble in *SCAFE* directoty at ./resources/bin/.
+
+
 
 ## Installing *SCAFE*
-Once you ensured the above dependencies are met, you are ready to download SCAFE to your system.
+Once you ensured the above dependencies are met, you are ready to download *SCAFE* to your system.
 
 ### Clone this respository
 
@@ -89,76 +91,23 @@ cd /my/path/to/install/
 git clone https://github.com/chung-lab/SCAFE
 cd SCAFE
 
+#--- export SCAFE scripts dir to PATH for system-wide call of SCAFE commands 
+echo "export PATH=$PATH:$(pwd)/scripts" >>~/.profile
+source ~/.profile
+
 #--- making sure the scripts and binaries are executable
 chmod 755 -R ./scripts/
 chmod 755 -R ./resources/bin/
 ```
 ### Check the dependencies
-SCAFE depends on perl, R and a number of 3rd party tools (as listed above). To ensure the dependencies, please run ./scripts/check.dependencies
+To ensure the dependencies, please run check.dependencies.
 
 ```shell
 #--- run check.dependencies to check 
 ./scripts/check.dependencies
 ```
-If everything runs smoothly, you should see the following report on screen.
-
-```shell
-
-===============================
-start checking
-===============================
-Check Type           Check Item                          Check Status
-===============      ===============                     ===============
-perl executables     workflow.sc.subsample               successful
-perl executables     workflow.sc.solo                    successful
-perl executables     workflow.sc.pool                    successful
-perl executables     workflow.bk.subsample               successful
-perl executables     workflow.bk.solo                    successful
-perl executables     workflow.bk.pool                    successful
-perl executables     tool.sc.subsample_ctss              successful
-perl executables     tool.sc.pool                        successful
-perl executables     tool.sc.count                       successful
-perl executables     tool.sc.bam_to_ctss                 successful
-perl executables     tool.cm.remove_strand_invader       successful
-perl executables     tool.cm.prep_genome                 successful
-perl executables     tool.cm.filter                      successful
-perl executables     tool.cm.ctss_to_bigwig              successful
-perl executables     tool.cm.cluster                     successful
-perl executables     tool.cm.annotate                    successful
-perl executables     tool.bk.subsample_ctss              successful
-perl executables     tool.bk.pool                        successful
-perl executables     tool.bk.count                       successful
-perl executables     tool.bk.bam_to_ctss                 successful
-perl executables     download.resources.genome           successful
-perl executables     download.demo.input                 successful
-perl executables     demo.test.run                       successful
-perl executables     check.install.dependencies          successful
-dropbox access       wget tar data                       successful
-3rd-party apps       bedtools                            successful
-3rd-party apps       samtools                            successful
-3rd-party apps       paraclu                             successful
-3rd-party apps       paraclu-cut.sh                      successful
-3rd-party apps       bedGraphToBigWig                    successful
-3rd-party apps       bigWigAverageOverBed                successful
-R version            v3.5 or later                       successful
-R packages           ROCR                                successful
-R packages           PRROC                               successful
-R packages           caret                               successful
-R packages           e1071                               successful
-R packages           ggplot2                             successful
-R packages           scales                              successful
-R packages           reshape2                            successful
-R scripts            benchmark_roc.R                     successful
-R scripts            build_glm.R                         successful
-R scripts            predict_prob.R                      successful
-===============================
-Finished checking
-===============================
-
-Successful for all checks. SCAFE should run well.
-```
 ### Docker image<a name="1"></a>
-If you have docker installed on your system, you might also consider pulling the *SCAFE* docker image and run it in a docker container. Once you are logged into the docker container, the following tutorial on the demo data can be ran with exactly the same command. 
+If you have docker installed on your system, you might also consider pulling the *SCAFE* docker image and run it in a docker container. Once you are logged into the *SCAFE* docker container, the following tutorial on the demo data can be ran with exactly the same command. 
 
 To install docker, please see [here](https://www.docker.com/). Noted that all files reads/writes are within the docker container by default. To share files (i.e. input and output of *SCAFE*) between the container and the host, please see [here](https://flaviocopes.com/docker-access-files-outside-container/).   
 
@@ -178,10 +127,10 @@ Demo data and reference genome must be downloaded for testing *SCAFE* on your sy
 
 ```shell
 #--- download the demo data using script download.demo.input
-./scripts/download.demo.input
+scafe.download.demo.input
 	
 #--- download the reference genome hg19.gencode_v32lift37 for testing demo data
-./scripts/download.resources.genome --genome=hg19.gencode_v32lift37
+scafe.download.resources.genome --genome=hg19.gencode_v32lift37
 ```
 
 ### Test run a single cell solo workflow for demo data
@@ -189,7 +138,7 @@ Now, let's test *SCAFE* with a workflow (*workflow.sc.solo*) that processes one 
 
 ```shell
 #--- check out the help message of workflow.sc.solo
-./scripts/workflow.sc.solo --help
+scafe.workflow.sc.solo --help
 ```
 It should print the help message as the followings:
 
@@ -213,7 +162,7 @@ Description:
   This workflow process a single sample, from a cellranger bam file to tCRE UMI/cellbarcode count matrix
 
 Usage:
-  workflow.sc.solo [options] --run_bam_path --run_cellbarcode_path --genome --run_tag --run_outDir
+  scafe.workflow.sc.solo [options] --run_bam_path --run_cellbarcode_path --genome --run_tag --run_outDir
 
   --run_bam_path         <required> [string]  bam file from cellranger, can be read 1 only or pair-end
   --run_cellbarcode_path <required> [string]  tsv file contains a list of cell barcodes,
@@ -244,7 +193,7 @@ Dependencies:
   paraclu-cut.sh
 
 For demo, cd to SCAFE dir and run,
-  ./scripts/workflow.sc.solo \
+  scafe.workflow.sc.solo \
   --overwrite=yes \
   --run_bam_path=./demo/input/sc.solo/demo.cellranger.bam \
   --run_cellbarcode_path=./demo/input/sc.solo/demo.barcodes.tsv.gz \
@@ -258,7 +207,7 @@ The help message details the input options, noted some are ***\<required\>*** an
 
 ```shell
 #--- run the workflow on the demo.cellranger.bam, it'll take a couple of minutes 
-./scripts/workflow.sc.solo \
+scafe.workflow.sc.solo \
 --overwrite=yes \
 --run_bam_path=./demo/input/sc.solo/demo.cellranger.bam \
 --run_cellbarcode_path=./demo/input/sc.solo/demo.barcodes.tsv.gz \
@@ -290,71 +239,15 @@ Finally, we recommended a test run for all 6 available workflows on the demo dat
 
 ```shell
 #--- check out the help message of demo.test.run
-./scripts/demo.test.run --help
+scafe.demo.test.run --help
 
 #--- run the all six available workflows on the demo bulk and single
 #--- it'll take a around 20 minutes
-./scripts/demo.test.run \
+scafe.demo.test.run \
 --overwrite=yes \
 --run_outDir=./demo/output/
 ```
 If everything runs smoothly, you should see the following report on screen
-
-```shell
-#=======================#
-Results of Demo Test Run.
-#=======================#
-
-workflow                       tool                           status    
-==============                 ==============                 ==============
-workflow.bk.pool               manager                        successful
-workflow.bk.pool               tool.bk.pool                   successful
-workflow.bk.pool               tool.cm.cluster                successful
-workflow.bk.pool               tool.cm.filter                 successful
-workflow.bk.pool               tool.cm.ctss_to_bigwig         successful
-workflow.bk.pool               tool.cm.annotate               successful
-workflow.bk.pool               tool.bk.count                  successful
-workflow.bk.pool               tool.bk.count                  successful
-workflow.bk.solo               manager                        successful
-workflow.bk.solo               tool.bk.bam_to_ctss            successful
-workflow.bk.solo               tool.cm.cluster                successful
-workflow.bk.solo               tool.cm.filter                 successful
-workflow.bk.solo               tool.cm.ctss_to_bigwig         successful
-workflow.bk.solo               tool.cm.annotate               successful
-workflow.bk.solo               tool.bk.count                  successful
-workflow.bk.subsample          manager                        successful
-workflow.bk.subsample          tool.bk.subsample_ctss         successful
-workflow.bk.subsample          tool.cm.cluster                successful
-workflow.bk.subsample          tool.cm.filter                 successful
-workflow.bk.subsample          tool.cm.ctss_to_bigwig         successful
-workflow.bk.subsample          tool.cm.annotate               successful
-workflow.bk.subsample          tool.bk.count                  successful
-workflow.sc.pool               manager                        successful
-workflow.sc.pool               tool.sc.pool                   successful
-workflow.sc.pool               tool.cm.remove_strand_invader  successful
-workflow.sc.pool               tool.cm.cluster                successful
-workflow.sc.pool               tool.cm.filter                 successful
-workflow.sc.pool               tool.cm.ctss_to_bigwig         successful
-workflow.sc.pool               tool.cm.annotate               successful
-workflow.sc.pool               tool.sc.count                  successful
-workflow.sc.pool               tool.sc.count                  successful
-workflow.sc.solo               manager                        successful
-workflow.sc.solo               tool.sc.bam_to_ctss            successful
-workflow.sc.solo               tool.cm.remove_strand_invader  successful
-workflow.sc.solo               tool.cm.cluster                successful
-workflow.sc.solo               tool.cm.filter                 successful
-workflow.sc.solo               tool.cm.ctss_to_bigwig         successful
-workflow.sc.solo               tool.cm.annotate               successful
-workflow.sc.solo               tool.sc.count                  successful
-workflow.sc.subsample          manager                        successful
-workflow.sc.subsample          tool.sc.subsample_ctss         successful
-workflow.sc.subsample          tool.cm.remove_strand_invader  successful
-workflow.sc.subsample          tool.cm.cluster                successful
-workflow.sc.subsample          tool.cm.filter                 successful
-workflow.sc.subsample          tool.cm.ctss_to_bigwig         successful
-workflow.sc.subsample          tool.cm.annotate               successful
-workflow.sc.subsample          tool.sc.count                  successful
-```
 
 ## Run *SCAFE* on your own data 
 
@@ -370,9 +263,9 @@ We recommend most users to run *SCAFE* using workflows with default options. The
 
 ```shell
 #--- check out the help message of the three single cell workflows
-./scripts/workflow.sc.solo --help
-./scripts/workflow.sc.pool --help
-./scripts/workflow.sc.subsample --help
+scafe.workflow.sc.solo --help
+scafe.workflow.sc.pool --help
+scafe.workflow.sc.subsample --help
 
 ```
 ### Run *SCAFE* individual tools with custom options 
@@ -382,10 +275,10 @@ For the sake of flexibiity, *SCAFE* allows users to run individual tools with cu
 
 ```shell
 #--- check out the help message of tool.sc.bam_to_ctss
-./scripts/tool.sc.bam_to_ctss --help
+scafe.tool.sc.bam_to_ctss --help
 
 #--- run tool.sc.bam_to_ctss with custom options
-./scripts/tool.sc.bam_to_ctss \
+scafe.tool.sc.bam_to_ctss \
 --min_MAPQ 10 \
 --exclude_flag '128,4' \
 --overwrite=yes \
@@ -398,10 +291,10 @@ For the sake of flexibiity, *SCAFE* allows users to run individual tools with cu
 
 ```shell
 #--- check out the help message of tool.cm.remove_strand_invader
-./scripts/tool.cm.remove_strand_invader --help
+scafe.tool.cm.remove_strand_invader --help
 
 #--- run tool.cm.remove_strand_invader with custom options
-./scripts/tool.cm.remove_strand_invader \
+scafe.tool.cm.remove_strand_invader \
 --min_edit_distance=3 \
 --min_end_non_G_num=1 \
 --overwrite=yes \
@@ -414,10 +307,10 @@ For the sake of flexibiity, *SCAFE* allows users to run individual tools with cu
 
 ```shell
 #--- check out the help message of tool.cm.cluster
-./scripts/tool.cm.cluster --help
+scafe.tool.cm.cluster --help
 
 #--- run tool.cm.cluster with custom options
-./scripts/tool.cm.cluster \
+scafe.tool.cm.cluster \
 --min_cluster_count=10 \
 --min_summit_count=5 \
 --min_num_sample_expr_cluster=5 \
@@ -430,10 +323,10 @@ For the sake of flexibiity, *SCAFE* allows users to run individual tools with cu
 
 ```shell
 #--- check out the help message of tool.cm.filter
-./scripts/tool.cm.filter --help
+scafe.tool.cm.filter --help
 
 #--- run tool.cm.cluster with custom options
-./scripts/tool.cm.filter \
+scafe.tool.cm.filter \
 --default_cutoff=0.3 \
 --overwrite=yes \
 --ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.collapse.ctss.bed.gz \
@@ -449,10 +342,10 @@ For the sake of flexibiity, *SCAFE* allows users to run individual tools with cu
 
 ```shell
 #--- check out the help message of tool.cm.annotate
-./scripts/tool.cm.annotate --help
+scafe.tool.cm.annotate --help
 
 #--- run tool.cm.annotate with custom options
-./scripts/tool.cm.annotate \
+scafe.tool.cm.annotate \
 --CRE_extend_size=800 \
 --CRE_extend_upstrm_ratio=3 \
 --proximity_slop_rng=1000 \
@@ -469,10 +362,10 @@ Currently, four reference genomes ara available. See *./script/download.resource
 
 ```shell
 #--- check out the help message of tool.cm.prep_genome
-./scripts/tool.cm.prep_genome --help
+scafe.tool.cm.prep_genome --help
 
 #--- run the tool on the TAIR10 assembly with gene model AtRTDv2 
-./scripts/tool.cm.prep_genome \
+scafe.tool.cm.prep_genome \
 --overwrite=yes \
 --gtf_path=./demo/input/genome/TAIR10.AtRTDv2.gtf.gz \
 --fasta_path=./demo/input/genome/TAIR10.genome.fa.gz \
@@ -486,9 +379,9 @@ Currently, four reference genomes ara available. See *./script/download.resource
 
 ```shell
 #--- check out the help message of the three single cell workflows
-./scripts/workflow.bk.solo --help
-./scripts/workflow.bk.pool --help
-./scripts/workflow.bk.subsample --help
+scafe.workflow.bk.solo --help
+scafe.workflow.bk.pool --help
+scafe.workflow.bk.subsample --help
 ```
 
 

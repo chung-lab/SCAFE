@@ -78,7 +78,7 @@ use AutoLoader qw/AUTOLOAD/;
  ...===┴========================================================================================...
 
                       Single Cell Analysis of Five-prime End (SCAFE) Tool Suite 
-                               ---> tool.sc.bam_to_ctss <---
+                               ---> scafe.tool.sc.bam_to_ctss <---
                      <--- tool, single-cell mode, convert bam to ctss --->
 
  Description:
@@ -86,7 +86,7 @@ use AutoLoader qw/AUTOLOAD/;
    extracts the unencoded G information, pileup ctss, and deduplicate the UMI
 
  Usage:
-   tool.sc.bam_to_ctss [options] --bamPath --genome --outputPrefix --outDir
+   scafe.tool.sc.bam_to_ctss [options] --bamPath --genome --outputPrefix --outDir
    
    --bamPath      <required> [string]  bam file from cellranger, can be read 1 only or pair-end
    --genome       <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
@@ -109,7 +109,7 @@ use AutoLoader qw/AUTOLOAD/;
    samtools
 
  For demo, cd to SCAFE dir and run,
-   ./scripts/tool.sc.bam_to_ctss \
+   scafe.tool.sc.bam_to_ctss \
    --overwrite=yes \
    --bamPath=./demo/input/sc.solo/demo.cellranger.bam \
    --genome=hg19.gencode_v32lift37 \

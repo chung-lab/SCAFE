@@ -77,17 +77,17 @@ use Cwd 'abs_path';
  ...===┴========================================================================================...
 
                       Single Cell Analysis of Five-prime End (SCAFE) Tool Suite 
-                               ---> tool.bk.subsample_ctss <---
+                               ---> scafe.tool.bk.subsample_ctss <---
                           <--- tool, bulk mode, subsample ctss --->
 
  Description:
    This tool subsample a ctss bed file from bulk CAGE ctss
 
  Usage:
-   tool.bk.subsample_ctss [options] --UMI_CB_ctss_bed_path --subsample_num --outputPrefix --outDir
+   scafe.tool.bk.subsample_ctss [options] --UMI_CB_ctss_bed_path --subsample_num --outputPrefix --outDir
    
    --long_ctss_bed_path <required> [string]  ctss file for subsampling, one line read in "long" format,
-                                             *long.ctss.bed.gz from tool.bk.bam_to_ctss.pl, 
+                                             *long.ctss.bed.gz from scafe.tool.bk.bam_to_ctss.pl, 
    --subsample_num      <required> [integer] number of UMI to be subsampled
    --outputPrefix       <required> [string]  prefix for the output files
    --outDir             <required> [string]  directory for the output files
@@ -97,7 +97,7 @@ use Cwd 'abs_path';
    bedtools
 
  For demo, cd to SCAFE dir and run,
-   ./scripts/tool.bk.subsample_ctss \
+   scafe.tool.bk.subsample_ctss \
    --overwrite=yes \
    --long_ctss_bed_path=./demo/output/bk.solo/bam_to_ctss/demo/bed/demo.long.ctss.bed.gz \
    --subsample_num=100000 \

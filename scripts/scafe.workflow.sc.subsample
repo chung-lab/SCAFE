@@ -71,24 +71,26 @@ use Cwd 'abs_path';
  ...===┴========================================================================================...
 
                       Single Cell Analysis of Five-prime End (SCAFE) Tool Suite 
-                                ---> workflow.bk.solo <---
-                     <--- workflow, bulk mode, process a single sample --->
+                               ---> scafe.workflow.sc.subsample <---
+                      <--- workflow, single-cell mode, subsample ctss --->
 
  Description:
-   This workflow process a single sample, from a bulk CAGE bam file to read count per tCRE per sample
+   This workflow subsamples a ctss file, defines tCRE and generate a tCRE UMI/cellbarcode count matrix
+   Subsampling is useful to investigate the effect of sequencing depth to tCRE definition
 
  Usage:
-   workflow.bk.pool [options] --lib_list_path --genome --run_tag --run_outDir
+   scafe.workflow.sc.subsample [options] --UMI_CB_ctss_bed_path --run_cellbarcode_path --subsample_num --genome --run_tag --run_outDir
    
-   --lib_list_path         <required> [string] a list of libraries, in formation of 
-                                               <lib_ID><\t><long_ctss_bed><\t><collapse_ctss_bed>
-                                               lib_ID = Unique ID of the cellbarcode
-                                               long_ctss_bed = *long.ctss.bed.gz from tool.bk.bam_to_ctss.pl, 
-                                               collapse_ctss_bed = *collapse.ctss.bed.gz from tool.bk.bam_to_ctss.pl, 
-   --genome                <required> [string] name of genome reference, e.g. hg19.gencode_v32lift37
-   --run_tag               <required> [string] prefix for the output files
-   --run_outDir            <required> [string] directory for the output files
-   --training_signal_path  (optional) [string] quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
+   --UMI_CB_ctss_bed_path <required> [string]  ctss file for subsampling, one line one cellbarcode-UMI combination,
+                                               *UMI_CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
+                                               4th column cellbarcode-UMI and 5th column is number of unencoded-G
+   --run_cellbarcode_path <required> [string]  tsv file contains a list of cell barcodes,
+                                               barcodes.tsv.gz from cellranger
+   --subsample_num        <required> [integer] number of UMI to be subsampled
+   --genome               <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
+   --run_tag              <required> [string]  prefix for the output files
+   --run_outDir           <required> [string]  directory for the output files
+   --training_signal_path (optional) [string]  quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
                                                regions (e.g. annotated CRE, in bed format) used for training of logical 
                                                regression model If null, $usr_glm_model_path must be supplied for 
                                                pre-built logical regression model. It overrides usr_glm_model_path 
@@ -111,12 +113,14 @@ use Cwd 'abs_path';
    paraclu-cut.sh
 
  For demo, cd to SCAFE dir and run,
-   ./scripts/workflow.bk.pool \
+   scafe.workflow.sc.subsample \
    --overwrite=yes \
-   --lib_list_path=./demo/input/bk.pool/lib_list_path.txt \
+   --UMI_CB_ctss_bed_path=./demo/input/sc.subsample/demo.UMI_CB.ctss.bed.gz \
+   --run_cellbarcode_path=./demo/input/sc.subsample/demo.barcodes.tsv.gz \
+   --subsample_num=100000 \
    --genome=hg19.gencode_v32lift37 \
    --run_tag=demo \
-   --run_outDir=./demo/output/bk.pool/
+   --run_outDir=./demo/output/sc.subsample/
 
 =head1 VERSION
 
@@ -150,9 +154,10 @@ use Cwd 'abs_path';
 #
 #<section ID="startTasks" num="0">
 my $ARGV_ary_ref = [@ARGV];
-my ($lib_list_path, $genome, $training_signal_path, $testing_signal_path, $max_thread, $run_tag, $run_outDir, $overwrite) = &readParameters();#->409
-my ($scafe_dir, $script_dir, $result_script_dir, $ARGVStr, $scriptAbsPath) = &prepDir($run_outDir, $ARGV_ary_ref);#->381
-&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->356
+my ($UMI_CB_ctss_bed_path, $run_cellbarcode_path, $subsample_num, $genome, $training_signal_path, $testing_signal_path, $max_thread, $run_tag, $run_outDir, $overwrite) = &readParameters();#->405
+$max_thread = 10 if $max_thread > 10;
+my ($scafe_dir, $script_dir, $result_script_dir, $ARGVStr, $scriptAbsPath) = &prepDir($run_outDir, $ARGV_ary_ref);#->377
+&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->352
 #<\section>
 #====================================================================================================================================================#
 
@@ -160,10 +165,9 @@ my ($scafe_dir, $script_dir, $result_script_dir, $ARGVStr, $scriptAbsPath) = &pr
 #	section 1_run
 #
 #<section ID="run" num="1">
-my ($path_hsh_ref) = &define_path($run_outDir, $run_tag, $lib_list_path, $training_signal_path, $testing_signal_path, $script_dir);#->208
-my ($task_info_hsh_ref) = &define_task($genome, $path_hsh_ref, $max_thread, $run_tag, $run_outDir);#->254
-&addCountIndivLibTask($path_hsh_ref, $task_info_hsh_ref, $run_tag, $run_outDir);#->150
-&run_task($task_info_hsh_ref, $path_hsh_ref, $result_script_dir);#->459
+my ($path_hsh_ref) = &define_path($run_outDir, $run_tag, $UMI_CB_ctss_bed_path, $run_cellbarcode_path, $training_signal_path, $testing_signal_path, $script_dir);#->173
+my ($task_info_hsh_ref) = &define_task($genome, $path_hsh_ref, $max_thread, $subsample_num, $run_tag, $run_outDir);#->221
+&run_task($task_info_hsh_ref, $path_hsh_ref, $result_script_dir);#->458
 #<\section>
 #====================================================================================================================================================#
 
@@ -177,63 +181,23 @@ my ($task_info_hsh_ref) = &define_task($genome, $path_hsh_ref, $max_thread, $run
 #	general [n=3]:
 #		currentTime, logCalledCMDAndScript, readParameters
 #
-#	unassigned [n=5]:
-#		addCountIndivLibTask, define_path, define_task
-#		prepDir, run_task
+#	unassigned [n=4]:
+#		define_path, define_task, prepDir
+#		run_task
 #
 #====================================================================================================================================================#
 
-sub addCountIndivLibTask {
-#....................................................................................................................................................#
-#	subroutineCategory: unassigned
-#	dependOnSub: >none
-#	appearInSub: >none
-#	primaryAppearInSection: 1_run|123
-#	secondaryAppearInSection: >none
-#	input: $path_hsh_ref, $run_outDir, $run_tag, $task_info_hsh_ref
-#	output: 
-#	toCall: &addCountIndivLibTask($path_hsh_ref, $task_info_hsh_ref, $run_tag, $run_outDir);
-#	calledInLine: 128
-#....................................................................................................................................................#
-	my ($path_hsh_ref, $task_info_hsh_ref, $run_tag, $run_outDir) = @_;
-	
-	my $task_num = keys %{$task_info_hsh_ref};
-	open CTSSLIST, "<", $path_hsh_ref->{'lib_list_path'};
-	while (<CTSSLIST>) {
-		chomp;
-			my ($libID, $long_ctss_bed_path, $collapse_ctss_bed_path) = split /\t/;
-		my $outputPrefix = $libID;
-		my $task_outDir = "$run_outDir/count/";
-		$task_num++;
-		$task_info_hsh_ref->{$task_num} = {
-			'task_name' => 'count',
-			'script_name' => 'tool.bk.count',
-			'param' => [
-				['countRegion_bed_path', $path_hsh_ref->{"tCRE_bed_path"}],
-				['ctss_bed_path', $collapse_ctss_bed_path],
-				['outputPrefix', $outputPrefix],
-				['outDir', $run_outDir."/count"],
-			],
-			'check' => [
-				$run_outDir."/count/$outputPrefix/log/count.log.tsv",
-			]
-		};
-	}
-	close CTSSLIST;
-
-	return ();
-}
 sub currentTime {
 #....................................................................................................................................................#
 #	subroutineCategory: general
 #	dependOnSub: >none
-#	appearInSub: prepDir|381
+#	appearInSub: prepDir|377
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 0_startTasks|112
+#	secondaryAppearInSection: 0_startTasks|117
 #	input: none
 #	output: $runTime
 #	toCall: my ($runTime) = &currentTime();
-#	calledInLine: 395
+#	calledInLine: 391
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
@@ -246,26 +210,28 @@ sub define_path {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 1_run|123
+#	primaryAppearInSection: 1_run|129
 #	secondaryAppearInSection: >none
-#	input: $lib_list_path, $run_outDir, $run_tag, $script_dir, $testing_signal_path, $training_signal_path
+#	input: $UMI_CB_ctss_bed_path, $run_cellbarcode_path, $run_outDir, $run_tag, $script_dir, $testing_signal_path, $training_signal_path
 #	output: $path_hsh_ref
-#	toCall: my ($path_hsh_ref) = &define_path($run_outDir, $run_tag, $lib_list_path, $training_signal_path, $testing_signal_path, $script_dir);
-#	calledInLine: 126
+#	toCall: my ($path_hsh_ref) = &define_path($run_outDir, $run_tag, $UMI_CB_ctss_bed_path, $run_cellbarcode_path, $training_signal_path, $testing_signal_path, $script_dir);
+#	calledInLine: 132
 #....................................................................................................................................................#
 
-	my ($run_outDir, $run_tag, $lib_list_path, $training_signal_path, $testing_signal_path, $script_dir) = @_;
+	my ($run_outDir, $run_tag, $UMI_CB_ctss_bed_path, $run_cellbarcode_path, $training_signal_path, $testing_signal_path, $script_dir) = @_;
 	
 	my $path_hsh_ref = {
 		'script_dir' => $script_dir,
 
-		'lib_list_path' => $lib_list_path,
+		'UMI_CB_ctss_bed_path' => $UMI_CB_ctss_bed_path,
+		'run_cellbarcode_path' => $run_cellbarcode_path,
 		'training_signal_path' => $training_signal_path,
 		'testing_signal_path' => $testing_signal_path,
 
-		'long_ctss_bed_path' => $run_outDir."/pool/".$run_tag."/bed/".$run_tag.".pool.long.ctss.bed.gz",
-		'ung_ctss_bed_path' => $run_outDir."/pool/".$run_tag."/bed/".$run_tag.".pool.unencoded_G.collapse.ctss.bed.gz",
-		'collapse_ctss_bed_path' => $run_outDir."/pool/".$run_tag."/bed/".$run_tag.".pool.collapse.ctss.bed.gz",
+		'CB_ctss_bed_path' => $run_outDir."/subsample_ctss/".$run_tag."/bed/".$run_tag.".subsample.CB.ctss.bed.gz",
+		'ung_ctss_bed_path' => $run_outDir."/subsample_ctss/".$run_tag."/bed/".$run_tag.".subsample.unencoded_G.collapse.ctss.bed.gz",
+		'collapse_ctss_bed_path' => $run_outDir."/subsample_ctss/".$run_tag."/bed/".$run_tag.".subsample.collapse.ctss.bed.gz",
+		'filtered_ctss_bed_path' => $run_outDir."/remove_strand_invader/".$run_tag."/bed/".$run_tag.".pass.ctss.bed.gz",
 		'raw_tssCluster_bed_path' => $run_outDir."/cluster/".$run_tag."/bed/".$run_tag.".tssCluster.bed.gz",
 		'filtered_tssCluster_info_path' => $run_outDir."/filter/".$run_tag."/log/".$run_tag.".tssCluster.log.tsv",
 
@@ -292,40 +258,53 @@ sub define_task {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 1_run|123
+#	primaryAppearInSection: 1_run|129
 #	secondaryAppearInSection: >none
-#	input: $genome, $max_thread, $path_hsh_ref, $run_outDir, $run_tag
+#	input: $genome, $max_thread, $path_hsh_ref, $run_outDir, $run_tag, $subsample_num
 #	output: $task_info_hsh_ref
-#	toCall: my ($task_info_hsh_ref) = &define_task($genome, $path_hsh_ref, $max_thread, $run_tag, $run_outDir);
-#	calledInLine: 127
+#	toCall: my ($task_info_hsh_ref) = &define_task($genome, $path_hsh_ref, $max_thread, $subsample_num, $run_tag, $run_outDir);
+#	calledInLine: 133
 #....................................................................................................................................................#
 
-	my ($genome, $path_hsh_ref, $max_thread, $run_tag, $run_outDir) = @_;
+	my ($genome, $path_hsh_ref, $max_thread, $subsample_num, $run_tag, $run_outDir) = @_;
 
 	my $task_info_hsh_ref = {
 		1 => {
-			'task_name' => 'pool',
-			'script_name' => 'tool.bk.pool',
+			'task_name' => 'subsample_ctss',
+			'script_name' => 'scafe.tool.sc.subsample_ctss',
 			'param' => [
-				['lib_list_path', $path_hsh_ref->{'lib_list_path'}],
-				['max_thread', $max_thread],
-				['genome', $genome],
+				['subsample_num', $subsample_num],
+				['UMI_CB_ctss_bed_path', $path_hsh_ref->{'UMI_CB_ctss_bed_path'}],
 				['outputPrefix', $run_tag],
-				['outDir', $run_outDir."/pool"],
+				['outDir', $run_outDir."/subsample_ctss"],
 			],
 			'check' => [
 				 $path_hsh_ref->{'ung_ctss_bed_path'},
 				 $path_hsh_ref->{'collapse_ctss_bed_path'},
-				 $path_hsh_ref->{'long_ctss_bed_path'},
+				 $path_hsh_ref->{'CB_ctss_bed_path'},
 			]
 		},
 		2 => {
-			'task_name' => 'cluster',
-			'script_name' => 'tool.cm.cluster',
+			'task_name' => 'remove_strand_invader',
+			'script_name' => 'scafe.tool.cm.remove_strand_invader',
 			'param' => [
-				['cluster_ctss_bed_path', $path_hsh_ref->{'collapse_ctss_bed_path'}],
-				['count_ctss_bed_path_list', $path_hsh_ref->{'collapse_ctss_bed_path'}],
-				['count_scope_bed_path', $path_hsh_ref->{'collapse_ctss_bed_path'}],
+				['ctss_bed_path', $path_hsh_ref->{'collapse_ctss_bed_path'}],
+				['genome', $genome],
+				['max_thread', $max_thread],
+				['outputPrefix', $run_tag],
+				['outDir', $run_outDir."/remove_strand_invader"],
+			],
+			'check' => [
+				 $path_hsh_ref->{'filtered_ctss_bed_path'},
+			]
+		},
+		3 => {
+			'task_name' => 'cluster',
+			'script_name' => 'scafe.tool.cm.cluster',
+			'param' => [
+				['cluster_ctss_bed_path', $path_hsh_ref->{'filtered_ctss_bed_path'}],
+				['count_ctss_bed_path_list', $path_hsh_ref->{'filtered_ctss_bed_path'}],
+				['count_scope_bed_path', $path_hsh_ref->{'filtered_ctss_bed_path'}],
 				['outputPrefix', $run_tag],
 				['outDir', $run_outDir."/cluster"],
 			],
@@ -333,16 +312,16 @@ sub define_task {
 				 $path_hsh_ref->{'raw_tssCluster_bed_path'},
 			]
 		},
-		3 => {
+		4 => {
 			'task_name' => 'filter',
-			'script_name' => 'tool.cm.filter',
+			'script_name' => 'scafe.tool.cm.filter',
 			'param' => [
 				['genome', $genome],
 				['training_signal_path', $path_hsh_ref->{'training_signal_path'}],
 				['testing_signal_path', $path_hsh_ref->{'testing_signal_path'}],
 				['ung_ctss_bed_path', $path_hsh_ref->{'ung_ctss_bed_path'}],
 				['tssCluster_bed_path', $path_hsh_ref->{'raw_tssCluster_bed_path'}],
-				['ctss_bed_path', $path_hsh_ref->{'collapse_ctss_bed_path'}],
+				['ctss_bed_path', $path_hsh_ref->{'filtered_ctss_bed_path'}],
 				['outputPrefix', $run_tag],
 				['outDir', $run_outDir."/filter"],
 			],
@@ -352,12 +331,12 @@ sub define_task {
 				 $path_hsh_ref->{'lenient.filtered_tssCluster_bed_path'},
 			]
 		},
-		4 => {
+		5 => {
 			'task_name' => 'ctss_to_bigwig',
-			'script_name' => 'tool.cm.ctss_to_bigwig',
+			'script_name' => 'scafe.tool.cm.ctss_to_bigwig',
 			'param' => [
 				['genome', $genome],
-				['ctss_bed_path', $path_hsh_ref->{'collapse_ctss_bed_path'}],
+				['ctss_bed_path', $path_hsh_ref->{'filtered_ctss_bed_path'}],
 				['outputPrefix', $run_tag],
 				['outDir', $run_outDir."/ctss_to_bigwig"],
 			],
@@ -368,9 +347,9 @@ sub define_task {
 				 $path_hsh_ref->{'bw_count_fwd_path'},
 			]
 		},
-		5 => {
+		6 => {
 			'task_name' => 'annotate',
-			'script_name' => 'tool.cm.annotate',
+			'script_name' => 'scafe.tool.cm.annotate',
 			'param' => [
 				['genome', $genome],
 				['tssCluster_bed_path', $path_hsh_ref->{"default.filtered_tssCluster_bed_path"}],
@@ -385,6 +364,22 @@ sub define_task {
 				$path_hsh_ref->{"tssCluster_info_path"},
 			]
 		},
+		7 => {
+			'task_name' => 'count',
+			'script_name' => 'scafe.tool.sc.count',
+			'param' => [
+				['countRegion_bed_path', $path_hsh_ref->{"tCRE_bed_path"}],
+				['ctss_bed_path', $path_hsh_ref->{'CB_ctss_bed_path'}],
+				['cellBarcode_list_path', $path_hsh_ref->{'run_cellbarcode_path'}],
+				['outputPrefix', $run_tag],
+				['outDir', $run_outDir."/count"],
+			],
+			'check' => [
+				$run_outDir."/count/$run_tag/matrix/matrix.mtx",
+				$run_outDir."/count/$run_tag/matrix/genes.tsv",
+				$run_outDir."/count/$run_tag/matrix/barcodes.tsv",
+			]
+		},
 	};
 	
 	return($task_info_hsh_ref);
@@ -394,12 +389,12 @@ sub logCalledCMDAndScript {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|112
+#	primaryAppearInSection: 0_startTasks|117
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $result_script_dir, $scriptAbsPath
 #	output: 
 #	toCall: &logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);
-#	calledInLine: 118
+#	calledInLine: 124
 #....................................................................................................................................................#
 	my ($ARGVStr, $result_script_dir, $scriptAbsPath) = @_;
 
@@ -417,19 +412,19 @@ sub logCalledCMDAndScript {
 sub prepDir {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: currentTime|190
+#	dependOnSub: currentTime|155
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|112
+#	primaryAppearInSection: 0_startTasks|117
 #	secondaryAppearInSection: >none
 #	input: $ARGV_ary_ref, $run_outDir
 #	output: $ARGVStr, $result_script_dir, $scafe_dir, $scriptAbsPath, $script_dir
 #	toCall: my ($scafe_dir, $script_dir, $result_script_dir, $ARGVStr, $scriptAbsPath) = &prepDir($run_outDir, $ARGV_ary_ref);
-#	calledInLine: 117
+#	calledInLine: 123
 #....................................................................................................................................................#
 	my ($run_outDir, $ARGV_ary_ref) = @_;
 
 	my $scriptAbsPath = abs_path($0);
-	my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @{$ARGV_ary_ref});#->190
+	my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @{$ARGV_ary_ref});#->155
 	my @path_split = split /\//, $scriptAbsPath;
 	my $scafe_dir_index = $#path_split-2;
 	my $script_dir_index = $#path_split-1;
@@ -447,21 +442,23 @@ sub readParameters {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|112
+#	primaryAppearInSection: 0_startTasks|117
 #	secondaryAppearInSection: >none
 #	input: none
-#	output: $genome, $lib_list_path, $max_thread, $overwrite, $run_outDir, $run_tag, $testing_signal_path, $training_signal_path
-#	toCall: my ($lib_list_path, $genome, $training_signal_path, $testing_signal_path, $max_thread, $run_tag, $run_outDir, $overwrite) = &readParameters();
-#	calledInLine: 116
+#	output: $UMI_CB_ctss_bed_path, $genome, $max_thread, $overwrite, $run_cellbarcode_path, $run_outDir, $run_tag, $subsample_num, $testing_signal_path, $training_signal_path
+#	toCall: my ($UMI_CB_ctss_bed_path, $run_cellbarcode_path, $subsample_num, $genome, $training_signal_path, $testing_signal_path, $max_thread, $run_tag, $run_outDir, $overwrite) = &readParameters();
+#	calledInLine: 121
 #....................................................................................................................................................#
 	
-	my ($lib_list_path, $genome, $training_signal_path, $testing_signal_path, $max_thread, $run_tag, $run_outDir, $overwrite);
+	my ($UMI_CB_ctss_bed_path, $run_cellbarcode_path, $subsample_num, $genome, $training_signal_path, $testing_signal_path, $max_thread, $run_tag, $run_outDir, $overwrite);
 
 	$overwrite = 'no';
 	$max_thread = 5;
 	
 	GetOptions 	(
-		"lib_list_path=s"				=>	\$lib_list_path,
+		"UMI_CB_ctss_bed_path=s"	=>	\$UMI_CB_ctss_bed_path,
+		"run_cellbarcode_path=s"	=>	\$run_cellbarcode_path,
+		"subsample_num=s"				=>	\$subsample_num,
 		"genome=s"						=>	\$genome,
 		"max_thread:i"					=>	\$max_thread,
 		"training_signal_path:s"	=>	\$training_signal_path,
@@ -472,11 +469,12 @@ sub readParameters {
 		'help'							=>	sub { HelpMessage(0) },
 	) or HelpMessage(1);
 
-	HelpMessage(1) unless $lib_list_path;
+	HelpMessage(1) unless $UMI_CB_ctss_bed_path;
 
 	#---check file
 	my $file_check_hsh_ref = {
-		'lib_list_path' => $lib_list_path,
+		'UMI_CB_ctss_bed_path' => $UMI_CB_ctss_bed_path,
+		'run_cellbarcode_path' => $run_cellbarcode_path,
 	};
 	
 	foreach my $option_name (keys %{$file_check_hsh_ref}) {
@@ -489,7 +487,7 @@ sub readParameters {
 	chop $run_outDir if ($run_outDir =~ m/\/$/); #---remove the last slash
 	system "mkdir -p -m 755 $run_outDir/";
 	
-	return($lib_list_path, $genome, $training_signal_path, $testing_signal_path, $max_thread, $run_tag, $run_outDir, $overwrite);
+	return($UMI_CB_ctss_bed_path, $run_cellbarcode_path, $subsample_num, $genome, $training_signal_path, $testing_signal_path, $max_thread, $run_tag, $run_outDir, $overwrite);
 
 }
 sub run_task {

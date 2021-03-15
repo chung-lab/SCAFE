@@ -85,7 +85,7 @@ use Cwd 'abs_path';
    tar
 
  For demo, cd to SCAFE dir and run,
-   ./script/download.demo.input
+   scafe.download.demo.input
 
 =head1 VERSION
 

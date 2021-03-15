@@ -75,17 +75,17 @@ use Cwd 'abs_path';
  ...===┴========================================================================================...
 
                       Single Cell Analysis of Five-prime End (SCAFE) Tool Suite 
-                                   ---> tool.cm.cluster <---
+                                   ---> scafe.tool.cm.cluster <---
                           <--- tool, common mode, cluster ctss --->
 
  Description:
    This tool generate TSS cluster from a ctss bed file, using an external tool paraclu with user-defined cutoffs
 
  Usage:
-   tool.cm.cluster [options] --cluster_ctss_bed_path --outputPrefix --outDir
+   scafe.tool.cm.cluster [options] --cluster_ctss_bed_path --outputPrefix --outDir
    
    --cluster_ctss_bed_path       <required> [string]  ctss file used for clustering,
-                                                      "collapse" ctss file from tool.sc.bam_to_ctss.pl, 
+                                                      "collapse" ctss file from scafe.tool.sc.bam_to_ctss.pl, 
                                                       4th column is number of cells and 5th column is number UMI
    --outputPrefix                <required> [string]  prefix for the output files
    --outDir                      <required> [string]  directory for the output files
@@ -114,7 +114,7 @@ use Cwd 'abs_path';
    bedtools
 
  For demo, cd to SCAFE dir and run,
-   ./scripts/tool.cm.cluster \
+   scafe.tool.cm.cluster \
    --overwrite=yes \
    --cluster_ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.collapse.ctss.bed.gz \
    --outputPrefix=demo \
