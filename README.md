@@ -13,7 +13,7 @@
  ...===┴========================================================================================...
  ```
 
-*SCAFE* (Single Cell Analysis of Five'Ends) provides an end-to-end solution for processing of single cell 5’end RNA-seq data. It takes a read alignment file (**.bam*) from single-cell RNA-5’end-sequencing (e.g. 10xGenomics Chromimum®), precisely maps the cDNA 5'ends (i.e. transcription start sites, TSS), filters for the artefacts and identifies genuine TSS clusters using logistic regression. Based on the TSS clusters, it defines transcribed cis-regulatory elements (tCRE) and annotated them to gene models. It then counts the UMI in tCRE in single cells and returns a tCRE UMI/cellbarcode matrix ready for downstream analyses, e.g. cell-type clustering, linking promoters to enhancers
+*SCAFE* (Single Cell Analysis of Five-prime Ends) provides an end-to-end solution for processing of single cell 5’end RNA-seq data. It takes a read alignment file (**.bam*) from single-cell RNA-5’end-sequencing (e.g. 10xGenomics Chromimum®), precisely maps the cDNA 5'ends (i.e. transcription start sites, TSS), filters for the artefacts and identifies genuine TSS clusters using logistic regression. Based on the TSS clusters, it defines transcribed cis-regulatory elements (tCRE) and annotated them to gene models. It then counts the UMI in tCRE in single cells and returns a tCRE UMI/cellbarcode matrix ready for downstream analyses, e.g. cell-type clustering, linking promoters to enhancers
 *etc* .
 
 ## Citing *SCAFE*
@@ -155,11 +155,16 @@ Finished checking
 Successful for all checks. SCAFE should run well.
 ```
 ### Docker image
-If you have docker installed on your system, you might also consider loading *SCAFE* as a docker image
+If you have docker installed on your system, you might also consider pulling the *SCAFE* docker image and run it in a docker container. Once you are logged into the docker container, the following tutorial on the demo data can be ran with exactly the same command. 
+
+To install docker, please see [here](https://www.docker.com/). Noted that all files reads/writes are within the docker container by default. To share files (i.e. input and output of SCAFE) between the container and the host, please see [here](https://flaviocopes.com/docker-access-files-outside-container/).   
 
 ```shell
-#---load the docker image (Not implemented yet)
-./scripts/XXX.XXX.XXX
+#---to pull the docker image
+docker pull cchon/scafe:1.0
+
+#---to run scafe within a docker container, run
+docker run -it cchon/scafe:1.0
 ```
 
 ## Getting started with demo data
@@ -197,7 +202,7 @@ It should print the help message as the followings:
       ┌─ᐅ 5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-3'
 ...===┴========================================================================================...
 
-                     Single Cell Analysis of Five'End (SCAFE) Tool Suite 
+                     Single Cell Analysis of Five-prime Ends (SCAFE) Tool Suite 
                                ---> workflow.sc.solo <---
                  <--- workflow, single-cell mode, process a single sample --->
 
