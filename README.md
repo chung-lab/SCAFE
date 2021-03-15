@@ -72,7 +72,7 @@ Rscript -e 'if (!require("reshape2")) install.packages("reshape2", repos = "http
 ### OS
 SCAFE was developed and tested on Debian GNU/Linux 9. Running SACFE on other OS are not guranteed.
 
-## Installing SCAFE
+## Installing *SCAFE*
 Once you ensured the above dependencies are met, you are ready to download SCAFE to your system.
 
 ### Clone this respository
@@ -157,7 +157,7 @@ Successful for all checks. SCAFE should run well.
 ### Docker image
 If you have docker installed on your system, you might also consider pulling the *SCAFE* docker image and run it in a docker container. Once you are logged into the docker container, the following tutorial on the demo data can be ran with exactly the same command. 
 
-To install docker, please see [here](https://www.docker.com/). Noted that all files reads/writes are within the docker container by default. To share files (i.e. input and output of SCAFE) between the container and the host, please see [here](https://flaviocopes.com/docker-access-files-outside-container/).   
+To install docker, please see [here](https://www.docker.com/). Noted that all files reads/writes are within the docker container by default. To share files (i.e. input and output of *SCAFE*) between the container and the host, please see [here](https://flaviocopes.com/docker-access-files-outside-container/).   
 
 ```shell
 #---to pull the docker image
