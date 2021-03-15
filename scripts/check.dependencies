@@ -387,7 +387,7 @@ sub checkThirdParty {
 		printf ("%-20s %-35s %-10s\r", $type, $check_name, $status);
 		my $stdOut = `$cut_sh_path 55C7128A 2>&1`;
 		$status = "failed";
-		$status = 'successful' if ($stdOut =~ m/awk: fatal: cannot open/);
+		$status = 'successful' if ($stdOut =~ m/awk:/);
 		printf ("%-20s %-35s %-10s\n", $type, $check_name, $status);
 		$check_hsh_ref->{$status}{$type}{$check_name}++;
 	}

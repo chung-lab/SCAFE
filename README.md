@@ -1,4 +1,4 @@
-<h1 align="center"> <i>SCAFE</i> (Single Cell Analysis of Five'Ends)</h1>
+<h1 align="center"> <i>SCAFE</i> (Single Cell Analysis of Five-prime Ends)</h1>
 
  ```shell
            5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~AAA-3'
