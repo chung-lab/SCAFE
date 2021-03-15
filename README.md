@@ -38,6 +38,9 @@ Profiling of cis-regulatory elements (CREs, mostly promoters and enhancers) in s
 A fraction of TSS identified based on read 5′ends from template switching (TS) reactions (used in 10xGenomics Chromimum®) may not be genuine, attributed to various artefacts including strand invasion and other sources. This results in excessive artifactual TSS misidentified along the gene body, collectively known as “exon painting”. While strand invasion artefacts can be specifically minimized by considering the complementarity of TSS upstream sequence to TS oligo sequence, a non-negligible fraction of artefactual TSS remains after filtering for strand invasion. To minimize the artifactual TSS, *SCAFE* examines the properties of TSS clusters, as shown in **Figure (b)**, and devised a classifier to identify genuine TSS based on multiple logistic regression. This classifier, i.e. logistic probability, achieved excellent performance with AUC>0.98 across sequencing depths and outperformed all individual metrics. This is implemented in the tool ***filter***.
 
 ## Dependencies
+### TL;DR
+Go straight to the [Docker Image](#1) section if you already have [docker](https://www.docker.com/) installed and do not want to hassle with dependencies and installation.
+
 ### perl
 *SCAFE* is mainly written in perl (v5.24.1 or later). All scripts are standalone applications and **DO NOT require installations** of extra perl modules. Check whether perl is properly installed on your system.
 
@@ -154,7 +157,7 @@ Finished checking
 
 Successful for all checks. SCAFE should run well.
 ```
-### Docker image
+### Docker image<a name="1"></a>
 If you have docker installed on your system, you might also consider pulling the *SCAFE* docker image and run it in a docker container. Once you are logged into the docker container, the following tutorial on the demo data can be ran with exactly the same command. 
 
 To install docker, please see [here](https://www.docker.com/). Noted that all files reads/writes are within the docker container by default. To share files (i.e. input and output of *SCAFE*) between the container and the host, please see [here](https://flaviocopes.com/docker-access-files-outside-container/).   
