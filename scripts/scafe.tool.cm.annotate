@@ -470,7 +470,7 @@ sub assignClusterProximity {
 			'slop_rng' => $proximity_slop_rng,
 		},
 		'exon' => {
-			'in_bed6_cmd' => "bed12tobed6 -i $transcript_in_scope_bed_path",
+			'in_bed6_cmd' => "$bedtools_bin bed12tobed6 -i $transcript_in_scope_bed_path",
 			'slop_rng' => 0,
 		},
 		'intron' => {
