@@ -155,7 +155,7 @@ It should print the help message as the followings:
 ...===┴========================================================================================...
 
                      Single Cell Analysis of Five-prime Ends (SCAFE) Tool Suite 
-                               ---> workflow.sc.solo <---
+                               ---> scafe.workflow.sc.solo <---
                  <--- workflow, single-cell mode, process a single sample --->
 
 Description:
