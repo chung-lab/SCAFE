@@ -11,7 +11,7 @@ RUN echo "deb http://cloud.r-project.org/bin/linux/debian stretch-cran35/" >>/et
  && Rscript -e 'install.packages("ggplot2")' \
  && Rscript -e 'install.packages("scales")' \
  && Rscript -e 'install.packages("reshape2")'
-RUN git clone -v https://github.com/chung-lab/SCAFE 2>2021031604
+RUN git clone -v https://github.com/chung-lab/SCAFE 2>2021031605
 WORKDIR ./SCAFE
 RUN chmod 755 -R ./scripts/ \
  && chmod 755 -R ./resources/bin/ \
