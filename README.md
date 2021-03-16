@@ -113,10 +113,10 @@ To install docker, please see [here](https://www.docker.com/). Noted that all fi
 
 ```shell
 #---to pull the docker image
-docker pull cchon/scafe:1.0
+docker pull cchon/scafe:latest
 
 #---to run scafe within a docker container, run
-docker run -it cchon/scafe:1.0
+docker run -it cchon/scafe:latest
 ```
 
 ## Getting started with demo data
