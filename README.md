@@ -104,7 +104,7 @@ To ensure the dependencies, please run check.dependencies.
 
 ```shell
 #--- run check.dependencies to check 
-./scripts/check.dependencies
+scafe.check.dependencies
 ```
 ### Docker image<a name="1"></a>
 If you have docker installed on your system, you might also consider pulling the *SCAFE* docker image and run it in a docker container. Once you are logged into the *SCAFE* docker container, the following tutorial on the demo data can be ran with exactly the same command. 
