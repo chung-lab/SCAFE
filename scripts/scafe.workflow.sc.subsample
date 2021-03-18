@@ -460,16 +460,37 @@ sub readParameters {
 		"run_cellbarcode_path=s"	=>	\$run_cellbarcode_path,
 		"subsample_num=s"				=>	\$subsample_num,
 		"genome=s"						=>	\$genome,
+		"run_tag=s"						=>	\$run_tag,
+		"run_outDir=s"					=>	\$run_outDir,
 		"max_thread:i"					=>	\$max_thread,
 		"training_signal_path:s"	=>	\$training_signal_path,
 		"testing_signal_path:s"		=>	\$testing_signal_path,
-		"run_tag=s"						=>	\$run_tag,
-		"run_outDir=s"					=>	\$run_outDir,
 		"overwrite:s"					=>	\$overwrite,
 		'help'							=>	sub { HelpMessage(0) },
 	) or HelpMessage(1);
 
-	HelpMessage(1) unless $UMI_CB_ctss_bed_path;
+	my $opt_check_hsh_ref = {
+		'UMI_CB_ctss_bed_path' => $UMI_CB_ctss_bed_path,
+		'run_cellbarcode_path' => $run_cellbarcode_path,
+		'subsample_num' => $subsample_num,
+		'genome' => $genome,
+		'run_tag' => $run_tag,
+		'run_outDir' => $run_outDir,
+	};
+	
+	my $required = 'yes';
+	print "\n";
+	foreach my $option_name (keys %{$opt_check_hsh_ref}) {
+		if (not defined $opt_check_hsh_ref->{$option_name}) {
+			print "WARNING: option \"$option_name\" is requied\n";
+			$required = 'no';
+		}
+	}
+	if ($required eq 'no') {
+		print "WARNING: SCAFE quitting. Please check this help message for required options\n";
+		print "\n";
+		HelpMessage(1);
+	}
 
 	#---check file
 	my $file_check_hsh_ref = {

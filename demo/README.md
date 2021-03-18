@@ -1,12 +1,12 @@
 ## Demo data and test runs
-Please use ./script/download.demo.input to download data and ./script/demo.test.run to test run. Please also make sure genome reference hg19.gencode_v32lift37 is download to ./resources/genome/ using ./scripts/download.resources.genome
+Please use scafe.download.demo.input to download data and scafe.demo.test.run to test run. Please also make sure genome reference hg19.gencode_v32lift37 is download to ./resources/genome/ using scafe.download.resources.genome
 
 ### download.demo.input [[top]](#0)<a name="22"></a>
    This scripts download demo data and save in ./demo/input dir.
 
 ```
  Usage:
-   download.demo.input
+   scafe.download.demo.input
 
  Dependencies:
    wget
@@ -18,11 +18,11 @@ Please use ./script/download.demo.input to download data and ./script/demo.test.
 ### demo.test.run [[top]](#0)<a name="23"></a>
    This scripts test run for demo data in the ./demo/input dir. It runs all six workflows.
    Demo input data must be downloaded from using ./script/download.demo.input
-   Genome reference hg19.gencode_v32lift37 must be downloaded using ./scripts/download.resources.genome
+   Genome reference hg19.gencode_v32lift37 must be downloaded using scafe.download.resources.genome
 
 ```
  Usage:
-   demo.test.run [options] --run_outDir
+   scafe.demo.test.run [options] --run_outDir
    
    --run_outDir           <required> [string]  directory for the output test runs
    --overwrite            (optional) [yes/no]  erase run_outDir before running (default=no)
@@ -37,7 +37,7 @@ Please use ./script/download.demo.input to download data and ./script/demo.test.
    paraclu-cut.sh
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/demo.test.run \
+   scafe.demo.test.run \
    --overwrite=yes \
    --run_outDir=./demo/output/
 ```
@@ -47,7 +47,7 @@ Please use ./script/download.demo.input to download data and ./script/demo.test.
 
 ```
  Usage:
-   download.resources.genome --genome
+   scafe.download.resources.genome --genome
    
    --genome <required> [string] name of genome reference, currently available genomes:
                                 hg19.gencode_v32lift37
@@ -60,6 +60,6 @@ Please use ./script/download.demo.input to download data and ./script/demo.test.
    tar
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/download.resources.genome \
+   scafe.download.resources.genome \
    --genome=hg19.gencode_v32lift37
 ```

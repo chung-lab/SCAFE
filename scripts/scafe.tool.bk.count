@@ -540,7 +540,6 @@ sub readCountRegionInfo {
 	} else {
 		open (COUNTREGION, "<", $countRegion_bed_path);
 	}
-	<COUNTREGION>;
 	my $countRegion_index = 1;
 	while (<COUNTREGION>) {
 		chomp;

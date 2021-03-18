@@ -1408,19 +1408,38 @@ sub readParameters {
 
 	GetOptions 	(
 		"bamPath=s"				=>	\$bamPath,
-		"include_flag=s"		=>	\$include_flag,
+		"outDir=s"				=>	\$outDir,
+		"genome=s"				=>	\$genome,
+		"outputPrefix=s"		=>	\$outputPrefix,
 		"min_MAPQ:i"			=>	\$min_MAPQ,
+		"include_flag:s"		=>	\$include_flag,
 		"exclude_flag:s"		=>	\$exclude_flag,
 		"max_thread:i"			=>	\$max_thread,
 		"TS_oligo_seq:s"		=>	\$TS_oligo_seq,
-		"genome=s"				=>	\$genome,
-		"outputPrefix=s"		=>	\$outputPrefix,
-		"outDir:s"				=>	\$outDir,
 		"overwrite:s"			=>	\$overwrite,
 		'help'					=>	sub { HelpMessage(0) },
 	) or HelpMessage(1);
 
-	HelpMessage(1) unless $bamPath;
+	my $opt_check_hsh_ref = {
+		'bamPath' => $bamPath,
+		'outDir' => $outDir,
+		'genome' => $genome,
+		'outputPrefix' => $outputPrefix,
+	};
+	
+	my $required = 'yes';
+	print "\n";
+	foreach my $option_name (keys %{$opt_check_hsh_ref}) {
+		if (not defined $opt_check_hsh_ref->{$option_name}) {
+			print "WARNING: option \"$option_name\" is requied\n";
+			$required = 'no';
+		}
+	}
+	if ($required eq 'no') {
+		print "WARNING: SCAFE quitting. Please check this help message for required options\n";
+		print "\n";
+		HelpMessage(1);
+	}
 	
 	#---check file
 	my $file_check_hsh_ref = {
@@ -1429,7 +1448,9 @@ sub readParameters {
 	
 	foreach my $option_name (keys %{$file_check_hsh_ref}) {
 		my $file_path = $file_check_hsh_ref->{$option_name};
-		die "Quitting: File $option_name does not exists at $file_path" if not -s $file_path;
+		if (not -s $file_path) {
+			die "Quitting: File $option_name does not exists at $file_path";
+		}
 	}
 	
 	chop $outDir if ($outDir =~ m/\/$/); #---remove the last slash
