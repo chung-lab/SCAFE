@@ -262,7 +262,7 @@ Finally, try using *scafe.tool.sc.link* to run [cicero](https://cole-trapnell-la
 #--- check out the help message of scafe.tool.sc.link
 scafe.tool.sc.link --help
 
-#--- run the all six available workflows on the demo bulk and single
+#--- run scafe.tool.sc.link to link tCRE by their coactivity
 #--- it'll take a around 20 minutes
 scafe.tool.sc.link \
 --overwrite=yes \
