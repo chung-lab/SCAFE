@@ -375,10 +375,10 @@ sub generateCiceroCDS {
 	my $binarize = 'FALSE';
 	$binarize = 'yes' if $binarize_CRE_exp eq 'yes';
 	my $cicero_cds_path = "$result_cicero_dir/cicero_cds.RDS";
+	my $R_stdout_path = "$result_cicero_dir/get_cicero_cds_R.stdout.txt";
+	my $R_stderr_path = "$result_cicero_dir/get_cicero_cds_R.stderr.txt";
 	
 	if (not -s $cicero_cds_path) {
-		my $R_stdout_path = "$result_cicero_dir/get_cicero_cds_R.stdout.txt";
-		my $R_stderr_path = "$result_cicero_dir/get_cicero_cds_R.stderr.txt";
 		my $cmd = join " ", (
 			$Rscript_bin,
 			$get_cicero_cds_R,
@@ -396,7 +396,13 @@ sub generateCiceroCDS {
 		&reportAndLogStatus("cicero_cds_path found.", 10, "\n");#->927
 	}
 	
-	die "cicero cds generation failed.\n" if not -s $cicero_cds_path;
+	if (not -s $cicero_cds_path) {
+		&reportAndLogStatus("cicero cds generation failed.", 10, "\n");
+		&reportAndLogStatus("checking $R_stderr_path.", 10, "\n");
+		&reportAndLogStatus("=================================", 10, "\n");
+		system "less $R_stderr_path";
+		die "check cicero installion. quitting\n";
+	}
 
 	return ($cicero_cds_path);
 }
@@ -424,11 +430,11 @@ sub generateCiceroLink {
 				my $ciero_out_dir = $thread_info_hsh_ref->{$threadID}{'ciero_out_dir'};
 				my $cicero_link_path = $thread_info_hsh_ref->{$threadID}{'cicero_link_path'};
 				my $cicero_ccan_path = $thread_info_hsh_ref->{$threadID}{'cicero_ccan_path'};
+				my $R_stdout_path = "$ciero_out_dir/run_cicero_link_R.stdout.txt";
+				my $R_stderr_path = "$ciero_out_dir/run_cicero_link_R.stderr.txt";
 				
 				&reportAndLogStatus("$chr_list spawned to thread $threadID", 10, "\n");#->927
 				if (not -s $cicero_link_path or not -s $cicero_ccan_path) {
-					my $R_stdout_path = "$ciero_out_dir/run_cicero_link_R.stdout.txt";
-					my $R_stderr_path = "$ciero_out_dir/run_cicero_link_R.stderr.txt";
 					my $cmd = join " ", (
 						$Rscript_bin,
 						$run_cicero_link_R,
@@ -443,7 +449,14 @@ sub generateCiceroLink {
 				} else {
 					&reportAndLogStatus("links of $chr_list found. skipping.", 10, "\n");#->927
 				}
-				die "failed to generate links for $chr_list. check error log at $ciero_out_dir\n" if not -s $cicero_link_path or not -s $cicero_ccan_path;
+				
+				if (not -s $cicero_link_path or not -s $cicero_ccan_path) {
+					&reportAndLogStatus("failed to generate links for $chr_list. ", 10, "\n");
+					&reportAndLogStatus("checking $R_stderr_path.", 10, "\n");
+					&reportAndLogStatus("=================================", 10, "\n");
+					system "less $R_stderr_path";
+					die "check cicero installion. quitting\n";
+				}
 
 				return ();
 			}

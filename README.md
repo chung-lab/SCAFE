@@ -52,23 +52,24 @@ perl --version
 ### R
 *SCAFE* relies on R for logistic regression, ROC analysis and graph plotting. Rscript **(v3.6.1 or later)** and the following R packages have to be properly installed:
 
-* [ROCR](https://cran.r-project.org/web/packages/ROCR/readme/README.html), [PRROC](https://cran.r-project.org/web/packages/PRROC/index.html), [caret](https://cran.r-project.org/web/packages/caret/index.html), [e1071](https://cran.r-project.org/web/packages/e1071/index.html), [ggplot2](https://ggplot2.tidyverse.org/), [scales](https://cran.r-project.org/web/packages/scales/index.html), [reshape2](https://cran.r-project.org/web/packages/reshape2/index.html), [docopt](https://cran.r-project.org/web/packages/docopt/index.html), [data.table](https://cran.r-project.org/web/packages/data.table/index.html), [Matrix](https://cran.r-project.org/web/packages/Matrix/index.html), [monocle3](https://cole-trapnell-lab.github.io/monocle3/docs/installation/), [cicero](https://cole-trapnell-lab.github.io/cicero-release/docs_m3/#installing-cicero)
+* [ROCR](https://cran.r-project.org/web/packages/ROCR/readme/README.html), [PRROC](https://cran.r-project.org/web/packages/PRROC/index.html), [caret](https://cran.r-project.org/web/packages/caret/index.html), [e1071](https://cran.r-project.org/web/packages/e1071/index.html), [ggplot2](https://ggplot2.tidyverse.org/), [scales](https://cran.r-project.org/web/packages/scales/index.html), [reshape2](https://cran.r-project.org/web/packages/reshape2/index.html), [docopt](https://cran.r-project.org/web/packages/docopt/index.html), [data.table](https://cran.r-project.org/web/packages/data.table/index.html), [Matrix](https://cran.r-project.org/web/packages/Matrix/index.html), [R.utils](), [monocle3](https://cole-trapnell-lab.github.io/monocle3/docs/installation/), [cicero](https://cole-trapnell-lab.github.io/cicero-release/docs_m3/#installing-cicero)
 
 ```shell
 #--- Check your Rscript version, must be 3.6.1 ot later
 Rscript --version
 
 #--- Check your R packages, install if missing
-Rscript -e 'if (!require("ROCR")) install.packages("ROCR")'
-Rscript -e 'if (!require("PRROC")) install.packages("PRROC")'
-Rscript -e 'if (!require("caret")) install.packages("caret")'
-Rscript -e 'if (!require("e1071")) install.packages("e1071")'
-Rscript -e 'if (!require("ggplot2")) install.packages("ggplot2")'
-Rscript -e 'if (!require("scales")) install.packages("scales")'
-Rscript -e 'if (!require("reshape2")) install.packages("reshape2")'
-Rscript -e 'if (!require("docopt")) install.packages("docopt")'
-Rscript -e 'if (!require("data.table")) install.packages("data.table")'
-Rscript -e 'if (!require("Matrix")) install.packages("Matrix")'
+Rscript -e 'install.packages("ROCR")'
+Rscript -e 'install.packages("PRROC")'
+Rscript -e 'install.packages("caret")'
+Rscript -e 'install.packages("e1071")'
+Rscript -e 'install.packages("ggplot2")'
+Rscript -e 'install.packages("scales")'
+Rscript -e 'install.packages("reshape2")'
+Rscript -e 'install.packages("docopt")'
+Rscript -e 'install.packages("data.table")'
+Rscript -e 'install.packages("Matrix", repos="http://R-Forge.R-project.org")'
+Rscript -e 'install.packages("R.utils")'
 ```
 
 Please refer to the respective homepages for installing [monocle3](https://cole-trapnell-lab.github.io/monocle3/docs/installation/) and [cicero](https://cole-trapnell-lab.github.io/cicero-release/docs_m3/#installing-cicero). Failed to install these two package will ***NOT*** affect the workflows. Only *scafe.tool.sc.link* requires these two packages.
