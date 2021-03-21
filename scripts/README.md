@@ -395,7 +395,6 @@ This folder contains the following tools and workflows. A tool perform a single 
 
  To demo run, cd to SCAFE dir and run:
    scafe.tool.sc.link \
-   /osc-fs_home/hon-chun/analysis/tenX_single_cell/scafe/dev/scripts/1.0/scafe.tool.sc.link.pl \
    --overwrite=yes \
    --max_thread=10 \
    --CRE_bed_path=./demo/input/sc.link/demo.CRE.coord.bed.gz \

@@ -52,21 +52,28 @@ perl --version
 ### R
 *SCAFE* relies on R for logistic regression, ROC analysis and graph plotting. Rscript **(v3.6.1 or later)** and the following R packages have to be properly installed:
 
-* [ROCR](https://cran.r-project.org/web/packages/ROCR/readme/README.html), [PRROC](https://cran.r-project.org/web/packages/PRROC/index.html), [caret](https://cran.r-project.org/web/packages/caret/index.html), [e1071](https://cran.r-project.org/web/packages/e1071/index.html), [ggplot2](https://ggplot2.tidyverse.org/), [scales](https://cran.r-project.org/web/packages/scales/index.html), [reshape2](https://cran.r-project.org/web/packages/reshape2/index.html)
+* [ROCR](https://cran.r-project.org/web/packages/ROCR/readme/README.html), [PRROC](https://cran.r-project.org/web/packages/PRROC/index.html), [caret](https://cran.r-project.org/web/packages/caret/index.html), [e1071](https://cran.r-project.org/web/packages/e1071/index.html), [ggplot2](https://ggplot2.tidyverse.org/), [scales](https://cran.r-project.org/web/packages/scales/index.html), [reshape2](https://cran.r-project.org/web/packages/reshape2/index.html), [docopt](https://cran.r-project.org/web/packages/docopt/index.html), [data.table](https://cran.r-project.org/web/packages/data.table/index.html), [Matrix](https://cran.r-project.org/web/packages/Matrix/index.html), [monocle3](https://cole-trapnell-lab.github.io/monocle3/docs/installation/), [cicero](https://cole-trapnell-lab.github.io/cicero-release/docs_m3/#installing-cicero)
 
 ```shell
 #--- Check your Rscript version, must be 3.6.1 ot later
 Rscript --version
 
 #--- Check your R packages, install if missing
-Rscript -e 'if (!require("ROCR")) install.packages("ROCR", repos = "http://cran.us.r-project.org")'
-Rscript -e 'if (!require("PRROC")) install.packages("PRROC", repos = "http://cran.us.r-project.org")'
-Rscript -e 'if (!require("caret")) install.packages("caret", repos = "http://cran.us.r-project.org")'
-Rscript -e 'if (!require("e1071")) install.packages("e1071", repos = "http://cran.us.r-project.org")'
-Rscript -e 'if (!require("ggplot2")) install.packages("ggplot2", repos = "http://cran.us.r-project.org")'
-Rscript -e 'if (!require("scales")) install.packages("scales", repos = "http://cran.us.r-project.org")'
-Rscript -e 'if (!require("reshape2")) install.packages("reshape2", repos = "http://cran.us.r-project.org")'
+Rscript -e 'if (!require("ROCR")) install.packages("ROCR")'
+Rscript -e 'if (!require("PRROC")) install.packages("PRROC")'
+Rscript -e 'if (!require("caret")) install.packages("caret")'
+Rscript -e 'if (!require("e1071")) install.packages("e1071")'
+Rscript -e 'if (!require("ggplot2")) install.packages("ggplot2")'
+Rscript -e 'if (!require("scales")) install.packages("scales")'
+Rscript -e 'if (!require("reshape2")) install.packages("reshape2")'
+Rscript -e 'if (!require("docopt")) install.packages("docopt")'
+Rscript -e 'if (!require("data.table")) install.packages("data.table")'
+Rscript -e 'if (!require("Matrix")) install.packages("Matrix")'
 ```
+
+Please refer to the respective homepages for installing [monocle3](https://cole-trapnell-lab.github.io/monocle3/docs/installation/) and [cicero](https://cole-trapnell-lab.github.io/cicero-release/docs_m3/#installing-cicero). Failed to install these two package will ***NOT*** affect the workflows. Only *scafe.tool.sc.link* requires these two packages.
+  
+
 ### Other 3rd party applications
 *SCAFE* also relies on a number of 3rd party applications. The binaries and executables (Linux) of these applications are distributed with this reprository in the directory ./resources/bin and **DO NOT require installations**.
 
@@ -235,7 +242,7 @@ ls -alh ./demo/output/sc.solo/count/demo/matrix
 ```
 
 ### Test run all workflows on bulk and single cell data
-Finally, we recommended a test run for all 6 available workflows on the demo data. It will take around ~20 minutes on a regular system running at 5 threads (default).
+We recommended a test run for all 6 available workflows on the demo data. It will take around ~20 minutes on a regular system running at 5 threads (default).
 
 ```shell
 #--- check out the help message of demo.test.run
@@ -247,7 +254,26 @@ scafe.demo.test.run \
 --overwrite=yes \
 --run_outDir=./demo/output/
 ```
-If everything runs smoothly, you should see the following report on screen
+
+### Test linking tCRE by coactivity
+Finally, try using *scafe.tool.sc.link* to run [cicero](https://cole-trapnell-lab.github.io/cicero-release/docs_m3/#abstract) for linking tCREs based on their coactivity. We provide a demo dataset from our PBMC data. *scafe.tool.sc.link* parallelize cicero by chromosomes, and it'll take around 20 minutes to run. We'll use *--max_thread=10* to run with 10 threads. It'll calculate the coactivity between tCREs and define cis-coactivity networks of tCREs.
+
+```shell
+#--- check out the help message of scafe.tool.sc.link
+scafe.tool.sc.link --help
+
+#--- run the all six available workflows on the demo bulk and single
+#--- it'll take a around 20 minutes
+scafe.tool.sc.link \
+--overwrite=yes \
+--max_thread=10 \
+--CRE_bed_path=./demo/input/sc.link/demo.CRE.coord.bed.gz \
+--CRE_info_path=./demo/input/sc.link/demo.CRE.info.tsv.gz \
+--count_dir=./demo/input/sc.link/matrix/ \
+--genome=hg19.gencode_v32lift37 \
+--outputPrefix=demo \
+--outDir=./demo/output/sc.link/
+```
 
 ## Run *SCAFE* on your own data 
 
