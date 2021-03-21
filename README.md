@@ -257,8 +257,7 @@ scafe.demo.test.run \
 ```
 
 ### Test linking tCRE by coactivity
-Finally, try using *scafe.tool.sc.link* to run [cicero](https://cole-trapnell-lab.github.io/cicero-release/docs_m3/#abstract) for linking tCREs based on their coactivity. We provide a demo dataset from our PBMC data. *scafe.tool.sc.link* parallelize cicero by chromosomes, and it'll take around 20 minutes to run. We'll use *--max_thread=10* to run with 10 threads. It'll calculate the coactivity between tCREs and define cis-coactivity networks of tCREs.
-
+Finally, try using *scafe.tool.sc.link* to run [cicero](https://cole-trapnell-lab.github.io/cicero-release/docs_m3/#abstract) for linking tCREs based on their coactivity. We provide a demo dataset from our PBMC data. *scafe.tool.sc.link* parallelize cicero by chromosomes, and it'll take around 20 minutes to run. We'll use *--max_thread=10* to run with 10 threads.
 ```shell
 #--- check out the help message of scafe.tool.sc.link
 scafe.tool.sc.link --help
@@ -275,6 +274,59 @@ scafe.tool.sc.link \
 --outputPrefix=demo \
 --outDir=./demo/output/sc.link/
 ```
+
+*scafe.tool.sc.link* calculates the coactivity between tCREs and define cis-coactivity networks of tCREs. You can check these results in the log directory.
+
+```shell
+#--- check connectivity
+gzip -dc ./demo/output/sc.link/demo/log/cicero.coactivity.link.redundant.non_zero.tsv.gz | head -n 20
+
+CRE1                          CRE2                         coactivity
+chr10_101190280_101190781_-   chr10_101370561_101371062_-  -0.11747
+chr10_101190280_101190781_-   chr10_101491567_101492125_+  0.39047
+chr10_101190280_101190781_-   chr10_101491783_101492284_-  0.01331
+chr10_101370561_101371062_-   chr10_101190280_101190781_-  -0.11747
+chr10_101370561_101371062_-   chr10_101491567_101492125_+  -0.30085
+chr10_101370561_101371062_-   chr10_101491783_101492284_-  -0.01026
+chr10_101380086_101380587_-   chr10_101380794_101381295_+  -0.08749
+chr10_101380794_101381295_+   chr10_101380086_101380587_-  -0.08749
+chr10_101491567_101492125_+   chr10_101190280_101190781_-  0.39047
+chr10_101491567_101492125_+   chr10_101370561_101371062_-  -0.30085
+chr10_101491567_101492125_+   chr10_101491783_101492284_-  0.0341
+chr10_101491783_101492284_-   chr10_101190280_101190781_-  0.01331
+chr10_101491783_101492284_-   chr10_101370561_101371062_-  -0.01026
+chr10_101491783_101492284_-   chr10_101491567_101492125_+  0.0341
+chr10_101945538_101946039_+   chr10_101945685_101946186_-  -0.04648
+chr10_101945685_101946186_-   chr10_101945538_101946039_+  -0.04648
+chr10_102027294_102027795_-   chr10_102046013_102046828_-  0.01844
+chr10_102027294_102027795_-   chr10_102289535_102290036_-  0.23593
+chr10_102027294_102027795_-   chr10_102295299_102295800_+  0.02627
+
+#--- check cis-coactivity network
+gzip -dc ./demo/output/sc.link/demo/log/cicero.coactivity.network.tsv.gz | head -n 20
+
+CCANID                           CREID
+CCAN_chr10_102027395_102792196   chr10_102672325_102672826_+
+CCAN_chr10_102027395_102792196   chr10_102790607_102791339_+
+CCAN_chr10_102027395_102792196   chr10_102289535_102290036_-
+CCAN_chr10_102027395_102792196   chr10_102295299_102295800_+
+CCAN_chr10_102027395_102792196   chr10_102046013_102046828_-
+CCAN_chr10_102027395_102792196   chr10_102746899_102747400_+
+CCAN_chr10_102027395_102792196   chr10_102746902_102747654_-
+CCAN_chr10_102027395_102792196   chr10_102756412_102756913_+
+CCAN_chr10_102027395_102792196   chr10_102027294_102027795_-
+CCAN_chr10_102027395_102792196   chr10_102791429_102792296_+
+CCAN_chr10_102027395_102792196   chr10_102673005_102673506_-
+CCAN_chr10_1034402_1282508       chr10_1282407_1282908_-
+CCAN_chr10_1034402_1282508       chr10_1094738_1095693_-
+CCAN_chr10_1034402_1282508       chr10_1034001_1034502_+
+CCAN_chr10_1034402_1282508       chr10_1102543_1103044_-
+CCAN_chr10_1034402_1282508       chr10_1101951_1102886_+
+CCAN_chr10_103543152_104614260   chr10_104155091_104155592_+
+CCAN_chr10_103543152_104614260   chr10_104613618_104614134_+
+CCAN_chr10_103543152_104614260   chr10_103543051_103543552_-
+```
+
 
 ## Run *SCAFE* on your own data 
 
