@@ -20,5 +20,4 @@ scafe.tool.sc.link \
 --outDir=./demo/output/sc.link/
 
 scafe.demo.test.run \
---overwrite=yes \
 --run_outDir=./demo/output/

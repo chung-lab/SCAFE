@@ -117,7 +117,7 @@ scafe.check.dependencies
 ### Docker image<a name="1"></a>
 If you have docker installed on your system, you might also consider pulling the *SCAFE* docker image and run it in a docker container. Once you are logged into the *SCAFE* docker container, the following tutorial on the demo data can be ran with exactly the same command. 
 
-To install docker, please see [here](https://www.docker.com/). Noted that all files reads/writes are within the docker container by default. To share files (i.e. input and output of *SCAFE*) between the container and the host, please see [here](https://flaviocopes.com/docker-access-files-outside-container/).   
+To install docker, please see [here](https://www.docker.com/). Noted that all files reads/writes are within the docker container by default. To share files (i.e. input and output of *SCAFE*) between the container and the host, please see [here](https://flaviocopes.com/docker-access-files-outside-container/). If you are running Docker on a labtop, make sure the allocated resources (e.g. memory and disk space) are enough, see [here](https://docs.docker.com/docker-for-mac/). We suggest to allocate at least 16GB of memory.
 
 ```shell
 #---to pull the docker image
