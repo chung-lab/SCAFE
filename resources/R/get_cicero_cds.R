@@ -1,7 +1,8 @@
-#!/usr/bin/env Rscript
-suppressMessages({
-  library(docopt)
-})
+#!/usr/bin/env Rs cript
+package.list = c(
+  'docopt','monocle3', 'cicero', 'Matrix', 'data.table', 'scales'
+)
+suppressMessages(suppressWarnings(sapply(package.list, library, character.only = TRUE, quietly = TRUE)))
 
 doc <- "Usage: get_cicero_cds.R [options]
 
@@ -14,20 +15,10 @@ options:
 --help               Show this help text"
 
 opt <- docopt(doc) # docopt parsing
-#print(opt)
+print(opt)
 
 timestamp()
 options(scipen=999)
-cat('Loading packages ...\n')
-
-suppressMessages({
-  library(monocle3)
-  library(cicero)
-  library(Matrix)
-  library(data.table)
-  library(scales)
-})
-
 
 output.dir <- opt$out
 if(!dir.exists(output.dir)) dir.create(output.dir, recursive=TRUE)

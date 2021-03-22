@@ -245,7 +245,7 @@ sub checkRPackages {
 	my ($check_hsh_ref) = @_;
 		
 	my $type = "R packages";
-	foreach my $package (qw/ROCR PRROC caret e1071 ggplot2 scales reshape2/) {
+	foreach my $package (qw/ROCR PRROC caret e1071 ggplot2 scales reshape2 docopt data.table Matrix R.utils monocle3 cicero/) {
 		my $status = "checking";
 		printf ("%-20s %-35s %-10s\r", $type, $package, $status);
 		my $stdOut = `Rscript -e "packageVersion('$package')" 2>&1`;
@@ -279,6 +279,16 @@ sub checkRScript {
 		my $stdOut = `Rscript $R_dir/$R_script 2>&1`;
 		$status = "failed";
 		$status = 'successful' if ($stdOut =~ m/Error: $R_script has no input/);
+		printf ("%-20s %-35s %-10s\n", $type, $R_script, $status);
+		$check_hsh_ref->{$status}{$type}{$R_script}++;
+	}
+
+	foreach my $R_script (qw/run_cicero_link.R get_cicero_cds.R/) {
+		my $status = "checking";
+		printf ("%-20s %-35s %-10s\r", $type, $R_script, $status);
+		my $stdOut = `Rscript $R_dir/$R_script 2>&1`;
+		$status = "failed";
+		$status = 'successful' if ($stdOut =~ m/Usage: $R_script \[options\]/);
 		printf ("%-20s %-35s %-10s\n", $type, $R_script, $status);
 		$check_hsh_ref->{$status}{$type}{$R_script}++;
 	}
