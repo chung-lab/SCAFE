@@ -286,7 +286,7 @@ sub checkRScript {
 	foreach my $R_script (qw/run_cicero_link.R get_cicero_cds.R/) {
 		my $status = "checking";
 		printf ("%-20s %-35s %-10s\r", $type, $R_script, $status);
-		my $stdOut = `Rscript $R_dir/$R_script 2>&1`;
+		my $stdOut = `Rscript $R_dir/$R_script --help 2>&1`;
 		$status = "failed";
 		$status = 'successful' if ($stdOut =~ m/Usage: $R_script \[options\]/);
 		printf ("%-20s %-35s %-10s\n", $type, $R_script, $status);

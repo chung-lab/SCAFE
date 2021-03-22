@@ -49,7 +49,7 @@ RUN Rscript -e 'install.packages("devtools")' \
  && Rscript -e 'devtools::install_github("cole-trapnell-lab/cicero-release", ref = "monocle3")'
 
 #---[2021/03/22 15:54] clone the git
-RUN git clone -v https://github.com/chung-lab/SCAFE 2>2021032220
+RUN git clone -v https://github.com/chung-lab/SCAFE 2>2021032220.2
 
 #---[2021/03/22 15:54] install the paths
 WORKDIR ./SCAFE
