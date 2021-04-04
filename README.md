@@ -13,12 +13,12 @@
  ...===┴========================================================================================...
  ```
 
-*SCAFE* (Single Cell Analysis of Five-prime Ends) provides an end-to-end solution for processing of single cell 5’end RNA-seq data. It takes a read alignment file (**.bam*) from single-cell RNA-5’end-sequencing (e.g. 10xGenomics Chromimum®), precisely maps the cDNA 5'ends (i.e. transcription start sites, TSS), filters for the artefacts and identifies genuine TSS clusters using logistic regression. Based on the TSS clusters, it defines transcribed cis-regulatory elements (tCRE) and annotated them to gene models. It then counts the UMI in tCRE in single cells and returns a tCRE UMI/cellbarcode matrix ready for downstream analyses, e.g. cell-type clustering, linking promoters to enhancers
+*SCAFE* (Single Cell Analysis of Five-prime Ends) provides an end-to-end solution for processing of single cell 5’end RNA-seq data. It takes a read alignment file \(\*.bam\) from single-cell RNA-5’end-sequencing (e.g. 10xGenomics Chromimum®), precisely maps the cDNA 5'ends (i.e. transcription start sites, TSS), filters for the artefacts and identifies genuine TSS clusters using logistic regression. Based on the TSS clusters, it defines transcribed cis-regulatory elements (tCRE) and annotated them to gene models. It then counts the UMI in tCRE in single cells and returns a tCRE UMI/cellbarcode matrix ready for downstream analyses, e.g. cell-type clustering, linking promoters to enhancers
 *etc* .
 
 ## Citing *SCAFE*
 
-Profiling of transcribed cis-regulatory elements in single cells. *bioRxiv*, 2021, [XXXXXX](https://XXXXXXXXXX/)
+Jonathan Moody and Tsukasa Kouno *et al*. Profiling of transcribed cis-regulatory elements in single cells. [bioRxiv 2021.04.04.438388](https://doi.org/10.1101/2021.04.04.438388)
 
 ## What does *SCAFE* do?
 <div style="text-align:center"><img src=".github/images/tCRE_definition.png?" width="860"></div>
