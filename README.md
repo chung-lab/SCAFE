@@ -18,7 +18,7 @@
 
 ## Citing *SCAFE*
 
-Jonathan Moody and Tsukasa Kouno *et al*. Profiling of transcribed cis-regulatory elements in single cells. [bioRxiv 2021.04.04.438388](https://doi.org/10.1101/2021.04.04.438388)
+Jonathan Moody and Tsukasa Kouno *et al*. Profiling of transcribed cis-regulatory elements in single cells. [bioRxiv 2021.04.04.438388](https://www.biorxiv.org/content/10.1101/2021.04.04.438388v1)
 
 ## What does *SCAFE* do?
 <div style="text-align:center"><img src=".github/images/tCRE_definition.png?" width="860"></div>
