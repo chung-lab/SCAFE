@@ -13,20 +13,32 @@
  ...===┴========================================================================================...
  ```
 
-*SCAFE* (Single Cell Analysis of Five-prime Ends) provides an end-to-end solution for processing of single cell 5’end RNA-seq data. It takes a read alignment file \(\*.bam\) from single-cell RNA-5’end-sequencing (e.g. 10xGenomics Chromimum®), precisely maps the cDNA 5'ends (i.e. transcription start sites, TSS), filters for the artefacts and identifies genuine TSS clusters using logistic regression. Based on the TSS clusters, it defines transcribed cis-regulatory elements (tCRE) and annotated them to gene models. It then counts the UMI in tCRE in single cells and returns a tCRE UMI/cellbarcode matrix ready for downstream analyses, e.g. cell-type clustering, linking promoters to enhancers
-*etc* .
+*SCAFE* (Single Cell Analysis of Five-prime Ends) provides an end-to-end solution for processing of single cell 5’end RNA-seq data. It takes a read alignment file \(\*.bam\) from single-cell RNA-5’end-sequencing (e.g. 10xGenomics Chromimum®), precisely maps the cDNA 5'ends (i.e. transcription start sites, TSS), filters for the artefacts and identifies genuine TSS clusters using logistic regression. Based on the TSS clusters, it defines transcribed cis-regulatory elements (tCRE) and annotated them to gene models. It then counts the UMI in tCRE in single cells and returns a tCRE UMI/cellbarcode matrix ready for downstream analyses, e.g. cell-type clustering, linking promoters to enhancers by co-activity *etc*.
 
-## Citing *SCAFE*
+## Table of contents
+* [Publications](#1)
+* [Versions](#2)
+* [What does *SCAFE* do?](#3)
+* [How does *SCAFE* do it?](#4)
+* [Dependencies](#5)
+* [Installation](#6)
+* [Getting started with demo data](#7)
+* [Run *SCAFE* on your own data](#8)
+
+## Publications<a name="1"></a>
 
 Jonathan Moody and Tsukasa Kouno *et al*. Profiling of transcribed cis-regulatory elements in single cells. [bioRxiv 2021.04.04.438388](https://www.biorxiv.org/content/10.1101/2021.04.04.438388v1)
 
-## What does *SCAFE* do?
+## Versions<a name="2"></a>
+*SCAFE* is currently in the beta phase of its development, which means there are likely bugs and performance issues. We are currently testing *SCAFE* under various user-scenerios to make sure it runs for most users. A stable release will be made public at the time when its companion manuscript is published in a scientific journal.
+
+## What does *SCAFE* do?<a name="3"></a>
 <div style="text-align:center"><img src=".github/images/tCRE_definition.png?" width="860"></div>
 
 ### *SCAFE* extracts transcribed cis-regulatory elements from single-cell RNA-5’end-sequencing data
 Profiling of cis-regulatory elements (CREs, mostly promoters and enhancers) in single cells allows us to interrogate the cell-type specific contexts of gene regulation and genetic predisposition to diseases. Single-cell RNA-5’end-sequencing methods (sc-end5-seq, available from [10xGenomics Chromimum®](https://kb.10xgenomics.com/hc/en-us/articles/360000939852-What-is-the-difference-between-Single-Cell-3-and-5-Gene-Expression-libraries-)) theorectically captures the 5'end of cDNA, which represents transcription start sites (TSS). Measuring the RNA output at TSS allows us to precisely locate transcribed CREs (tCREs) on the genome, enabling the quantification of promoter and enhancer activities in single cells. **Figure (a)** shows the sc-end5-seq signal at the two promoters of gene *DHX30*. It highlights the consistency between sc-end5-seq and sc-ATAC-seq data, as well as the dynamic alternaitve TSS usage between cell states (i.e. resting and stimulated immune cells). *SCAFE* identify genuine TSS information from sc-end5-seq data. **Figure (b)** illustrates the stretagies of SCAFE to defined tCRE from TSS information. **Figure (c)** shows the proximal and distal tCREs defined by *SCAFE* at *PTGER4* locus. **Figure (d)** shows the activities of the proximal and distal tCREs at *PTGER4* locus in resting and simulated immune cells, demonstarting the capability of *SCAFE* to study CRE activities in single cells.
 
-## How does *SCAFE* do it?
+## How does *SCAFE* do it?<a name="4"></a>
 <div style="text-align:center"><img src=".github/images/flowchart.png?" width="860"></div>
 
 ### *SCAFE* Core Tools and Workflows
@@ -37,9 +49,9 @@ Profiling of cis-regulatory elements (CREs, mostly promoters and enhancers) in s
 ### *SCAFE* discovers *de novo* genunie TSS clusters and tCREs
 A fraction of TSS identified based on read 5′ends from template switching (TS) reactions (used in 10xGenomics Chromimum®) may not be genuine, attributed to various artefacts including strand invasion and other sources. This results in excessive artifactual TSS misidentified along the gene body, collectively known as “exon painting”. While strand invasion artefacts can be specifically minimized by considering the complementarity of TSS upstream sequence to TS oligo sequence, a non-negligible fraction of artefactual TSS remains after filtering for strand invasion. To minimize the artifactual TSS, *SCAFE* examines the properties of TSS clusters, as shown in **Figure (b)**, and devised a classifier to identify genuine TSS based on multiple logistic regression. This classifier, i.e. logistic probability, achieved excellent performance with AUC>0.98 across sequencing depths and outperformed all individual metrics. This is implemented in the tool ***filter***.
 
-## Dependencies
+## Dependencies<a name="5"></a>
 ### TL;DR
-Go straight to the [Docker Image](#1) section if you do not want to deal with dependencies and already have [docker](https://www.docker.com/) installed.
+Go straight to the [Docker Image](#docker) section if you do not want to deal with dependencies and already have [docker](https://www.docker.com/) installed.
 
 ### perl
 *SCAFE* is mainly written in perl (**v5.24.1 or later**). All scripts are standalone applications and **DO NOT require installations** of extra perl modules. Check whether perl is properly installed on your system.
@@ -85,7 +97,7 @@ SCAFE was developed and tested on Debian GNU/Linux 9, with R (3.6.1) and perl (5
 
 
 
-## Installing *SCAFE*
+## Installation<a name="6"></a>
 Once you ensured the above dependencies are met, you are ready to download *SCAFE* to your system.
 
 ### Clone this respository
@@ -114,7 +126,7 @@ To ensure the dependencies, please run check.dependencies.
 #--- run check.dependencies to check 
 scafe.check.dependencies
 ```
-### Docker image<a name="1"></a>
+### Docker image<a name="docker"></a>
 If you have docker installed on your system, you might also consider pulling the *SCAFE* docker image and run it in a docker container. Once you are logged into the *SCAFE* docker container, the following tutorial on the demo data can be ran with exactly the same command. 
 
 To install docker, please see [here](https://www.docker.com/). Noted that all files reads/writes are within the docker container by default. To share files (i.e. input and output of *SCAFE*) between the container and the host, please see [here](https://flaviocopes.com/docker-access-files-outside-container/). If you are running Docker on a labtop, make sure the allocated resources (e.g. memory and disk space) are enough, see [here](https://docs.docker.com/docker-for-mac/). We suggest to allocate at least 16GB of memory.
@@ -127,7 +139,7 @@ docker pull cchon/scafe:latest
 docker run -it cchon/scafe:latest
 ```
 
-## Getting started with demo data
+## Getting started with demo data<a name="7"></a>
 Now you have enssured all dependencies and downloaded SCAFE, time to get the demo data and test a few runs on the demo data.
 
 ### Download demo data and reference genome
@@ -328,7 +340,7 @@ CCAN_chr10_103543152_104614260   chr10_103543051_103543552_-
 ```
 
 
-## Run *SCAFE* on your own data 
+## Run *SCAFE* on your own data<a name="8"></a>
 
 ### Input *\*.bam* files
 *SCAFE* maps the cDNA 5'end by identifying the junction between the TS oligo and the cDNA on **Read 1** of sc-end5-seq data on the 10xGenomics Chromimum® platform. Therefore, **Read 1** must be sequenced long enough (e.g. >50nt) to allow mappnig to genome. The *\*.bam* files are commonly generated from 10xGenomics Chromimum® *cellranger count* pipeline. When running [*cellranger count*](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/count), the *--chemistry*  option must be *SC5P-PE* (Pair-end). The *\*.bam* generated from both *--chemistry fiveprime* and *--chemistry SC5P-R2* options are **NOT COMPATIBLE** with *SCAFE* as the former will remove the junction between the TS oligo and the cDNA on Read 1 and the latter does not even contain Read 1. If users sequecnced Read 1 only, they could run [*cellranger count*](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/count) with *--chemistry SC5P-PE* option by supplying *cellranger* a *dummy* Read 2 fastq with Read 1 reverse complemented. If users wish to generate their own *\*.bam* from other custom pipelines, make sure that:
