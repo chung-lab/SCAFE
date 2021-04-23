@@ -124,7 +124,7 @@ This folder contains the following tools and workflows. A tool perform a single 
 ```
 
 ### scafe.workflow.sc.pool [[top]](#0)<a name="3"></a>
-   This workflow process a single sample, from a cellranger bam file to tCRE UMI/cellbarcode count matrix
+   This workflow pool multiple samples for defining tCRE, starting from ctss files to tCRE UMI/cellbarcode count matrix
 
 ```
  Usage:
@@ -259,7 +259,7 @@ This folder contains the following tools and workflows. A tool perform a single 
 ```
 
 ### scafe.workflow.bk.pool [[top]](#0)<a name="6"></a>
-   This workflow process a single sample, from a bulk CAGE bam file to read count per tCRE per sample
+   This workflow pool multiple samples for defining tCRE, starting from ctss files to read count per tCRE per sample
 
 ```
  Usage:
