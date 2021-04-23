@@ -71,11 +71,11 @@ use Cwd 'abs_path';
  ...===┴========================================================================================...
 
                       Single Cell Analysis of Five-prime End (SCAFE) Tool Suite 
-                                ---> scafe.workflow.bk.solo <---
-                     <--- workflow, bulk mode, process a single sample --->
+                                ---> scafe.workflow.bk.pool <---
+                     <--- workflow, bulk mode, process multiple samples --->
 
  Description:
-   This workflow process a single sample, from a bulk CAGE bam file to read count per tCRE per sample
+   This workflow pool multiple samples for defining tCRE, starting from ctss files to read count per tCRE per sample
 
  Usage:
    scafe.workflow.bk.pool [options] --lib_list_path --genome --run_tag --run_outDir
