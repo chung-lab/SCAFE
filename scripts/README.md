@@ -100,6 +100,9 @@ This folder contains the following tools and workflows. A tool perform a single 
                                                regions (e.g. annotated CRE, in bed format) used for testing the performance 
                                                of the logical regression model. If null, annotated TSS from $genome will be 
                                                used as binary genomic regions. (default=null)
+   --usr_glm_model_path   (optional) [string]  pre-built logical regression model from the Caret package in R. Used only if 
+                                               training_signal_path is not supplied. Models were pre-built for each genome
+                                               and used as default.
    --max_thread           (optional) [integer] maximum number of parallel threads, capped at 10 to 
                                                avoid memory overflow (default=5)
    --overwrite            (optional) [yes/no]  erase run_outDir before running (default=no)
@@ -148,6 +151,9 @@ This folder contains the following tools and workflows. A tool perform a single 
                                               regions (e.g. annotated CRE, in bed format) used for testing the performance 
                                               of the logical regression model. If null, annotated TSS from $genome will be 
                                               used as binary genomic regions. (default=null)
+   --usr_glm_model_path  (optional) [string]  pre-built logical regression model from the Caret package in R. Used only if 
+                                              training_signal_path is not supplied. Models were pre-built for each genome
+                                              and used as default.
    --max_thread          (optional) [integer] maximum number of parallel threads, capped at 10 to 
                                               avoid memory overflow (default=5)
    --overwrite           (optional) [yes/no]  erase run_outDir before running (default=no)
