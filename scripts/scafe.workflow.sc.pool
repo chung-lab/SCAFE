@@ -75,7 +75,7 @@ use Cwd 'abs_path';
                    <--- workflow, single-cell mode, pool ctss of multiple samples --->
 
  Description:
-   This workflow process a single sample, from a cellranger bam file to tCRE UMI/cellbarcode count matrix
+   This workflow pool multiple samples for defining tCRE, starting from ctss files to tCRE UMI/cellbarcode count matrix
 
  Usage:
    scafe.workflow.sc.pool [options] --lib_list_path --genome --run_tag --run_outDir

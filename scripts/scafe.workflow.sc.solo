@@ -95,6 +95,9 @@ use Cwd 'abs_path';
                                                regions (e.g. annotated CRE, in bed format) used for testing the performance 
                                                of the logical regression model. If null, annotated TSS from $genome will be 
                                                used as binary genomic regions. (default=null)
+   --usr_glm_model_path   (optional) [string]  pre-built logical regression model from the Caret package in R. Used only if 
+                                               training_signal_path is not supplied. Models were pre-built for each genome
+                                               and used as default. 
    --max_thread           (optional) [integer] maximum number of parallel threads, capped at 10 to 
                                                avoid memory overflow (default=5)
    --overwrite            (optional) [yes/no]  erase run_outDir before running (default=no)
@@ -149,7 +152,7 @@ use Cwd 'abs_path';
 #
 #<section ID="startTasks" num="0">
 my $ARGV_ary_ref = [@ARGV];
-my ($run_bam_path, $run_cellbarcode_path, $genome, $training_signal_path, $testing_signal_path, $max_thread, $run_tag, $run_outDir, $overwrite) = &readParameters();#->401
+my ($run_bam_path, $run_cellbarcode_path, $genome, $training_signal_path, $testing_signal_path, $usr_glm_model_path, $max_thread, $run_tag, $run_outDir, $overwrite) = &readParameters();#->401
 $max_thread = 10 if $max_thread > 10;
 my ($scafe_dir, $script_dir, $result_script_dir, $ARGVStr, $scriptAbsPath) = &prepDir($run_outDir, $ARGV_ary_ref);#->373
 &logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->348
@@ -160,7 +163,7 @@ my ($scafe_dir, $script_dir, $result_script_dir, $ARGVStr, $scriptAbsPath) = &pr
 #	section 1_run
 #
 #<section ID="run" num="1">
-my ($path_hsh_ref) = &define_path($run_outDir, $run_tag, $run_bam_path, $run_cellbarcode_path, $training_signal_path, $testing_signal_path, $script_dir);#->168
+my ($path_hsh_ref) = &define_path($run_outDir, $run_tag, $run_bam_path, $run_cellbarcode_path, $training_signal_path, $testing_signal_path, $usr_glm_model_path, $script_dir);#->168
 my ($task_info_hsh_ref) = &define_task($genome, $path_hsh_ref, $max_thread, $run_tag, $run_outDir);#->216
 &run_task($task_info_hsh_ref, $path_hsh_ref, $result_script_dir);#->453
 #<\section>
@@ -207,13 +210,13 @@ sub define_path {
 #	appearInSub: >none
 #	primaryAppearInSection: 1_run|124
 #	secondaryAppearInSection: >none
-#	input: $run_bam_path, $run_cellbarcode_path, $run_outDir, $run_tag, $script_dir, $testing_signal_path, $training_signal_path
+#	input: $run_bam_path, $run_cellbarcode_path, $run_outDir, $run_tag, $script_dir, $testing_signal_path, $training_signal_path, $usr_glm_model_path
 #	output: $path_hsh_ref
-#	toCall: my ($path_hsh_ref) = &define_path($run_outDir, $run_tag, $run_bam_path, $run_cellbarcode_path, $training_signal_path, $testing_signal_path, $script_dir);
+#	toCall: my ($path_hsh_ref) = &define_path($run_outDir, $run_tag, $run_bam_path, $run_cellbarcode_path, $training_signal_path, $testing_signal_path, $usr_glm_model_path, $script_dir);
 #	calledInLine: 127
 #....................................................................................................................................................#
 
-	my ($run_outDir, $run_tag, $run_bam_path, $run_cellbarcode_path, $training_signal_path, $testing_signal_path, $script_dir) = @_;
+	my ($run_outDir, $run_tag, $run_bam_path, $run_cellbarcode_path, $training_signal_path, $testing_signal_path, $usr_glm_model_path, $script_dir) = @_;
 	
 	my $path_hsh_ref = {
 		'script_dir' => $script_dir,
@@ -315,6 +318,7 @@ sub define_task {
 				['genome', $genome],
 				['training_signal_path', $path_hsh_ref->{'training_signal_path'}],
 				['testing_signal_path', $path_hsh_ref->{'testing_signal_path'}],
+				['usr_glm_model_path', $path_hsh_ref->{'usr_glm_model_path'}],
 				['ung_ctss_bed_path', $path_hsh_ref->{'ung_ctss_bed_path'}],
 				['tssCluster_bed_path', $path_hsh_ref->{'raw_tssCluster_bed_path'}],
 				['ctss_bed_path', $path_hsh_ref->{'filtered_ctss_bed_path'}],
@@ -441,12 +445,12 @@ sub readParameters {
 #	primaryAppearInSection: 0_startTasks|112
 #	secondaryAppearInSection: >none
 #	input: none
-#	output: $genome, $max_thread, $overwrite, $run_bam_path, $run_cellbarcode_path, $run_outDir, $run_tag, $testing_signal_path, $training_signal_path
-#	toCall: my ($run_bam_path, $run_cellbarcode_path, $genome, $training_signal_path, $testing_signal_path, $max_thread, $run_tag, $run_outDir, $overwrite) = &readParameters();
+#	output: $genome, $max_thread, $overwrite, $run_bam_path, $run_cellbarcode_path, $run_outDir, $run_tag, $testing_signal_path, $training_signal_path, $usr_glm_model_path
+#	toCall: my ($run_bam_path, $run_cellbarcode_path, $genome, $training_signal_path, $testing_signal_path, $usr_glm_model_path, $max_thread, $run_tag, $run_outDir, $overwrite) = &readParameters();
 #	calledInLine: 116
 #....................................................................................................................................................#
 	
-	my ($run_bam_path, $run_cellbarcode_path, $genome, $training_signal_path, $testing_signal_path, $max_thread, $run_tag, $run_outDir, $overwrite);
+	my ($run_bam_path, $run_cellbarcode_path, $genome, $training_signal_path, $testing_signal_path, $usr_glm_model_path, $max_thread, $run_tag, $run_outDir, $overwrite);
 
 	$overwrite = 'no';
 	$max_thread = 5;
@@ -458,6 +462,7 @@ sub readParameters {
 		"max_thread:i"					=>	\$max_thread,
 		"training_signal_path:s"	=>	\$training_signal_path,
 		"testing_signal_path:s"		=>	\$testing_signal_path,
+		"usr_glm_model_path:s"		=>  \$usr_glm_model_path,
 		"run_tag=s"						=>	\$run_tag,
 		"run_outDir=s"					=>	\$run_outDir,
 		"overwrite:s"					=>	\$overwrite,
@@ -482,7 +487,7 @@ sub readParameters {
 	chop $run_outDir if ($run_outDir =~ m/\/$/); #---remove the last slash
 	system "mkdir -p -m 755 $run_outDir/";
 	
-	return($run_bam_path, $run_cellbarcode_path, $genome, $training_signal_path, $testing_signal_path, $max_thread, $run_tag, $run_outDir, $overwrite);
+	return($run_bam_path, $run_cellbarcode_path, $genome, $training_signal_path, $testing_signal_path, $usr_glm_model_path, $max_thread, $run_tag, $run_outDir, $overwrite);
 
 }
 sub run_task {
