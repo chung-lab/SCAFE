@@ -131,6 +131,7 @@ v0.9.0-beta [March 20, 2021]
 
 v1.0.0 [June 6, 2022]
 	-No update
+	-added directionality
 
 =cut
 #<\doc>
@@ -250,6 +251,7 @@ sub define_path {
 		'tCRE_info_path' => $run_outDir."/annotate/".$run_tag."/log/".$run_tag.".CRE.info.tsv.gz",
 		'tssCluster_bed_path' => $run_outDir."/annotate/".$run_tag."/bed/".$run_tag.".cluster.coord.bed.gz",
 		'tssCluster_info_path' => $run_outDir."/annotate/".$run_tag."/log/".$run_tag.".cluster.info.tsv.gz",
+		'directionality_info_path' => $run_outDir."/directionality/".$run_tag."/log/".$run_tag.".directionality.log.tsv.gz",
 	};
 
 	foreach my $level (qw/robust lenient default/) {
@@ -387,6 +389,20 @@ sub define_task {
 				$run_outDir."/count/$run_tag/matrix/barcodes.tsv",
 			]
 		},
+		8 => {
+			'task_name' => 'directionality',
+			'script_name' => 'scafe.tool.cm.directionality',
+			'param' => [
+				['CRE_bed_path', $path_hsh_ref->{'tCRE_bed_path'}],
+				['CRE_info_path', $path_hsh_ref->{'tCRE_info_path'}],
+				['ctss_bed_path', $path_hsh_ref->{'filtered_ctss_bed_path'}],
+				['outputPrefix', $run_tag],
+				['outDir', $run_outDir."/directionality"],
+			],
+			'check' => [
+				$path_hsh_ref->{"directionality_info_path"},
+			]
+		}
 	};
 	
 	return($task_info_hsh_ref);

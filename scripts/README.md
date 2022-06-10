@@ -3,7 +3,7 @@ This folder contains the following tools and workflows. A tool perform a single 
 
 * [**scafe.workflow.sc.subsample**](#1) ---> workflow, single-cell mode, subsample ctss
 * [**scafe.workflow.sc.solo**](#2) ---> workflow, single-cell mode, process a single sample
-* [**scafe.workflow.cm.aggregate**](#3) ---> 
+* [**scafe.workflow.cm.aggregate**](#3) ---> workflow, commond mode, aggregate ctss of multiple samples to define CRE
 * [**scafe.workflow.bk.subsample**](#4) ---> workflow, bulk mode, subsample ctss
 * [**scafe.workflow.bk.solo**](#5) ---> workflow, bulk mode, process a single sample
 * [**scafe.tool.sc.subsample\_ctss**](#6) ---> tool, single-cell mode, subsample ctss
@@ -12,17 +12,18 @@ This folder contains the following tools and workflows. A tool perform a single 
 * [**scafe.tool.cm.remove\_strand\_invader**](#9) ---> tool, common mode, remove strand invader artefact
 * [**scafe.tool.cm.prep\_genome**](#10) ---> tool, common mode, prepare custom reference genome
 * [**scafe.tool.cm.filter**](#11) ---> tool, common mode, filter for genuine TSS clusters
-* [**scafe.tool.cm.ctss\_to\_bigwig**](#12) ---> tool, common mode, convert ctss to bigwig
-* [**scafe.tool.cm.cluster**](#13) ---> tool, common mode, cluster ctss
-* [**scafe.tool.cm.annotate**](#14) ---> tool, common mode, define and annotate tCRE
-* [**scafe.tool.cm.aggregate**](#15) ---> tool, common mode, aggregate ctss of multiple samples
-* [**scafe.tool.bk.subsample\_ctss**](#16) ---> tool, bulk mode, subsample ctss
-* [**scafe.tool.bk.count**](#17) ---> tool, bulk mode, count ctss within tCREs
-* [**scafe.tool.bk.bam\_to\_ctss**](#18) ---> tool, bulk mode, convert bam to ctss bed
-* [**scafe.download.resources.genome**](#19) ---> download, reference genome to resources dir
-* [**scafe.download.demo.input**](#20) ---> download, demo input data for testing
-* [**scafe.demo.test.run**](#21) ---> demo, run demo data for testing
-* [**scafe.check.dependencies**](#22) ---> check dependencies
+* [**scafe.tool.cm.directionality**](#12) ---> tool, common mode, calculate directionality of tCREs
+* [**scafe.tool.cm.ctss\_to\_bigwig**](#13) ---> tool, common mode, convert ctss to bigwig
+* [**scafe.tool.cm.cluster**](#14) ---> tool, common mode, cluster ctss
+* [**scafe.tool.cm.annotate**](#15) ---> tool, common mode, define and annotate tCRE
+* [**scafe.tool.cm.aggregate**](#16) ---> tool, common mode, aggregate ctss of multiple samples
+* [**scafe.tool.bk.subsample\_ctss**](#17) ---> tool, bulk mode, subsample ctss
+* [**scafe.tool.bk.count**](#18) ---> tool, bulk mode, count ctss within tCREs
+* [**scafe.tool.bk.bam\_to\_ctss**](#19) ---> tool, bulk mode, convert bam to ctss bed
+* [**scafe.download.resources.genome**](#20) ---> download, reference genome to resources dir
+* [**scafe.download.demo.input**](#21) ---> download, demo input data for testing
+* [**scafe.demo.test.run**](#22) ---> demo, run demo data for testing
+* [**scafe.check.dependencies**](#23) ---> check dependencies
 
 
 ### scafe.workflow.sc.subsample [[top]](#0)<a name="1"></a>
@@ -139,11 +140,11 @@ This folder contains the following tools and workflows. A tool perform a single 
 ```
 
 ### scafe.workflow.cm.aggregate [[top]](#0)<a name="3"></a>
-   This workflow process a multiple samples from scafe.workflow.sc.solo to define CRE using aggregated signal
+   This workflow process a multiple samples from scafe.workflow.sc.solo or scafe.workflow.bk.solo to define CRE using aggregated signal
 
 ```
  Usage:
-   scafe.workflow.sc.pool [options] --lib_list_path --genome --run_tag --run_outDir
+   scafe.workflow.cm.aggregate [options] --lib_list_path --genome --run_tag --run_outDir
    
    --lib_list_path        <required> [string] a list of libraries, in formation of 
                                               <lib_ID><\t><collapse_ctss><\t><unencoded_G_collapse_ctss>
@@ -180,12 +181,12 @@ This folder contains the following tools and workflows. A tool perform a single 
    bgzip
 
  To demo run, cd to SCAFE dir and run:
-   scafe.workflow.sc.aggregate \
+   scafe.workflow.cm.aggregate \
    --overwrite=yes \
-   --lib_list_path=./demo/input/sc.arggregate/lib_list_path.txt \
+   --lib_list_path=./demo/input/cm.aggregate/lib_list_path.txt \
    --genome=hg19.gencode_v32lift37 \
    --run_tag=demo \
-   --run_outDir=./demo/output/sc.arggregate/
+   --run_outDir=./demo/output/cm.aggregate/
 ```
 
 ### scafe.workflow.bk.subsample [[top]](#0)<a name="4"></a>
@@ -544,7 +545,44 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/filter/
 ```
 
-### scafe.tool.cm.ctss\_to\_bigwig [[top]](#0)<a name="12"></a>
+### scafe.tool.cm.directionality [[top]](#0)<a name="12"></a>
+   This tool counts the ctss within tCREs and calculate their strand bias (i.e. directionality)
+
+```
+ Usage:
+   scafe.tool.cm.directionality [options] --CRE_bed_path --CRE_info_path --ctss_bed_path --outputPrefix --outDir
+   
+   --CRE_bed_path           <required> [string] bed file contains the tCRE ranges, 
+                                                *.CRE.coord.bed.gz from scafe.tool.cm.annotate
+   --CRE_info_path          <required> [string] information table of tCRE, 
+                                                *.CRE.info.tsv.gz from scafe.tool.cm.annotate
+   --ctss_bed_path          <required> [string] ctss file for counting,
+                                                *collapse.ctss.bed.gz from scafe.tool.sc.bam_to_ctss, 
+                                                5th column is number of read
+   --ctss_scope_bed_path    <optional> [string] bed file contains the regions for filtering CTSS, e.g. tssCluster ranges, 
+                                                so only the ctss within these ranges (i.e. scope) will be count. This is to 
+                                                prevent over permissive counting to ctss in the CRE range by stricting only 
+                                                ctss within valid tssClusters to be counted. 
+                                                *.tssCluster.default.filtered.bed.gz from scafe.tool.cm.filter.
+                                                It will skip filtering if not file was provide (default=null).
+   --outputPrefix           <required> [string] prefix for the output files
+   --outDir                 <required> [string] directory for the output files
+   --overwrite              (optional) [yes/no] erase outDir/outputPrefix before running (default=no)
+
+ Dependencies:
+   bedtools
+
+ To demo run, cd to SCAFE dir and run:
+   scafe.tool.cm.directionality \
+   --overwrite=yes \
+   --CRE_bed_path=./demo/output/sc.solo/annotate/demo/bed/demo.CRE.coord.bed.gz \
+   --CRE_info_path=./demo/output/sc.solo/annotate/demo/log/demo.CRE.info.tsv.gz \
+   --ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.collapse.ctss.bed.gz \
+   --outputPrefix=demo \
+   --outDir=./demo/output/sc.solo/directionality/
+```
+
+### scafe.tool.cm.ctss\_to\_bigwig [[top]](#0)<a name="13"></a>
    This tool converts a ctss bed file into two bigwig file, one for each strand, for visualization purpose 
 
 ```
@@ -568,7 +606,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/ctss_to_bigwig/
 ```
 
-### scafe.tool.cm.cluster [[top]](#0)<a name="13"></a>
+### scafe.tool.cm.cluster [[top]](#0)<a name="14"></a>
    This tool generate TSS cluster from a ctss bed file, using an external tool paraclu with user-defined cutoffs
 
 ```
@@ -612,7 +650,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/cluster/
 ```
 
-### scafe.tool.cm.annotate [[top]](#0)<a name="14"></a>
+### scafe.tool.cm.annotate [[top]](#0)<a name="15"></a>
    This tool defines tCRE from TSS clusters and annotates them based their overlap with gene models.
 
 ```
@@ -702,7 +740,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/annotate/
 ```
 
-### scafe.tool.cm.aggregate [[top]](#0)<a name="15"></a>
+### scafe.tool.cm.aggregate [[top]](#0)<a name="16"></a>
    This tool aggregate multiple ctss bed files, regardless of single cell or bulk
 
 ```
@@ -738,7 +776,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/cm.aggregate/aggregate/
 ```
 
-### scafe.tool.bk.subsample\_ctss [[top]](#0)<a name="16"></a>
+### scafe.tool.bk.subsample\_ctss [[top]](#0)<a name="17"></a>
    This tool subsample a ctss bed file from bulk CAGE ctss
 
 ```
@@ -766,7 +804,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/bk.subsample/subsample_ctss/
 ```
 
-### scafe.tool.bk.count [[top]](#0)<a name="17"></a>
+### scafe.tool.bk.count [[top]](#0)<a name="18"></a>
    This tool counts the CAGE reads within a set of user-defined regions, e.g. tCRE, and 
    returns the reads per regions
 
@@ -795,7 +833,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/bk.solo/count/
 ```
 
-### scafe.tool.bk.bam\_to\_ctss [[top]](#0)<a name="18"></a>
+### scafe.tool.bk.bam\_to\_ctss [[top]](#0)<a name="19"></a>
    This tool converts a bulk CAGE bam file to a ctss bed file, identifies read 5'end 
    (capped TSS, i.e. ctss), extracts the unencoded G information, pileup ctss, 
    and deduplicate the UMI
@@ -833,7 +871,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/bk.solo/bam_to_ctss/
 ```
 
-### scafe.download.resources.genome [[top]](#0)<a name="19"></a>
+### scafe.download.resources.genome [[top]](#0)<a name="20"></a>
    This script download reference genome data and save in ./resources/genome.
 
 ```
@@ -855,7 +893,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --genome=hg19.gencode_v32lift37
 ```
 
-### scafe.download.demo.input [[top]](#0)<a name="20"></a>
+### scafe.download.demo.input [[top]](#0)<a name="21"></a>
    This scripts download demo data and save in ./demo/input dir.
 
 ```
@@ -870,7 +908,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    scafe.download.demo.input
 ```
 
-### scafe.demo.test.run [[top]](#0)<a name="21"></a>
+### scafe.demo.test.run [[top]](#0)<a name="22"></a>
    This scripts test run for demo data in the ./demo/input dir. It runs user-selected workflows.
    Demo input data must be downloaded from using ./script/download.demo.input
    Genome reference hg19.gencode_v32lift37 must be downloaded using ./scripts/download.resources.genome
@@ -906,7 +944,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --run_outDir=./demo/output/
 ```
 
-### scafe.check.dependencies [[top]](#0)<a name="22"></a>
+### scafe.check.dependencies [[top]](#0)<a name="23"></a>
    This scripts check the integrity of tools and workflow scripts, 3rd executable dependencies and R packages.
 
 ```
