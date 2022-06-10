@@ -217,7 +217,7 @@ sub define_path {
 		'UMI_CB_ctss_bed_path' => $scafe_dir."/demo/input/sc.subsample/demo.UMI_CB.ctss.bed.gz",
 		'run_cellbarcode_path' => $scafe_dir."/demo/input/sc.subsample/demo.barcodes.tsv.gz",
 		'sc.run_bam_path' => $scafe_dir."/demo/input/sc.solo/demo.cellranger.bam",
-		'lib_list_path' => $scafe_dir."/demo/input/cm.arggregate/lib_list_path.txt",
+		'lib_list_path' => $scafe_dir."/demo/input/cm.aggregate/lib_list_path.txt",
 		'long_ctss_bed_path' => $scafe_dir."/demo/input/bk.subsample/demo.long.ctss.bed.gz",
 		'bk.run_bam_path' => $scafe_dir."/demo/input/bk.solo/demo.CAGE.bam",
 	};

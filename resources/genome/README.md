@@ -1,7 +1,7 @@
 ## Reference Genome file
 SCAFE relies on parsed reference genome files for data processing. Please use ./scripts/download.resources.genome to download the genome corresponding to your datasets. The demo data is on hg19.gencode_v32lift37. Alternatively, you can use ./scripts/tool.cm.prep_genome to build your custom genome.
 
-### download.resources.genome
+### scafe.download.resources.genome [[top]](#0)<a name="20"></a>
    This script download reference genome data and save in ./resources/genome.
 
 ```
@@ -19,16 +19,16 @@ SCAFE relies on parsed reference genome files for data processing. Please use ./
    tar
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/download.resources.genome \
+   scafe.download.resources.genome \
    --genome=hg19.gencode_v32lift37
 ```
 
-### tool.cm.prep\_genome
+### scafe.tool.cm.prep\_genome [[top]](#0)<a name="10"></a>
    This tool prepares a reference genome assembly and its gene models for others tools in scafe.
 
 ```
  Usage:
-   tool.cm.prep_genome [options] --gtf_path --fasta_path --chrom_list_path --mask_bed_path --outputPrefix --outDir
+   scafe.tool.cm.prep_genome [options] --gtf_path --fasta_path --chrom_list_path --mask_bed_path --outputPrefix --outDir
    
    --gtf_path         <required> [string] gtf of the gene models
    --fasta_path       <required> [string] fasta of the genome assembly
@@ -51,7 +51,7 @@ SCAFE relies on parsed reference genome files for data processing. Please use ./
    samtools
 
  To demo run, cd to SCAFE dir and run:
-   ./scripts/tool.cm.prep_genome \
+   scafe.tool.cm.prep_genome \
    --overwrite=yes \
    --gtf_path=./demo/input/genome/TAIR10.AtRTDv2.gtf.gz \
    --fasta_path=./demo/input/genome/TAIR10.genome.fa.gz \
