@@ -144,7 +144,11 @@ use AutoLoader qw/AUTOLOAD/;
 
 =head1 VERSION
 
-1.0
+v0.9.0-beta [March 20, 2021]
+	-Initial pre-release
+
+v1.0.0 [June 6, 2022]
+	-No update
 
 =cut#
 #<\doc>
@@ -164,8 +168,8 @@ use AutoLoader qw/AUTOLOAD/;
 #<global>
 my $scriptDirPath = dirname(rel2abs($0));
 my $scriptAbsPath = abs_path($0);
-my ($curntTimeStamp) = &timeStamp();#->2252
-my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->686
+my ($curntTimeStamp) = &timeStamp();#->2306
+my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->740
 my $globalReadmeHsh_ref = {};
 our $tmplog_fh;
 #<\global>
@@ -179,7 +183,7 @@ our $tmplog_fh;
 #	section 0_startingTasks
 #
 #<section ID="startingTasks" num="0">
-my ($ctss_bed_path, $ung_ctss_bed_path, $tssCluster_bed_path, $training_signal_path, $testing_signal_path, $genome, $tssCluster_flank_size, $local_bkgd_extend_size, $min_gold_num, $training_pct, $Rscript_bin, $usr_glm_model_path, $default_cutoff, $exclude_chrom_list, $outputPrefix, $outDir, $overwrite) = &readParameters();#->2147
+my ($ctss_bed_path, $ung_ctss_bed_path, $tssCluster_bed_path, $training_signal_path, $testing_signal_path, $genome, $tssCluster_flank_size, $local_bkgd_extend_size, $min_gold_num, $training_pct, $Rscript_bin, $usr_glm_model_path, $default_cutoff, $exclude_chrom_list, $outputPrefix, $outDir, $overwrite) = &readParameters();#->2201
 #<\section>
 #====================================================================================================================================================#
 
@@ -223,14 +227,14 @@ my $result_tmp_dir = "$result_dir/tmp/"; push @mkDirAry, $result_tmp_dir;
 foreach my $dir (@mkDirAry) {system ("mkdir -pm 755 $dir");}
 
 open $tmplog_fh, ">", "$result_dir/00_screen_log.$curntTimeStamp.log.txt";
-&printStartOrFinishMessage("startMessage");#->1910
-&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->1480
+&printStartOrFinishMessage("startMessage");#->1964
+&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->1534
 
-&reportAndLogStatus("Running with following parameters", 10, "\n");#->2230
-&reportAndLogStatus("tssCluster_flank_size=$tssCluster_flank_size", 10, "\n");#->2230
-&reportAndLogStatus("local_bkgd_extend_size=$local_bkgd_extend_size", 10, "\n");#->2230
-&reportAndLogStatus("min_gold_num=$min_gold_num", 10, "\n");#->2230
-&reportAndLogStatus("training_pct=$training_pct", 10, "\n");#->2230
+&reportAndLogStatus("Running with following parameters", 10, "\n");#->2284
+&reportAndLogStatus("tssCluster_flank_size=$tssCluster_flank_size", 10, "\n");#->2284
+&reportAndLogStatus("local_bkgd_extend_size=$local_bkgd_extend_size", 10, "\n");#->2284
+&reportAndLogStatus("min_gold_num=$min_gold_num", 10, "\n");#->2284
+&reportAndLogStatus("training_pct=$training_pct", 10, "\n");#->2284
 
 #<\section>
 #====================================================================================================================================================#
@@ -239,12 +243,12 @@ open $tmplog_fh, ">", "$result_dir/00_screen_log.$curntTimeStamp.log.txt";
 #	section 3_getInfoTasks
 #
 #<section ID="getInfoTasks" num="3">
-my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
-my ($build_glm_R, $predict_prob_R, $benchmark_roc_R) = &checkRScriptVersion($Rscript_bin);#->600
-my ($mask_tss_region_bed_path, $exon_region_bed_path, $intron_region_bed_path, $background_exon_bed_path, $background_intron_bed_path, $gene_bed_path, $mask_bed_path, $chrom_size_path, $gene_info_path, $tss_pos_bed_path) = &checkRegionBedChromSizeGeneInfoPath($genome);#->647
-my ($exclude_chrom_hsh_ref) = &generateExcludeChrHsh($exclude_chrom_list);#->824
-my ($chrom_size_hsh_ref) = &getChromSize($chrom_size_path);#->998
-my ($gene_info_hsh_ref) = &readGeneInfo($gene_info_path);#->2085
+my ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();#->529
+my ($build_glm_R, $predict_prob_R, $benchmark_roc_R) = &checkRScriptVersion($Rscript_bin);#->654
+my ($mask_tss_region_bed_path, $exon_region_bed_path, $intron_region_bed_path, $background_exon_bed_path, $background_intron_bed_path, $gene_bed_path, $mask_bed_path, $chrom_size_path, $gene_info_path, $tss_pos_bed_path) = &checkRegionBedChromSizeGeneInfoPath($genome);#->701
+my ($exclude_chrom_hsh_ref) = &generateExcludeChrHsh($exclude_chrom_list);#->878
+my ($chrom_size_hsh_ref) = &getChromSize($chrom_size_path);#->1052
+my ($gene_info_hsh_ref) = &readGeneInfo($gene_info_path);#->2139
 #<\section>
 #====================================================================================================================================================#
 
@@ -252,9 +256,9 @@ my ($gene_info_hsh_ref) = &readGeneInfo($gene_info_path);#->2085
 #	section 4_backgroundDensityTasks
 #
 #<section ID="backgroundDensityTasks" num="4">
-my ($trnscpt_info_hsh_ref, $trnscpt_bkgd_hsh_ref) = &getTranscriptRegionSize($background_exon_bed_path, $background_intron_bed_path, $gene_info_hsh_ref);#->1252
-my ($min_density) = &getBackgroundDensity($trnscpt_info_hsh_ref, $gene_info_hsh_ref, $trnscpt_bkgd_hsh_ref, $ctss_bed_path, $trnscpt_density_pct, $min_density_pct, $bedtools_bin);#->848
-&printGeneDensityLog($result_log_dir, $gene_info_hsh_ref, $paramTag);#->1753
+my ($trnscpt_info_hsh_ref, $trnscpt_bkgd_hsh_ref) = &getTranscriptRegionSize($background_exon_bed_path, $background_intron_bed_path, $gene_info_hsh_ref);#->1306
+my ($min_density) = &getBackgroundDensity($trnscpt_info_hsh_ref, $gene_info_hsh_ref, $trnscpt_bkgd_hsh_ref, $ctss_bed_path, $trnscpt_density_pct, $min_density_pct, $bedtools_bin);#->902
+&printGeneDensityLog($result_log_dir, $gene_info_hsh_ref, $paramTag);#->1807
 #<\section>
 #====================================================================================================================================================#
 
@@ -262,10 +266,10 @@ my ($min_density) = &getBackgroundDensity($trnscpt_info_hsh_ref, $gene_info_hsh_
 #	section 5_tssClusterPropertiesTasks
 #
 #<section ID="tssClusterPropertiesTasks" num="5">
-my ($tssCluster_summit_bed_path, $tssCluster_summit_anno_flank_bed_path, $tssCluster_info_hsh_ref) = &getTssClusterProperties($tssCluster_bed_path, $ctss_bed_path, $result_bed_dir, $bedtools_bin, $chrom_size_path, $tssCluster_flank_size, $chrom_size_hsh_ref, $anno_reg_assignment_flank_size, $ung_ctss_bed_path, $local_bkgd_extend_size, $mask_tss_region_bed_path, $pseudocount);#->1292
-&getGeneTssClusterRanking($tssCluster_summit_bed_path, $tss_pos_bed_path, $tssCluster_info_hsh_ref, $bedtools_bin, $gene_info_hsh_ref, $chrom_size_path);#->1097
-&getDistToTSS($tssCluster_summit_bed_path, $tss_pos_bed_path, $tssCluster_info_hsh_ref, $bedtools_bin);#->1063
-&getDistToCRE($tssCluster_summit_bed_path, $mask_bed_path, $mask_tss_region_bed_path, $tssCluster_info_hsh_ref, $bedtools_bin);#->1025
+my ($tssCluster_summit_bed_path, $tssCluster_summit_anno_flank_bed_path, $tssCluster_info_hsh_ref) = &getTssClusterProperties($tssCluster_bed_path, $ctss_bed_path, $result_bed_dir, $bedtools_bin, $chrom_size_path, $tssCluster_flank_size, $chrom_size_hsh_ref, $anno_reg_assignment_flank_size, $ung_ctss_bed_path, $local_bkgd_extend_size, $mask_tss_region_bed_path, $pseudocount);#->1346
+&getGeneTssClusterRanking($tssCluster_summit_bed_path, $tss_pos_bed_path, $tssCluster_info_hsh_ref, $bedtools_bin, $gene_info_hsh_ref, $chrom_size_path);#->1151
+&getDistToTSS($tssCluster_summit_bed_path, $tss_pos_bed_path, $tssCluster_info_hsh_ref, $bedtools_bin);#->1117
+&getDistToCRE($tssCluster_summit_bed_path, $mask_bed_path, $mask_tss_region_bed_path, $tssCluster_info_hsh_ref, $bedtools_bin);#->1079
 #<\section>
 #====================================================================================================================================================#
 
@@ -273,9 +277,9 @@ my ($tssCluster_summit_bed_path, $tssCluster_summit_anno_flank_bed_path, $tssClu
 #	section 6_backgroundRelativeExpressionTasks
 #
 #<section ID="backgroundRelativeExpressionTasks" num="6">
-&assignTssClusterToBackgroundRegions($tssCluster_summit_anno_flank_bed_path, $bedtools_bin, $tssCluster_info_hsh_ref, $gene_info_hsh_ref, $exon_region_bed_path, $intron_region_bed_path);#->390
-&assignTssClusterToAnnnotationRegions($tssCluster_summit_anno_flank_bed_path, $bedtools_bin, $tssCluster_info_hsh_ref, $gene_info_hsh_ref, $exon_region_bed_path, $intron_region_bed_path, $mask_tss_region_bed_path);#->296
-&getBackgroundRelativeExpression($tssCluster_info_hsh_ref, $gene_info_hsh_ref, $min_density, $tssCluster_flank_size, $local_bkgd_extend_size);#->948
+&assignTssClusterToBackgroundRegions($tssCluster_summit_anno_flank_bed_path, $bedtools_bin, $tssCluster_info_hsh_ref, $gene_info_hsh_ref, $exon_region_bed_path, $intron_region_bed_path);#->406
+&assignTssClusterToAnnnotationRegions($tssCluster_summit_anno_flank_bed_path, $bedtools_bin, $tssCluster_info_hsh_ref, $gene_info_hsh_ref, $exon_region_bed_path, $intron_region_bed_path, $mask_tss_region_bed_path);#->312
+&getBackgroundRelativeExpression($tssCluster_info_hsh_ref, $gene_info_hsh_ref, $min_density, $tssCluster_flank_size, $local_bkgd_extend_size);#->1002
 #<\section>
 #====================================================================================================================================================#
 
@@ -283,9 +287,9 @@ my ($tssCluster_summit_bed_path, $tssCluster_summit_anno_flank_bed_path, $tssClu
 #	section 7_BenchmarkTasks
 #
 #<section ID="BenchmarkTasks" num="7">
-my ($tssCluster_glm_predictors_path, $glm_model_path) = &performGlmTraining($result_tmp_dir, $training_signal_path, $tssCluster_summit_bed_path, $tssCluster_info_hsh_ref, $bigWigAverageOverBed_bin, $bedtools_bin, $training_pct_hsh_ref, $min_gold_num, $result_bed_dir, $mask_tss_region_bed_path, $mask_bed_path, $result_glm_dir, $exclude_chrom_hsh_ref, $build_glm_R, $genome, $Rscript_bin, $testing_signal_path, $testing_pct_hsh_ref, $usr_glm_model_path);#->1588
-&predictLogisticProbability($tssCluster_glm_predictors_path, $glm_model_path, $predict_prob_R, $tssCluster_info_hsh_ref, $result_glm_dir, $Rscript_bin, $default_cutoff);#->1636
-&performAnnoRegionBenchmark($testing_signal_path, $tssCluster_info_hsh_ref, $result_glm_dir, $exclude_chrom_hsh_ref, $Rscript_bin, $benchmark_roc_R);#->1505
+my ($tssCluster_glm_predictors_path, $glm_model_path) = &performGlmTraining($result_tmp_dir, $training_signal_path, $tssCluster_summit_bed_path, $tssCluster_info_hsh_ref, $bigWigAverageOverBed_bin, $bedtools_bin, $training_pct_hsh_ref, $min_gold_num, $result_bed_dir, $mask_tss_region_bed_path, $mask_bed_path, $result_glm_dir, $exclude_chrom_hsh_ref, $build_glm_R, $genome, $Rscript_bin, $testing_signal_path, $testing_pct_hsh_ref, $usr_glm_model_path);#->1642
+&predictLogisticProbability($tssCluster_glm_predictors_path, $glm_model_path, $predict_prob_R, $tssCluster_info_hsh_ref, $result_glm_dir, $Rscript_bin, $default_cutoff);#->1690
+&performAnnoRegionBenchmark($testing_signal_path, $tssCluster_info_hsh_ref, $result_glm_dir, $exclude_chrom_hsh_ref, $Rscript_bin, $benchmark_roc_R);#->1559
 #<\section>
 #====================================================================================================================================================#
 
@@ -293,8 +297,8 @@ my ($tssCluster_glm_predictors_path, $glm_model_path) = &performGlmTraining($res
 #	section 8_count
 #
 #<section ID="count" num="8">
-&printTssClusterLog($result_log_dir, $tssCluster_info_hsh_ref, $paramTag);#->2004
-&printFilteredBed($tssCluster_bed_path, $tssCluster_info_hsh_ref, $result_bed_dir, $paramTag);#->1697
+&printTssClusterLog($result_log_dir, $tssCluster_info_hsh_ref, $paramTag);#->2058
+&printFilteredBed($tssCluster_bed_path, $tssCluster_info_hsh_ref, $result_bed_dir, $paramTag);#->1751
 #<\section>
 #====================================================================================================================================================#
 
@@ -302,8 +306,8 @@ my ($tssCluster_glm_predictors_path, $glm_model_path) = &performGlmTraining($res
 #	section 9_finishingTasks
 #
 #<section ID="finishingTasks" num="9">
-&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->1790
-&printStartOrFinishMessage("finishMessage");#->1910
+&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->1844
+&printStartOrFinishMessage("finishMessage");#->1964
 #<\section>
 #====================================================================================================================================================#
 
@@ -314,13 +318,12 @@ my ($tssCluster_glm_predictors_path, $glm_model_path) = &performGlmTraining($res
 #====================================================================================================================================================#
 #List of subroutines by category
 #
-#	checkTools [n=3]:
-#		checkBedtoolsVersion, checkBigWigAverageOverBedVersion, checkRScriptVersion
+#	checkTools [n=1]:
+#		checkRScriptVersion
 #
-#	general [n=8]:
-#		checkBedtoolsVersion, checkBigWigAverageOverBedVersion, checkRScriptVersion
-#		currentTime, logCalledCMDAndScript, printStartOrFinishMessage
-#		readParameters, timeStamp
+#	general [n=6]:
+#		checkRScriptVersion, currentTime, logCalledCMDAndScript
+#		printStartOrFinishMessage, readParameters, timeStamp
 #
 #	getTextInfo [n=1]:
 #		readGeneInfo
@@ -334,34 +337,34 @@ my ($tssCluster_glm_predictors_path, $glm_model_path) = &performGlmTraining($res
 #	time [n=1]:
 #		timeStamp
 #
-#	unassigned [n=25]:
+#	unassigned [n=26]:
 #		assignTssClusterToAnnnotationRegions, assignTssClusterToBackgroundRegions, buildGlm
-#		checkGlmModelRDS, checkRegionBedChromSizeGeneInfoPath, defineGoldenSetForTesting
-#		defineGoldenSetForTraining, generateExcludeChrHsh, getBackgroundDensity
-#		getBackgroundRelativeExpression, getChromSize, getDistToCRE
-#		getDistToTSS, getGeneTssClusterRanking, getGoldenSetBed
-#		getGoldenSetBigwig, getTranscriptRegionSize, getTssClusterProperties
-#		performAnnoRegionBenchmark, performGlmTraining, predictLogisticProbability
-#		printFilteredBed, printGeneDensityLog, printTrainingInput
-#		printTssClusterLog
+#		checkAllExecutable, checkGlmModelRDS, checkRegionBedChromSizeGeneInfoPath
+#		defineGoldenSetForTesting, defineGoldenSetForTraining, generateExcludeChrHsh
+#		getBackgroundDensity, getBackgroundRelativeExpression, getChromSize
+#		getDistToCRE, getDistToTSS, getGeneTssClusterRanking
+#		getGoldenSetBed, getGoldenSetBigwig, getTranscriptRegionSize
+#		getTssClusterProperties, performAnnoRegionBenchmark, performGlmTraining
+#		predictLogisticProbability, printFilteredBed, printGeneDensityLog
+#		printTrainingInput, printTssClusterLog
 #
 #====================================================================================================================================================#
 
 sub assignTssClusterToAnnnotationRegions {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
+#	dependOnSub: reportAndLogStatus|2284
 #	appearInSub: >none
-#	primaryAppearInSection: 6_backgroundRelativeExpressionTasks|218
+#	primaryAppearInSection: 6_backgroundRelativeExpressionTasks|235
 #	secondaryAppearInSection: >none
 #	input: $bedtools_bin, $exon_region_bed_path, $gene_info_hsh_ref, $intron_region_bed_path, $mask_tss_region_bed_path, $tssCluster_info_hsh_ref, $tssCluster_summit_anno_flank_bed_path
 #	output: 
 #	toCall: &assignTssClusterToAnnnotationRegions($tssCluster_summit_anno_flank_bed_path, $bedtools_bin, $tssCluster_info_hsh_ref, $gene_info_hsh_ref, $exon_region_bed_path, $intron_region_bed_path, $mask_tss_region_bed_path);
-#	calledInLine: 222
+#	calledInLine: 239
 #....................................................................................................................................................#
 	my ($tssCluster_summit_anno_flank_bed_path, $bedtools_bin, $tssCluster_info_hsh_ref, $gene_info_hsh_ref, $exon_region_bed_path, $intron_region_bed_path, $mask_tss_region_bed_path) = @_;
 	
-	&reportAndLogStatus("Assigning background regions to tssClusters by summit location", 10, "\n");#->2230
+	&reportAndLogStatus("Assigning background regions to tssClusters by summit location", 10, "\n");#->2284
 
 	my $anno_info_hsh_ref = {};
 	$anno_info_hsh_ref->{'end5'}{'bed_path'} = $mask_tss_region_bed_path;
@@ -382,7 +385,7 @@ sub assignTssClusterToAnnnotationRegions {
 	foreach my $anno_orientation (qw/ss as/) {
 		my $anno_orientation_opt = $anno_orientation_hsh_ref->{$anno_orientation};
 		foreach my $anno_type (sort {$anno_info_hsh_ref->{$a}{'priority'} <=> $anno_info_hsh_ref->{$b}{'priority'}} keys %{$anno_info_hsh_ref}) {
-			&reportAndLogStatus("Intersecting tssClusters with $anno_type in $anno_orientation anno_orientation.", 10, "\n");#->2230
+			&reportAndLogStatus("Intersecting tssClusters with $anno_type in $anno_orientation anno_orientation.", 10, "\n");#->2284
 			#---[2019/12/22 23:10] to hold the tssClusterID within this round
 			my $anno_bed_path = $anno_info_hsh_ref->{$anno_type}{'bed_path'};
 			my $within_region_tssClusterID_hsh_ref = {};
@@ -407,7 +410,7 @@ sub assignTssClusterToAnnnotationRegions {
 			}
 			close BEDTOOLSINTERSECT;
 			my $num_tssCluster_within_region = keys %{$within_region_tssClusterID_hsh_ref};
-			&reportAndLogStatus("$num_tssCluster_within_region tssClusters assigned to $anno_type in $anno_orientation anno_orientation.", 10, "\n");#->2230
+			&reportAndLogStatus("$num_tssCluster_within_region tssClusters assigned to $anno_type in $anno_orientation anno_orientation.", 10, "\n");#->2284
 			#---[2019/12/22 23:10] bookmark the added tssClusterID
 			foreach my $tssClusterID (keys %{$within_region_tssClusterID_hsh_ref}) {
 				$check_tssClusterID_hsh_ref->{$tssClusterID}++;
@@ -416,7 +419,7 @@ sub assignTssClusterToAnnnotationRegions {
 	}
 
 	{
-		&reportAndLogStatus("adding intergenic annotaton", 10, "\n");#->2230
+		&reportAndLogStatus("adding intergenic annotaton", 10, "\n");#->2284
 		my $anno_type = 'intergenic';
 		my $anno_orientation = 'ns';
 		my $geneID = 'nongenic';
@@ -429,7 +432,7 @@ sub assignTssClusterToAnnnotationRegions {
 				$tssCluster_info_hsh_ref->{$tssClusterID}{'anno_geneID'}{$geneID}++;
 			}
 		}
-		&reportAndLogStatus("$num_tssCluster_within_region tssClusters assigned to $anno_type in $anno_orientation anno_orientation.", 10, "\n");#->2230
+		&reportAndLogStatus("$num_tssCluster_within_region tssClusters assigned to $anno_type in $anno_orientation anno_orientation.", 10, "\n");#->2284
 		
 	}
 
@@ -444,18 +447,18 @@ sub assignTssClusterToAnnnotationRegions {
 sub assignTssClusterToBackgroundRegions {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
+#	dependOnSub: reportAndLogStatus|2284
 #	appearInSub: >none
-#	primaryAppearInSection: 6_backgroundRelativeExpressionTasks|218
+#	primaryAppearInSection: 6_backgroundRelativeExpressionTasks|235
 #	secondaryAppearInSection: >none
 #	input: $bedtools_bin, $exon_region_bed_path, $gene_info_hsh_ref, $intron_region_bed_path, $tssCluster_info_hsh_ref, $tssCluster_summit_anno_flank_bed_path
 #	output: 
 #	toCall: &assignTssClusterToBackgroundRegions($tssCluster_summit_anno_flank_bed_path, $bedtools_bin, $tssCluster_info_hsh_ref, $gene_info_hsh_ref, $exon_region_bed_path, $intron_region_bed_path);
-#	calledInLine: 221
+#	calledInLine: 238
 #....................................................................................................................................................#
 	my ($tssCluster_summit_anno_flank_bed_path, $bedtools_bin, $tssCluster_info_hsh_ref, $gene_info_hsh_ref, $exon_region_bed_path, $intron_region_bed_path) = @_;
 	
-	&reportAndLogStatus("Assigning background regions to tssClusters by summit location", 10, "\n");#->2230
+	&reportAndLogStatus("Assigning background regions to tssClusters by summit location", 10, "\n");#->2284
 
 	my $anno_info_hsh_ref = {};
 	$anno_info_hsh_ref->{'exon'}{'bed_path'} = $exon_region_bed_path;
@@ -474,7 +477,7 @@ sub assignTssClusterToBackgroundRegions {
 	foreach my $bkgd_orientation (qw/ss as/) {
 		my $bkgd_orientation_opt = $bkgd_orientation_hsh_ref->{$bkgd_orientation};
 		foreach my $bkgd_type (sort {$anno_info_hsh_ref->{$a}{'priority'} <=> $anno_info_hsh_ref->{$b}{'priority'}} keys %{$anno_info_hsh_ref}) {
-			&reportAndLogStatus("Intersecting tssClusters with $bkgd_type in $bkgd_orientation bkgd_orientation.", 10, "\n");#->2230
+			&reportAndLogStatus("Intersecting tssClusters with $bkgd_type in $bkgd_orientation bkgd_orientation.", 10, "\n");#->2284
 			#---[2019/12/22 23:10] to hold the tssClusterID within this round
 			my $anno_bed_path = $anno_info_hsh_ref->{$bkgd_type}{'bed_path'};
 			my $within_region_tssClusterID_hsh_ref = {};
@@ -499,7 +502,7 @@ sub assignTssClusterToBackgroundRegions {
 			}
 			close BEDTOOLSINTERSECT;
 			my $num_tssCluster_within_region = keys %{$within_region_tssClusterID_hsh_ref};
-			&reportAndLogStatus("$num_tssCluster_within_region tssClusters assigned to $bkgd_type in $bkgd_orientation bkgd_orientation.", 10, "\n");#->2230
+			&reportAndLogStatus("$num_tssCluster_within_region tssClusters assigned to $bkgd_type in $bkgd_orientation bkgd_orientation.", 10, "\n");#->2284
 			#---[2019/12/22 23:10] bookmark the added tssClusterID
 			foreach my $tssClusterID (keys %{$within_region_tssClusterID_hsh_ref}) {
 				$check_tssClusterID_hsh_ref->{$tssClusterID}++;
@@ -508,7 +511,7 @@ sub assignTssClusterToBackgroundRegions {
 	}
 
 	{
-		&reportAndLogStatus("adding intergenic annotaton", 10, "\n");#->2230
+		&reportAndLogStatus("adding intergenic annotaton", 10, "\n");#->2284
 		my $bkgd_type = 'intergenic';
 		my $bkgd_orientation = 'ns';
 		my $geneID = 'nongenic';
@@ -521,7 +524,7 @@ sub assignTssClusterToBackgroundRegions {
 				$tssCluster_info_hsh_ref->{$tssClusterID}{'bkgd_geneID'}{$geneID}++;
 			}
 		}
-		&reportAndLogStatus("$num_tssCluster_within_region tssClusters assigned to $bkgd_type in $bkgd_orientation bkgd_orientation.", 10, "\n");#->2230
+		&reportAndLogStatus("$num_tssCluster_within_region tssClusters assigned to $bkgd_type in $bkgd_orientation bkgd_orientation.", 10, "\n");#->2284
 	}
 
 	foreach my $tssClusterID (keys %{$tssCluster_info_hsh_ref}) {
@@ -535,14 +538,14 @@ sub assignTssClusterToBackgroundRegions {
 sub buildGlm {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
-#	appearInSub: performGlmTraining|1588
+#	dependOnSub: reportAndLogStatus|2284
+#	appearInSub: performGlmTraining|1642
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 7_BenchmarkTasks|228
+#	secondaryAppearInSection: 7_BenchmarkTasks|245
 #	input: $Rscript_bin, $build_glm_R, $result_glm_dir, $tssCluster_glm_predictors_path
 #	output: $glm_model_path
 #	toCall: my ($glm_model_path) = &buildGlm($tssCluster_glm_predictors_path, $build_glm_R, $result_glm_dir, $Rscript_bin);
-#	calledInLine: 1626
+#	calledInLine: 1680
 #....................................................................................................................................................#
 	my ($tssCluster_glm_predictors_path, $build_glm_R, $result_glm_dir, $Rscript_bin) = @_;
 	
@@ -553,11 +556,11 @@ sub buildGlm {
 	my $glm_model_stdout_path = "$build_glm_dir/00_run.stdout.log.txt";
 	my $glm_model_stderr_path = "$build_glm_dir/00_run.stderr.log.txt";
 	
-	&reportAndLogStatus("building glm_model_path", 10, "\n");#->2230
+	&reportAndLogStatus("building glm_model_path", 10, "\n");#->2284
 	system "$Rscript_bin $build_glm_R $tssCluster_glm_predictors_path $build_glm_dir 1>$glm_model_stdout_path 2>$glm_model_stderr_path";
 	
 	if (-s $glm_model_path) {
-		&reportAndLogStatus("glm_model_path is generated", 10, "\n");#->2230
+		&reportAndLogStatus("glm_model_path is generated", 10, "\n");#->2284
 	} else {
 		die "glm_model_path is not generated. Quitting\n";
 	}
@@ -567,18 +570,20 @@ sub buildGlm {
 sub checkAllExecutable {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|1254
+#	dependOnSub: reportAndLogStatus|2284
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|129
+#	primaryAppearInSection: 3_getInfoTasks|201
 #	secondaryAppearInSection: >none
 #	input: none
-#	output: $bedGraphToBigWig_bin, $bedtools_bin, $bigWigAverageOverBed_bin, $cut_sh_path, $paraclu_bin, $samtools_bin
-#	toCall: my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
-#	calledInLine: 144
+#	output: $bedGraphToBigWig_bin, $bedtools_bin, $bgzip_bin, $bigWigAverageOverBed_bin, $cut_sh_path, $paraclu_bin, $samtools_bin, $tabix_bin
+#	toCall: my ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
+#	calledInLine: 204
 #....................................................................................................................................................#
 	
 	my $dirPath = dirname(rel2abs($0));
 
+	my $tabix_bin = "$dirPath/../resources/bin/tabix/tabix";
+	my $bgzip_bin = "$dirPath/../resources/bin/bgzip/bgzip";
 	my $bedtools_bin = "$dirPath/../resources/bin/bedtools/bedtools";
 	my $samtools_bin = "$dirPath/../resources/bin/samtools/samtools";
 	my $paraclu_bin = "$dirPath/../resources/bin/paraclu/paraclu";
@@ -586,12 +591,30 @@ sub checkAllExecutable {
 	my $bedGraphToBigWig_bin = "$dirPath/../resources/bin/bedGraphToBigWig/bedGraphToBigWig";
 	my $bigWigAverageOverBed_bin = "$dirPath/../resources/bin/bigWigAverageOverBed/bigWigAverageOverBed";
 	
-	&reportAndLogStatus("Checking all SCAFE executables", 10, "\n");#->1254
+	&reportAndLogStatus("Checking all SCAFE executables", 10, "\n");#->2284
 	
+	{
+		my $stdOut = `$tabix_bin  --version 2>&1`;
+		if ($stdOut =~ m/tabix \(htslib\) (\S+)/) {
+			&reportAndLogStatus("Checking: tabix version: $1", 0, "\n");#->2284
+		} else {
+			die "tabix is not installed properly. Quitting.\n";
+		}
+	}
+
+	{
+		my $stdOut = `$bgzip_bin --version 2>&1`;
+		if ($stdOut =~ m/bgzip \(htslib\) (\S+)/) {
+			&reportAndLogStatus("Checking: bgzip version: $1", 0, "\n");#->2284
+		} else {
+			die "bgzip is not installed properly. Quitting.\n";
+		}
+	}
+
 	{
 		my $stdOut = `$bedtools_bin --version 2>&1`;
 		if ($stdOut =~ m/bedtools v(\S+)/) {
-			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->2284
 		} else {
 			die "bedtools is not installed properly. Quitting.\n";
 		}
@@ -600,7 +623,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$samtools_bin 2>&1`;
 		if ($stdOut =~ m/\s+(Version: \S+)\s+/) {
-			&reportAndLogStatus("Checking: samtools version: $1", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: samtools version: $1", 0, "\n");#->2284
 		} else {
 			die "samtools is not installed properly. Quitting.\n";
 		}
@@ -609,7 +632,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$paraclu_bin 2>&1`;
 		if ($stdOut =~ m/paraclu: I need a minValue and a fileName/) {
-			&reportAndLogStatus("Checking: paraclu found.", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: paraclu found.", 0, "\n");#->2284
 		} else {
 			die "paraclu is not installed properly. Quitting.\n";
 		}
@@ -618,7 +641,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$cut_sh_path 55C7128A 2>&1`;
 		if ($stdOut =~ m/awk:/) {
-			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->2284
 		} else {
 			die "paraclu-cut is not installed properly. Quitting.\n";
 		}
@@ -627,7 +650,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bedGraphToBigWig_bin 2>&1`;
 		if ($stdOut =~ m/bedGraphToBigWig v (\S+)/) {
-			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->2284
 		} else {
 			die "bedGraphToBigWig not installed properly. Quitting.\n";
 		}
@@ -636,25 +659,25 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bigWigAverageOverBed_bin 2>&1`;
 		if ($stdOut =~ m/bigWigAverageOverBed v(\S+)/) {
-			&reportAndLogStatus("Checking: bigWigAverageOverBed version: $1", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: bigWigAverageOverBed version: $1", 0, "\n");#->2284
 		} else {
 			die "bigWigAverageOverBed is not installed properly. Quitting.\n";
 		}
 	}
 
-	return ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin);
+	return ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin);
 }
 sub checkGlmModelRDS {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
-#	appearInSub: performGlmTraining|1588
+#	dependOnSub: reportAndLogStatus|2284
+#	appearInSub: performGlmTraining|1642
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 7_BenchmarkTasks|228
+#	secondaryAppearInSection: 7_BenchmarkTasks|245
 #	input: $genome
 #	output: $glm_model_path
 #	toCall: my ($glm_model_path) = &checkGlmModelRDS($genome);
-#	calledInLine: 1630
+#	calledInLine: 1684
 #....................................................................................................................................................#
 
 	my ($genome) = @_;
@@ -662,7 +685,7 @@ sub checkGlmModelRDS {
 	my $glm_model_path = "$dirPath/../resources/genome/$genome/glm/combined.predictors.glm.model.RDS";
 
 	if (-s $glm_model_path) {
-		&reportAndLogStatus("Checking: glm_model_path found", 0, "\n");#->2230
+		&reportAndLogStatus("Checking: glm_model_path found", 0, "\n");#->2284
 	} else {
 		die "glm_model_path not found. Quitting.\n";
 	}
@@ -672,14 +695,14 @@ sub checkGlmModelRDS {
 sub checkRScriptVersion {
 #....................................................................................................................................................#
 #	subroutineCategory: general, checkTools
-#	dependOnSub: reportAndLogStatus|2230
+#	dependOnSub: reportAndLogStatus|2284
 #	appearInSub: >none
-#	primaryAppearInSection: 3_getInfoTasks|184
+#	primaryAppearInSection: 3_getInfoTasks|201
 #	secondaryAppearInSection: >none
 #	input: $Rscript_bin
 #	output: $benchmark_roc_R, $build_glm_R, $predict_prob_R
 #	toCall: my ($build_glm_R, $predict_prob_R, $benchmark_roc_R) = &checkRScriptVersion($Rscript_bin);
-#	calledInLine: 187
+#	calledInLine: 205
 #....................................................................................................................................................#
 	
 	my ($Rscript_bin) = @_;
@@ -691,25 +714,25 @@ sub checkRScriptVersion {
 
 	my $stdOut = `$Rscript_bin --version 2>&1`;
 	if ($stdOut =~ m/R scripting front-end version (\S+)/) {
-		&reportAndLogStatus("Checking: Rscript version: $1", 0, "\n");#->2230
+		&reportAndLogStatus("Checking: Rscript version: $1", 0, "\n");#->2284
 	} else {
 		die "Rscript is not installed properly. Quitting.\n";
 	}
 	
 	if (-s $build_glm_R) {
-		&reportAndLogStatus("build_glm_R found.", 0, "\n");#->2230
+		&reportAndLogStatus("build_glm_R found.", 0, "\n");#->2284
 	} else {
 		die "Rscript build_glm_R is not found. Quitting.\n";
 	}
 
 	if (-s $predict_prob_R) {
-		&reportAndLogStatus("predict_prob_R found.", 0, "\n");#->2230
+		&reportAndLogStatus("predict_prob_R found.", 0, "\n");#->2284
 	} else {
 		die "Rscript predict_prob_R is not found. Quitting.\n";
 	}
 
 	if (-s $benchmark_roc_R) {
-		&reportAndLogStatus("benchmark_roc_R found.", 0, "\n");#->2230
+		&reportAndLogStatus("benchmark_roc_R found.", 0, "\n");#->2284
 	} else {
 		die "Rscript benchmark_roc_R is not found. Quitting.\n";
 	}
@@ -721,12 +744,12 @@ sub checkRegionBedChromSizeGeneInfoPath {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 3_getInfoTasks|184
+#	primaryAppearInSection: 3_getInfoTasks|201
 #	secondaryAppearInSection: >none
 #	input: $genome
 #	output: $background_exon_bed_path, $background_intron_bed_path, $chrom_size_path, $exon_region_bed_path, $gene_bed_path, $gene_info_path, $intron_region_bed_path, $mask_bed_path, $mask_tss_region_bed_path, $tss_pos_bed_path
 #	toCall: my ($mask_tss_region_bed_path, $exon_region_bed_path, $intron_region_bed_path, $background_exon_bed_path, $background_intron_bed_path, $gene_bed_path, $mask_bed_path, $chrom_size_path, $gene_info_path, $tss_pos_bed_path) = &checkRegionBedChromSizeGeneInfoPath($genome);
-#	calledInLine: 190
+#	calledInLine: 206
 #....................................................................................................................................................#
 	my ($genome) = @_;
 
@@ -759,13 +782,13 @@ sub currentTime {
 #....................................................................................................................................................#
 #	subroutineCategory: general
 #	dependOnSub: >none
-#	appearInSub: printStartOrFinishMessage|1910, reportAndLogStatus|2230
+#	appearInSub: printStartOrFinishMessage|1964, reportAndLogStatus|2284
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 2_defineOutDirPath|156, 9_finishingTasks|247
+#	secondaryAppearInSection: 2_defineOutDirPath|172, 9_finishingTasks|264
 #	input: none
 #	output: $runTime
 #	toCall: my ($runTime) = &currentTime();
-#	calledInLine: 113, 1926, 1930, 1935, 1939, 2246, 2247
+#	calledInLine: 130, 1980, 1984, 1989, 1993, 2300, 2301
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
@@ -776,14 +799,14 @@ sub currentTime {
 sub defineGoldenSetForTesting {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: getGoldenSetBed|1148, getGoldenSetBigwig|1195, reportAndLogStatus|2230
-#	appearInSub: performGlmTraining|1588
+#	dependOnSub: getGoldenSetBed|1202, getGoldenSetBigwig|1249, reportAndLogStatus|2284
+#	appearInSub: performGlmTraining|1642
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 7_BenchmarkTasks|228
+#	secondaryAppearInSection: 7_BenchmarkTasks|245
 #	input: $bedtools_bin, $bigWigAverageOverBed_bin, $exclude_chrom_hsh_ref, $mask_bed_path, $mask_tss_region_bed_path, $min_gold_num, $result_tmp_dir, $testing_pct_hsh_ref, $testing_signal_path, $training_pct_hsh_ref, $tssCluster_info_hsh_ref, $tssCluster_summit_bed_path
 #	output: 
 #	toCall: &defineGoldenSetForTesting($tssCluster_summit_bed_path, $tssCluster_info_hsh_ref, $training_pct_hsh_ref, $mask_tss_region_bed_path, $mask_bed_path, $testing_signal_path, $result_tmp_dir, $bedtools_bin, $bigWigAverageOverBed_bin, $testing_pct_hsh_ref, $min_gold_num, $exclude_chrom_hsh_ref);
-#	calledInLine: 1610
+#	calledInLine: 1664
 #....................................................................................................................................................#
 	my ($tssCluster_summit_bed_path, $tssCluster_info_hsh_ref, $training_pct_hsh_ref, $mask_tss_region_bed_path, $mask_bed_path, $testing_signal_path, $result_tmp_dir, $bedtools_bin, $bigWigAverageOverBed_bin, $testing_pct_hsh_ref, $min_gold_num, $exclude_chrom_hsh_ref) = @_;
 	
@@ -800,14 +823,14 @@ sub defineGoldenSetForTesting {
 			my $benchmark_signal_score_path = "$result_tmp_dir/benchmark_signal_score.txt";
 			my $bw_signal_path = $testing_signal_path;
 			my $tssCluster_intersect_reg_bed_path = $tssCluster_summit_bed_path;
-			&getGoldenSetBigwig($bigWigAverageOverBed_bin, $bw_signal_path, $tssCluster_intersect_reg_bed_path, $benchmark_signal_score_path, $tssCluster_info_hsh_ref, $train_test, $exclude_chrom_hsh_ref, $pos_gold_target_num, $neg_gold_target_num);#->1195
+			&getGoldenSetBigwig($bigWigAverageOverBed_bin, $bw_signal_path, $tssCluster_intersect_reg_bed_path, $benchmark_signal_score_path, $tssCluster_info_hsh_ref, $train_test, $exclude_chrom_hsh_ref, $pos_gold_target_num, $neg_gold_target_num);#->1249
 
 		} elsif ($testing_signal_path =~ m/bed$/ or $testing_signal_path =~ m/bed.gz$/) {
 
 			my $max_dist_to_bed_region = 0;
 			my $min_dist_to_bed_region = 100;
 			my $bed_signal_path = $testing_signal_path;
-			&getGoldenSetBed($bed_signal_path, $exclude_chrom_hsh_ref, $tssCluster_info_hsh_ref, $max_dist_to_bed_region, $min_dist_to_bed_region, $tssCluster_summit_bed_path, $train_test, $bedtools_bin);#->1148
+			&getGoldenSetBed($bed_signal_path, $exclude_chrom_hsh_ref, $tssCluster_info_hsh_ref, $max_dist_to_bed_region, $min_dist_to_bed_region, $tssCluster_summit_bed_path, $train_test, $bedtools_bin);#->1202
 		
 		} else {
 			die "testing_signal_path must be bed or bigwig\n";
@@ -815,7 +838,7 @@ sub defineGoldenSetForTesting {
 
 	} else {
 
-		&reportAndLogStatus("defining goldenset by annotated TSS and CRE for testing", 10, "\n");#->2230
+		&reportAndLogStatus("defining goldenset by annotated TSS and CRE for testing", 10, "\n");#->2284
 
 		my $max_dist_to_anno_tss = 250;
 		my $min_dist_to_anno_cre = 10;
@@ -846,8 +869,8 @@ sub defineGoldenSetForTesting {
 			}
 		}
 
-		&reportAndLogStatus("num_gold_pos for testing =$num_gold_pos", 10, "\n");#->2230
-		&reportAndLogStatus("num_gold_neg for testing =$num_gold_neg", 10, "\n");#->2618	#->2230
+		&reportAndLogStatus("num_gold_pos for testing =$num_gold_pos", 10, "\n");#->2284
+		&reportAndLogStatus("num_gold_neg for testing =$num_gold_neg", 10, "\n");#->2618	#->2284
 
 	}
 
@@ -856,14 +879,14 @@ sub defineGoldenSetForTesting {
 sub defineGoldenSetForTraining {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: getGoldenSetBed|1148, getGoldenSetBigwig|1195
-#	appearInSub: performGlmTraining|1588
+#	dependOnSub: getGoldenSetBed|1202, getGoldenSetBigwig|1249
+#	appearInSub: performGlmTraining|1642
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 7_BenchmarkTasks|228
+#	secondaryAppearInSection: 7_BenchmarkTasks|245
 #	input: $bedtools_bin, $bigWigAverageOverBed_bin, $exclude_chrom_hsh_ref, $min_gold_num, $result_tmp_dir, $training_pct_hsh_ref, $training_signal_path, $tssCluster_info_hsh_ref, $tssCluster_summit_bed_path
 #	output: 
 #	toCall: &defineGoldenSetForTraining($result_tmp_dir, $training_signal_path, $tssCluster_summit_bed_path, $tssCluster_info_hsh_ref, $bigWigAverageOverBed_bin, $bedtools_bin, $training_pct_hsh_ref, $min_gold_num, $exclude_chrom_hsh_ref);
-#	calledInLine: 1613
+#	calledInLine: 1667
 #....................................................................................................................................................#
 	my ($result_tmp_dir, $training_signal_path, $tssCluster_summit_bed_path, $tssCluster_info_hsh_ref, $bigWigAverageOverBed_bin, $bedtools_bin, $training_pct_hsh_ref, $min_gold_num, $exclude_chrom_hsh_ref) = @_;
 
@@ -878,14 +901,14 @@ sub defineGoldenSetForTraining {
 		$neg_gold_target_num = $min_gold_num if $min_gold_num > $neg_gold_target_num;
 		my $benchmark_signal_score_path = "$result_tmp_dir/benchmark_signal_score.txt";
 		my $bw_signal_path = $training_signal_path;
-		&getGoldenSetBigwig($bigWigAverageOverBed_bin, $bw_signal_path, $tssCluster_summit_bed_path, $benchmark_signal_score_path, $tssCluster_info_hsh_ref, $train_test, $exclude_chrom_hsh_ref, $pos_gold_target_num, $neg_gold_target_num);#->1195
+		&getGoldenSetBigwig($bigWigAverageOverBed_bin, $bw_signal_path, $tssCluster_summit_bed_path, $benchmark_signal_score_path, $tssCluster_info_hsh_ref, $train_test, $exclude_chrom_hsh_ref, $pos_gold_target_num, $neg_gold_target_num);#->1249
 
 	} elsif ($training_signal_path =~ m/bed$/ or $training_signal_path =~ m/bed.gz$/) {
 
 		my $max_dist_to_bed_region = 0;
 		my $min_dist_to_bed_region = 100;
 		my $bed_signal_path = $training_signal_path;
-		&getGoldenSetBed($bed_signal_path, $exclude_chrom_hsh_ref, $tssCluster_info_hsh_ref, $max_dist_to_bed_region, $min_dist_to_bed_region, $tssCluster_summit_bed_path, $train_test, $bedtools_bin);#->1148
+		&getGoldenSetBed($bed_signal_path, $exclude_chrom_hsh_ref, $tssCluster_info_hsh_ref, $max_dist_to_bed_region, $min_dist_to_bed_region, $tssCluster_summit_bed_path, $train_test, $bedtools_bin);#->1202
 		
 	} else {
 		die "training_signal_path must be bed or bigwig\n";
@@ -896,21 +919,21 @@ sub defineGoldenSetForTraining {
 sub generateExcludeChrHsh {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
+#	dependOnSub: reportAndLogStatus|2284
 #	appearInSub: >none
-#	primaryAppearInSection: 1_defineHardCodedParam|132
+#	primaryAppearInSection: 3_getInfoTasks|201
 #	secondaryAppearInSection: >none
 #	input: $exclude_chrom_list
 #	output: $exclude_chrom_hsh_ref
 #	toCall: my ($exclude_chrom_hsh_ref) = &generateExcludeChrHsh($exclude_chrom_list);
-#	calledInLine: 151
+#	calledInLine: 207
 #....................................................................................................................................................#
 	my ($exclude_chrom_list) = @_;
 	
 	my $exclude_chrom_hsh_ref = {};
 	if ($exclude_chrom_list ne 'null') {
 		foreach my $exclu_chrom (split /\,/, $exclude_chrom_list) {
-			&reportAndLogStatus("$exclu_chrom will be excluded from training and testing", 10, "\n");#->2230
+			&reportAndLogStatus("$exclu_chrom will be excluded from training and testing", 10, "\n");#->2284
 			$exclude_chrom_hsh_ref->{$exclu_chrom} = 1;
 		}
 	}
@@ -920,14 +943,14 @@ sub generateExcludeChrHsh {
 sub getBackgroundDensity {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
+#	dependOnSub: reportAndLogStatus|2284
 #	appearInSub: >none
-#	primaryAppearInSection: 4_backgroundDensityTasks|197
+#	primaryAppearInSection: 4_backgroundDensityTasks|214
 #	secondaryAppearInSection: >none
 #	input: $bedtools_bin, $ctss_bed_path, $gene_info_hsh_ref, $min_density_pct, $trnscpt_bkgd_hsh_ref, $trnscpt_density_pct, $trnscpt_info_hsh_ref
 #	output: $min_density
 #	toCall: my ($min_density) = &getBackgroundDensity($trnscpt_info_hsh_ref, $gene_info_hsh_ref, $trnscpt_bkgd_hsh_ref, $ctss_bed_path, $trnscpt_density_pct, $min_density_pct, $bedtools_bin);
-#	calledInLine: 201
+#	calledInLine: 218
 #....................................................................................................................................................#
 	my ($trnscpt_info_hsh_ref, $gene_info_hsh_ref, $trnscpt_bkgd_hsh_ref, $ctss_bed_path, $trnscpt_density_pct, $min_density_pct, $bedtools_bin) = @_;
 
@@ -939,9 +962,9 @@ sub getBackgroundDensity {
 				$trnscpt_info_hsh_ref->{$trnscptID}{'count'}{$exon_intron}{$bkgd_orientation} = 1;
 			}
 		}
-		&reportAndLogStatus("getting $exon_intron background count", 10, "\n");#->2230
+		&reportAndLogStatus("getting $exon_intron background count", 10, "\n");#->2284
 		my $exon_intron_bed_path = $trnscpt_bkgd_hsh_ref->{$exon_intron} ;
-		open BEDTOOLS, "$bedtools_bin intersect -wo -a $exon_intron_bed_path -b $ctss_bed_path | cut -f 4,6,11,12 |";
+		open BEDTOOLS, "$bedtools_bin intersect -wo -sorted -a $exon_intron_bed_path -b $ctss_bed_path | cut -f 4,6,11,12 |";
 		while (<BEDTOOLS>) {
 			chomp;
 			#chr10	76184022	76284872	ENSG00000156110.14_4|ENST00000672920.1_1	1	+	chr10	76211833	76211834	1	1	+	1
@@ -1003,7 +1026,7 @@ sub getBackgroundDensity {
 		$min_density = $all_non_zero_density_array[$i] if ($i <= $n*$min_density_pct);
 	}
 	
-	#&reportAndLogStatus("assign min_density=$min_density", 10, "\n");#->2230
+	#&reportAndLogStatus("assign min_density=$min_density", 10, "\n");#->2284
 	#foreach my $geneID (sort keys %{$gene_info_hsh_ref}) {
 	#	foreach my $exon_intron (sort keys %{$gene_info_hsh_ref->{$geneID}{'density'}}) {
 	#		foreach my $bkgd_orientation (sort keys %{$gene_info_hsh_ref->{$geneID}{'density'}{$exon_intron}}) {
@@ -1020,18 +1043,18 @@ sub getBackgroundDensity {
 sub getBackgroundRelativeExpression {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
+#	dependOnSub: reportAndLogStatus|2284
 #	appearInSub: >none
-#	primaryAppearInSection: 6_backgroundRelativeExpressionTasks|218
+#	primaryAppearInSection: 6_backgroundRelativeExpressionTasks|235
 #	secondaryAppearInSection: >none
 #	input: $gene_info_hsh_ref, $local_bkgd_extend_size, $min_density, $tssCluster_flank_size, $tssCluster_info_hsh_ref
 #	output: 
 #	toCall: &getBackgroundRelativeExpression($tssCluster_info_hsh_ref, $gene_info_hsh_ref, $min_density, $tssCluster_flank_size, $local_bkgd_extend_size);
-#	calledInLine: 223
+#	calledInLine: 240
 #....................................................................................................................................................#
 	my ($tssCluster_info_hsh_ref, $gene_info_hsh_ref, $min_density, $tssCluster_flank_size, $local_bkgd_extend_size) = @_;
 	
-	&reportAndLogStatus("getting background relative expression", 10, "\n");#->2230
+	&reportAndLogStatus("getting background relative expression", 10, "\n");#->2284
 	
 	foreach my $tssClusterID (keys %{$tssCluster_info_hsh_ref}) {
 	
@@ -1070,25 +1093,25 @@ sub getBackgroundRelativeExpression {
 sub getChromSize {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
+#	dependOnSub: reportAndLogStatus|2284
 #	appearInSub: >none
-#	primaryAppearInSection: 3_getInfoTasks|184
+#	primaryAppearInSection: 3_getInfoTasks|201
 #	secondaryAppearInSection: >none
 #	input: $chrom_size_path
 #	output: $chrom_size_hsh_ref
 #	toCall: my ($chrom_size_hsh_ref) = &getChromSize($chrom_size_path);
-#	calledInLine: 191
+#	calledInLine: 208
 #....................................................................................................................................................#
 	my ($chrom_size_path) = @_;
 	
-	&reportAndLogStatus("getting chrom size", 10, "\n");#->2230
+	&reportAndLogStatus("getting chrom size", 10, "\n");#->2284
 	my $chrom_size_hsh_ref = {};
 	open CHROM, "<", $chrom_size_path;
 	while (<CHROM>) {
 		chomp;
 		my ($chrom, $size) = split /\t/;
 		$chrom_size_hsh_ref->{$chrom} = $size;
-		&reportAndLogStatus("chromosome $chrom with size $size stored", 10, "\n");#->2230
+		&reportAndLogStatus("chromosome $chrom with size $size stored", 10, "\n");#->2284
 	}
 	close CHROM;
 	
@@ -1097,18 +1120,18 @@ sub getChromSize {
 sub getDistToCRE {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
+#	dependOnSub: reportAndLogStatus|2284
 #	appearInSub: >none
-#	primaryAppearInSection: 5_tssClusterPropertiesTasks|207
+#	primaryAppearInSection: 5_tssClusterPropertiesTasks|224
 #	secondaryAppearInSection: >none
 #	input: $bedtools_bin, $mask_bed_path, $mask_tss_region_bed_path, $tssCluster_info_hsh_ref, $tssCluster_summit_bed_path
 #	output: 
 #	toCall: &getDistToCRE($tssCluster_summit_bed_path, $mask_bed_path, $mask_tss_region_bed_path, $tssCluster_info_hsh_ref, $bedtools_bin);
-#	calledInLine: 213
+#	calledInLine: 230
 #....................................................................................................................................................#
 	my ($tssCluster_summit_bed_path, $mask_bed_path, $mask_tss_region_bed_path, $tssCluster_info_hsh_ref, $bedtools_bin) = @_;
 
-	&reportAndLogStatus("getting distance to annotated cre", 10, "\n");#->2230
+	&reportAndLogStatus("getting distance to annotated cre", 10, "\n");#->2284
 	
 	foreach my $cre_bed_path ($mask_tss_region_bed_path, $mask_bed_path) {
 		open BEDTOOLS, "$bedtools_bin closest -d -a $tssCluster_summit_bed_path -b $cre_bed_path |";
@@ -1135,18 +1158,18 @@ sub getDistToCRE {
 sub getDistToTSS {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
+#	dependOnSub: reportAndLogStatus|2284
 #	appearInSub: >none
-#	primaryAppearInSection: 5_tssClusterPropertiesTasks|207
+#	primaryAppearInSection: 5_tssClusterPropertiesTasks|224
 #	secondaryAppearInSection: >none
 #	input: $bedtools_bin, $tssCluster_info_hsh_ref, $tssCluster_summit_bed_path, $tss_pos_bed_path
 #	output: 
 #	toCall: &getDistToTSS($tssCluster_summit_bed_path, $tss_pos_bed_path, $tssCluster_info_hsh_ref, $bedtools_bin);
-#	calledInLine: 212
+#	calledInLine: 229
 #....................................................................................................................................................#
 	my ($tssCluster_summit_bed_path, $tss_pos_bed_path, $tssCluster_info_hsh_ref, $bedtools_bin) = @_;
 
-	&reportAndLogStatus("getting distance to annotated tss", 10, "\n");#->2230
+	&reportAndLogStatus("getting distance to annotated tss", 10, "\n");#->2284
 	
 	foreach my $tssClusterID (keys %{$tssCluster_info_hsh_ref}) {
 		$tssCluster_info_hsh_ref->{$tssClusterID}{'dist_to_anno_tss'} = -1;
@@ -1169,18 +1192,18 @@ sub getDistToTSS {
 sub getGeneTssClusterRanking {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
+#	dependOnSub: reportAndLogStatus|2284
 #	appearInSub: >none
-#	primaryAppearInSection: 5_tssClusterPropertiesTasks|207
+#	primaryAppearInSection: 5_tssClusterPropertiesTasks|224
 #	secondaryAppearInSection: >none
 #	input: $bedtools_bin, $chrom_size_path, $gene_info_hsh_ref, $tssCluster_info_hsh_ref, $tssCluster_summit_bed_path, $tss_pos_bed_path
 #	output: 
 #	toCall: &getGeneTssClusterRanking($tssCluster_summit_bed_path, $tss_pos_bed_path, $tssCluster_info_hsh_ref, $bedtools_bin, $gene_info_hsh_ref, $chrom_size_path);
-#	calledInLine: 211
+#	calledInLine: 228
 #....................................................................................................................................................#
 	my ($tssCluster_summit_bed_path, $tss_pos_bed_path, $tssCluster_info_hsh_ref, $bedtools_bin, $gene_info_hsh_ref, $chrom_size_path) = @_;
 
-	&reportAndLogStatus("getting gene tssCluster ranking", 10, "\n");#->2230
+	&reportAndLogStatus("getting gene tssCluster ranking", 10, "\n");#->2284
 	
 	foreach my $tssClusterID (keys %{$tssCluster_info_hsh_ref}) {
 		$tssCluster_info_hsh_ref->{$tssClusterID}{'max_gene_rank'} = -1;
@@ -1220,14 +1243,14 @@ sub getGeneTssClusterRanking {
 sub getGoldenSetBed {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
-#	appearInSub: defineGoldenSetForTesting|704, defineGoldenSetForTraining|784
+#	dependOnSub: reportAndLogStatus|2284
+#	appearInSub: defineGoldenSetForTesting|758, defineGoldenSetForTraining|838
 #	primaryAppearInSection: >none
 #	secondaryAppearInSection: >none
 #	input: $bed_signal_path, $bedtools_bin, $exclude_chrom_hsh_ref, $max_dist_to_bed_region, $min_dist_to_bed_region, $train_test, $tssCluster_info_hsh_ref, $tssCluster_summit_bed_path
 #	output: 
 #	toCall: &getGoldenSetBed($bed_signal_path, $exclude_chrom_hsh_ref, $tssCluster_info_hsh_ref, $max_dist_to_bed_region, $min_dist_to_bed_region, $tssCluster_summit_bed_path, $train_test, $bedtools_bin);
-#	calledInLine: 737, 815
+#	calledInLine: 791, 869
 #....................................................................................................................................................#
 	my ($bed_signal_path, $exclude_chrom_hsh_ref, $tssCluster_info_hsh_ref, $max_dist_to_bed_region, $min_dist_to_bed_region, $tssCluster_summit_bed_path, $train_test, $bedtools_bin) = @_;
 
@@ -1259,27 +1282,27 @@ sub getGoldenSetBed {
 		}
 	}
 	
-	&reportAndLogStatus("$train_test num_gold_pos=$num_gold_pos", 10, "\n");#->2230
-	&reportAndLogStatus("$train_test num_gold_neg=$num_gold_neg", 10, "\n");#->2230
+	&reportAndLogStatus("$train_test num_gold_pos=$num_gold_pos", 10, "\n");#->2284
+	&reportAndLogStatus("$train_test num_gold_neg=$num_gold_neg", 10, "\n");#->2284
 
 	return ();
 }
 sub getGoldenSetBigwig {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
-#	appearInSub: defineGoldenSetForTesting|704, defineGoldenSetForTraining|784
+#	dependOnSub: reportAndLogStatus|2284
+#	appearInSub: defineGoldenSetForTesting|758, defineGoldenSetForTraining|838
 #	primaryAppearInSection: >none
 #	secondaryAppearInSection: >none
 #	input: $benchmark_signal_score_path, $bigWigAverageOverBed_bin, $bw_signal_path, $exclude_chrom_hsh_ref, $neg_gold_target_num, $pos_gold_target_num, $train_test, $tssCluster_info_hsh_ref, $tssCluster_intersect_reg_bed_path
 #	output: 
 #	toCall: &getGoldenSetBigwig($bigWigAverageOverBed_bin, $bw_signal_path, $tssCluster_intersect_reg_bed_path, $benchmark_signal_score_path, $tssCluster_info_hsh_ref, $train_test, $exclude_chrom_hsh_ref, $pos_gold_target_num, $neg_gold_target_num);
-#	calledInLine: 730, 808
+#	calledInLine: 784, 862
 #....................................................................................................................................................#
 	my ($bigWigAverageOverBed_bin, $bw_signal_path, $tssCluster_intersect_reg_bed_path, $benchmark_signal_score_path, $tssCluster_info_hsh_ref, $train_test, $exclude_chrom_hsh_ref, $pos_gold_target_num, $neg_gold_target_num) = @_;
 
 
-	&reportAndLogStatus("defining $train_test goldenset by bigwig score", 10, "\n");#->2230
+	&reportAndLogStatus("defining $train_test goldenset by bigwig score", 10, "\n");#->2284
 	system "$bigWigAverageOverBed_bin $bw_signal_path $tssCluster_intersect_reg_bed_path $benchmark_signal_score_path 2>/dev/null";
 	my $bw_score_hsh_ref = {};
 	open BWSCORE, "<", $benchmark_signal_score_path;
@@ -1316,22 +1339,22 @@ sub getGoldenSetBigwig {
 		}
 	}
 
-	&reportAndLogStatus("$train_test num_gold_pos=$num_gold_pos", 10, "\n");#->2230
-	&reportAndLogStatus("$train_test num_gold_neg=$num_gold_neg", 10, "\n");#->2230
+	&reportAndLogStatus("$train_test num_gold_pos=$num_gold_pos", 10, "\n");#->2284
+	&reportAndLogStatus("$train_test num_gold_neg=$num_gold_neg", 10, "\n");#->2284
 
 	return ();
 }
 sub getTranscriptRegionSize {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
+#	dependOnSub: reportAndLogStatus|2284
 #	appearInSub: >none
-#	primaryAppearInSection: 4_backgroundDensityTasks|197
+#	primaryAppearInSection: 4_backgroundDensityTasks|214
 #	secondaryAppearInSection: >none
 #	input: $background_exon_bed_path, $background_intron_bed_path, $gene_info_hsh_ref
 #	output: $trnscpt_bkgd_hsh_ref, $trnscpt_info_hsh_ref
 #	toCall: my ($trnscpt_info_hsh_ref, $trnscpt_bkgd_hsh_ref) = &getTranscriptRegionSize($background_exon_bed_path, $background_intron_bed_path, $gene_info_hsh_ref);
-#	calledInLine: 200
+#	calledInLine: 217
 #....................................................................................................................................................#
 	my ($background_exon_bed_path, $background_intron_bed_path, $gene_info_hsh_ref) = @_;
 	
@@ -1342,7 +1365,7 @@ sub getTranscriptRegionSize {
 	
 	my $trnscpt_info_hsh_ref = {};
 	foreach my $exon_intron (keys %{$trnscpt_bkgd_hsh_ref}) {
-		&reportAndLogStatus("getting $exon_intron background size", 10, "\n");#->2230
+		&reportAndLogStatus("getting $exon_intron background size", 10, "\n");#->2284
 		my $exon_intron_bed_path = $trnscpt_bkgd_hsh_ref->{$exon_intron} ;
 		open BED, " gzip -dc $trnscpt_bkgd_hsh_ref->{$exon_intron} |";
 		while (<BED>) {
@@ -1364,18 +1387,18 @@ sub getTranscriptRegionSize {
 sub getTssClusterProperties {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
+#	dependOnSub: reportAndLogStatus|2284
 #	appearInSub: >none
-#	primaryAppearInSection: 5_tssClusterPropertiesTasks|207
+#	primaryAppearInSection: 5_tssClusterPropertiesTasks|224
 #	secondaryAppearInSection: >none
 #	input: $anno_reg_assignment_flank_size, $bedtools_bin, $chrom_size_hsh_ref, $chrom_size_path, $ctss_bed_path, $local_bkgd_extend_size, $mask_tss_region_bed_path, $pseudocount, $result_bed_dir, $tssCluster_bed_path, $tssCluster_flank_size, $ung_ctss_bed_path
 #	output: $tssCluster_info_hsh_ref, $tssCluster_summit_anno_flank_bed_path, $tssCluster_summit_bed_path
 #	toCall: my ($tssCluster_summit_bed_path, $tssCluster_summit_anno_flank_bed_path, $tssCluster_info_hsh_ref) = &getTssClusterProperties($tssCluster_bed_path, $ctss_bed_path, $result_bed_dir, $bedtools_bin, $chrom_size_path, $tssCluster_flank_size, $chrom_size_hsh_ref, $anno_reg_assignment_flank_size, $ung_ctss_bed_path, $local_bkgd_extend_size, $mask_tss_region_bed_path, $pseudocount);
-#	calledInLine: 210
+#	calledInLine: 227
 #....................................................................................................................................................#
 	my ($tssCluster_bed_path, $ctss_bed_path, $result_bed_dir, $bedtools_bin, $chrom_size_path, $tssCluster_flank_size, $chrom_size_hsh_ref, $anno_reg_assignment_flank_size, $ung_ctss_bed_path, $local_bkgd_extend_size, $mask_tss_region_bed_path, $pseudocount) = @_;
 	
-	&reportAndLogStatus("Getting tssCluster count and summit and defining tssCluster_info_hsh", 10, "\n");#->2230
+	&reportAndLogStatus("Getting tssCluster count and summit and defining tssCluster_info_hsh", 10, "\n");#->2284
 
 	my $tssCluster_info_hsh_ref = {};
 	my $summit_dir = "$result_bed_dir/summit/";
@@ -1383,7 +1406,7 @@ sub getTssClusterProperties {
 	my $local_bkgd_region_bed_path = "$result_bed_dir/local_bkgd_region.bed";
 	my $tssCluster_summit_anno_flank_bed_path = "$summit_dir/tssCluster_summit.anno_flank.bed.gz";
 	
-	&reportAndLogStatus("Preparing bedtools intersect", 10, "\n");#->2230
+	&reportAndLogStatus("Preparing bedtools intersect", 10, "\n");#->2284
 	my $ctss_proc = 0;
 	open BEDTOOLS, "$bedtools_bin intersect -sorted -s -wo -a $tssCluster_bed_path -b $ctss_bed_path |";
 	while (<BEDTOOLS>) {
@@ -1424,11 +1447,11 @@ sub getTssClusterProperties {
 			$tssCluster_info_hsh_ref->{$tssClusterID}{'summit'} = $pos;
 		}
 		$ctss_proc++;
-		&reportAndLogStatus("$ctss_proc ctss processed", 10, "\n") if $ctss_proc%100000 == 0;#->2230
+		&reportAndLogStatus("$ctss_proc ctss processed", 10, "\n") if $ctss_proc%100000 == 0;#->2284
 	}
 	close OUTBED;
 
-	&reportAndLogStatus("getting unencoded G count", 10, "\n");#->2230
+	&reportAndLogStatus("getting unencoded G count", 10, "\n");#->2284
 	$ctss_proc = 0;
 	open BEDTOOLS, "$bedtools_bin intersect -wa -sorted -s -a $ung_ctss_bed_path -b $ctss_bed_path | $bedtools_bin intersect -sorted -s -wo -a $tssCluster_bed_path -b stdin |";
 	while (<BEDTOOLS>) {
@@ -1442,11 +1465,11 @@ sub getTssClusterProperties {
 
 		$tssCluster_info_hsh_ref->{$tssClusterID}{'ung_count'} += $ung_count;
 		$ctss_proc++;
-		&reportAndLogStatus("$ctss_proc ctss processed", 10, "\n") if $ctss_proc%100000 == 0;#->2230
+		&reportAndLogStatus("$ctss_proc ctss processed", 10, "\n") if $ctss_proc%100000 == 0;#->2284
 	}
 	close OUTBED;
 	
-	&reportAndLogStatus("getting unencoded G percentage", 10, "\n");#->2230
+	&reportAndLogStatus("getting unencoded G percentage", 10, "\n");#->2284
 	foreach my $tssClusterID (keys %{$tssCluster_info_hsh_ref}) {
 		my $count = $tssCluster_info_hsh_ref->{$tssClusterID}{'count'};
 		my $size = $tssCluster_info_hsh_ref->{$tssClusterID}{'size'};
@@ -1493,7 +1516,7 @@ sub getTssClusterProperties {
 	system "$bedtools_bin slop -b $anno_reg_assignment_flank_size -i $tssCluster_summit_bed_path -g $chrom_size_path | sort -k1,1 -k2,2n -k6,6 | gzip -c >$tssCluster_summit_anno_flank_bed_path";
 
 	if ($tssCluster_flank_size >= 0) {
-		&reportAndLogStatus("Getting flanking CTSS counts with tssCluster_flank_size=$tssCluster_flank_size.", 10, "\n");#->2230
+		&reportAndLogStatus("Getting flanking CTSS counts with tssCluster_flank_size=$tssCluster_flank_size.", 10, "\n");#->2284
 		my $ctss_proc = 0;
 		open BEDTOOLS, "$bedtools_bin slop -b $tssCluster_flank_size -i $tssCluster_summit_bed_path -g $chrom_size_path | $bedtools_bin intersect -sorted -s -wo -a stdin -b $ctss_bed_path |";
 		while (<BEDTOOLS>) {
@@ -1504,19 +1527,19 @@ sub getTssClusterProperties {
 			die "$tssClusterID does not exists\n" if not exists $tssCluster_info_hsh_ref->{$tssClusterID};
 			$tssCluster_info_hsh_ref->{$tssClusterID}{'flank_count'} += $count;
 			$ctss_proc++;
-			&reportAndLogStatus("$ctss_proc ctss processed", 10, "\n") if $ctss_proc%500000 == 0;#->2230
+			&reportAndLogStatus("$ctss_proc ctss processed", 10, "\n") if $ctss_proc%500000 == 0;#->2284
 		}
 		close (BEDTOOLS);									
-		&reportAndLogStatus("$ctss_proc ctss processed", 10, "\n");#->2230
+		&reportAndLogStatus("$ctss_proc ctss processed", 10, "\n");#->2284
 	} else {
-		&reportAndLogStatus("tssCluster_flank_size  = $tssCluster_flank_size. Using counts and flank count", 10, "\n");#->2230
+		&reportAndLogStatus("tssCluster_flank_size  = $tssCluster_flank_size. Using counts and flank count", 10, "\n");#->2284
 		foreach my $tssClusterID (keys %{$tssCluster_info_hsh_ref}) {
 			my $count = $tssCluster_info_hsh_ref->{$tssClusterID}{'count'};
 			$tssCluster_info_hsh_ref->{$tssClusterID}{'flank_count'} = $count;
 		}
 	}
 	
-	&reportAndLogStatus("Getting background local background size with local_bkgd_extend_size=$local_bkgd_extend_size.", 10, "\n");#->2230
+	&reportAndLogStatus("Getting background local background size with local_bkgd_extend_size=$local_bkgd_extend_size.", 10, "\n");#->2284
 	open LOCALBKGD, "gzip -dc $local_bkgd_region_bed_path|";
 	while (<LOCALBKGD>) {
 		my @splt = split /\t/;
@@ -1528,7 +1551,7 @@ sub getTssClusterProperties {
 	}
 	close LOCALBKGD;
 
-	&reportAndLogStatus("Getting background flanking CTSS counts with local_bkgd_extend_size=$local_bkgd_extend_size.", 10, "\n");#->2230
+	&reportAndLogStatus("Getting background flanking CTSS counts with local_bkgd_extend_size=$local_bkgd_extend_size.", 10, "\n");#->2284
 	$ctss_proc = 0;
 	open BEDTOOLS, "$bedtools_bin intersect -sorted -s -wo -a $local_bkgd_region_bed_path -b $ctss_bed_path |";
 	while (<BEDTOOLS>) {
@@ -1539,13 +1562,13 @@ sub getTssClusterProperties {
 		die "$tssClusterID does not exists\n" if not exists $tssCluster_info_hsh_ref->{$tssClusterID};
 		$tssCluster_info_hsh_ref->{$tssClusterID}{'local_bkgd_count'} += $count;
 		$ctss_proc++;
-		&reportAndLogStatus("$ctss_proc ctss processed", 10, "\n") if $ctss_proc%500000 == 0;#->2230
+		&reportAndLogStatus("$ctss_proc ctss processed", 10, "\n") if $ctss_proc%500000 == 0;#->2284
 	}
 	close (BEDTOOLS);									
-	&reportAndLogStatus("$ctss_proc ctss processed", 10, "\n");#->2230
+	&reportAndLogStatus("$ctss_proc ctss processed", 10, "\n");#->2284
 
 	my $num_tssCluster = keys %{$tssCluster_info_hsh_ref};
-	&reportAndLogStatus("$num_tssCluster tssClusters are stored", 10, "\n");#->2230
+	&reportAndLogStatus("$num_tssCluster tssClusters are stored", 10, "\n");#->2284
 
 	return ($tssCluster_summit_bed_path, $tssCluster_summit_anno_flank_bed_path, $tssCluster_info_hsh_ref);
 }
@@ -1554,12 +1577,12 @@ sub logCalledCMDAndScript {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|156
+#	primaryAppearInSection: 2_defineOutDirPath|172
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $result_script_dir, $scriptAbsPath
 #	output: 
 #	toCall: &logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);
-#	calledInLine: 172
+#	calledInLine: 189
 #....................................................................................................................................................#
 	my ($ARGVStr, $result_script_dir, $scriptAbsPath) = @_;
 
@@ -1577,21 +1600,21 @@ sub logCalledCMDAndScript {
 sub performAnnoRegionBenchmark {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
+#	dependOnSub: reportAndLogStatus|2284
 #	appearInSub: >none
-#	primaryAppearInSection: 7_BenchmarkTasks|228
+#	primaryAppearInSection: 7_BenchmarkTasks|245
 #	secondaryAppearInSection: >none
 #	input: $Rscript_bin, $benchmark_roc_R, $exclude_chrom_hsh_ref, $result_glm_dir, $testing_signal_path, $tssCluster_info_hsh_ref
 #	output: 
 #	toCall: &performAnnoRegionBenchmark($testing_signal_path, $tssCluster_info_hsh_ref, $result_glm_dir, $exclude_chrom_hsh_ref, $Rscript_bin, $benchmark_roc_R);
-#	calledInLine: 233
+#	calledInLine: 250
 #....................................................................................................................................................#
 	my ($testing_signal_path, $tssCluster_info_hsh_ref, $result_glm_dir, $exclude_chrom_hsh_ref, $Rscript_bin, $benchmark_roc_R) = @_;
 	
 	if (-s $testing_signal_path) {
 
 		my $min_num_golden = 50;
-		&reportAndLogStatus("testing_signal_path is valid. Performing benchmark on anno regions.", 10, "\n");#->2230
+		&reportAndLogStatus("testing_signal_path is valid. Performing benchmark on anno regions.", 10, "\n");#->2284
 		
 		my $anno_reg_hsh_ref = {};
 		foreach my $tssClusterID (keys %{$tssCluster_info_hsh_ref}) {
@@ -1629,7 +1652,7 @@ sub performAnnoRegionBenchmark {
 				}
 			}
 
-			&reportAndLogStatus("benchmark on $anno_region: num_gold_pos = $num_gold_pos num_gold_neg=$num_gold_neg", 10, "\n");#->2230
+			&reportAndLogStatus("benchmark on $anno_region: num_gold_pos = $num_gold_pos num_gold_neg=$num_gold_neg", 10, "\n");#->2284
 			
 			open ROCINPUT, ">", $roc_input_path;
 			print ROCINPUT join "", (join "\t", ('tssClusterID', 'binary', 'prob', 'test_bwscore', 'anno_region')), "\n";
@@ -1644,14 +1667,14 @@ sub performAnnoRegionBenchmark {
 			if ($num_gold_pos > $min_num_golden and $num_gold_neg > $min_num_golden) {
 				my $benchmark_roc_stdout_path = "$sub_outDir/00_stdout.txt";
 				my $benchmark_roc_stderr_path = "$sub_outDir/00_stderr.txt";
-				&reportAndLogStatus("benchmarking $anno_region", 10, "\n");#->2230
+				&reportAndLogStatus("benchmarking $anno_region", 10, "\n");#->2284
 				system "$Rscript_bin $benchmark_roc_R $roc_input_path $sub_outDir 1>$benchmark_roc_stdout_path 2>$benchmark_roc_stderr_path";
 			}
 		}
 
 	} else {
 	
-		&reportAndLogStatus("testing_signal_path not found. Will not perform benchmark on anno regions.", 10, "\n");#->2230
+		&reportAndLogStatus("testing_signal_path not found. Will not perform benchmark on anno regions.", 10, "\n");#->2284
 	
 	}
 
@@ -1660,14 +1683,14 @@ sub performAnnoRegionBenchmark {
 sub performGlmTraining {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: buildGlm|481, checkGlmModelRDS|575, defineGoldenSetForTesting|704, defineGoldenSetForTraining|784, printTrainingInput|1944, reportAndLogStatus|2230
+#	dependOnSub: buildGlm|497, checkGlmModelRDS|629, defineGoldenSetForTesting|758, defineGoldenSetForTraining|838, printTrainingInput|1998, reportAndLogStatus|2284
 #	appearInSub: >none
-#	primaryAppearInSection: 7_BenchmarkTasks|228
+#	primaryAppearInSection: 7_BenchmarkTasks|245
 #	secondaryAppearInSection: >none
 #	input: $Rscript_bin, $bedtools_bin, $bigWigAverageOverBed_bin, $build_glm_R, $exclude_chrom_hsh_ref, $genome, $mask_bed_path, $mask_tss_region_bed_path, $min_gold_num, $result_bed_dir, $result_glm_dir, $result_tmp_dir, $testing_pct_hsh_ref, $testing_signal_path, $training_pct_hsh_ref, $training_signal_path, $tssCluster_info_hsh_ref, $tssCluster_summit_bed_path, $usr_glm_model_path
 #	output: $glm_model_path, $tssCluster_glm_predictors_path
 #	toCall: my ($tssCluster_glm_predictors_path, $glm_model_path) = &performGlmTraining($result_tmp_dir, $training_signal_path, $tssCluster_summit_bed_path, $tssCluster_info_hsh_ref, $bigWigAverageOverBed_bin, $bedtools_bin, $training_pct_hsh_ref, $min_gold_num, $result_bed_dir, $mask_tss_region_bed_path, $mask_bed_path, $result_glm_dir, $exclude_chrom_hsh_ref, $build_glm_R, $genome, $Rscript_bin, $testing_signal_path, $testing_pct_hsh_ref, $usr_glm_model_path);
-#	calledInLine: 231
+#	calledInLine: 248
 #....................................................................................................................................................#
 	my ($result_tmp_dir, $training_signal_path, $tssCluster_summit_bed_path, $tssCluster_info_hsh_ref, $bigWigAverageOverBed_bin, $bedtools_bin, $training_pct_hsh_ref, $min_gold_num, $result_bed_dir, $mask_tss_region_bed_path, $mask_bed_path, $result_glm_dir, $exclude_chrom_hsh_ref, $build_glm_R, $genome, $Rscript_bin, $testing_signal_path, $testing_pct_hsh_ref, $usr_glm_model_path) = @_;
 	
@@ -1680,27 +1703,27 @@ sub performGlmTraining {
 		$tssCluster_info_hsh_ref->{$tssClusterID}{'test_bwscore'} = -1;
 	}
 
-	&defineGoldenSetForTesting($tssCluster_summit_bed_path, $tssCluster_info_hsh_ref, $training_pct_hsh_ref, $mask_tss_region_bed_path, $mask_bed_path, $testing_signal_path, $result_tmp_dir, $bedtools_bin, $bigWigAverageOverBed_bin, $testing_pct_hsh_ref, $min_gold_num, $exclude_chrom_hsh_ref);#->704
+	&defineGoldenSetForTesting($tssCluster_summit_bed_path, $tssCluster_info_hsh_ref, $training_pct_hsh_ref, $mask_tss_region_bed_path, $mask_bed_path, $testing_signal_path, $result_tmp_dir, $bedtools_bin, $bigWigAverageOverBed_bin, $testing_pct_hsh_ref, $min_gold_num, $exclude_chrom_hsh_ref);#->758
 	
 	if (-s $training_signal_path and not -s $usr_glm_model_path) {
-		&defineGoldenSetForTraining($result_tmp_dir, $training_signal_path, $tssCluster_summit_bed_path, $tssCluster_info_hsh_ref, $bigWigAverageOverBed_bin, $bedtools_bin, $training_pct_hsh_ref, $min_gold_num, $exclude_chrom_hsh_ref);#->784
+		&defineGoldenSetForTraining($result_tmp_dir, $training_signal_path, $tssCluster_summit_bed_path, $tssCluster_info_hsh_ref, $bigWigAverageOverBed_bin, $bedtools_bin, $training_pct_hsh_ref, $min_gold_num, $exclude_chrom_hsh_ref);#->838
 	}
 	
-	my ($tssCluster_glm_predictors_path) = &printTrainingInput($tssCluster_info_hsh_ref, $result_glm_dir, $result_bed_dir);#->1944
+	my ($tssCluster_glm_predictors_path) = &printTrainingInput($tssCluster_info_hsh_ref, $result_glm_dir, $result_bed_dir);#->1998
 	
 	my $glm_model_path;
 	
 	if (-s $usr_glm_model_path) {
-		&reportAndLogStatus("usr_glm_model_path found. Using user provide glm model for predictions.", 10, "\n");#->2230
+		&reportAndLogStatus("usr_glm_model_path found. Using user provide glm model for predictions.", 10, "\n");#->2284
 		$glm_model_path = $usr_glm_model_path;
 		
 	} elsif (-s $training_signal_path) {
-		&reportAndLogStatus("training_signal_path found. Using training_signal_path for train a glm model.", 10, "\n");#->2230
-		($glm_model_path) = &buildGlm($tssCluster_glm_predictors_path, $build_glm_R, $result_glm_dir, $Rscript_bin);#->481
+		&reportAndLogStatus("training_signal_path found. Using training_signal_path for train a glm model.", 10, "\n");#->2284
+		($glm_model_path) = &buildGlm($tssCluster_glm_predictors_path, $build_glm_R, $result_glm_dir, $Rscript_bin);#->497
 
 	} else {
-		&reportAndLogStatus("using the default glm_model for $genome for predictions.", 10, "\n");#->2230
-		($glm_model_path) = &checkGlmModelRDS($genome);#->575
+		&reportAndLogStatus("using the default glm_model for $genome for predictions.", 10, "\n");#->2284
+		($glm_model_path) = &checkGlmModelRDS($genome);#->629
 	}
 	
 	return ($tssCluster_glm_predictors_path, $glm_model_path);
@@ -1708,14 +1731,14 @@ sub performGlmTraining {
 sub predictLogisticProbability {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
+#	dependOnSub: reportAndLogStatus|2284
 #	appearInSub: >none
-#	primaryAppearInSection: 7_BenchmarkTasks|228
+#	primaryAppearInSection: 7_BenchmarkTasks|245
 #	secondaryAppearInSection: >none
 #	input: $Rscript_bin, $default_cutoff, $glm_model_path, $predict_prob_R, $result_glm_dir, $tssCluster_glm_predictors_path, $tssCluster_info_hsh_ref
 #	output: 
 #	toCall: &predictLogisticProbability($tssCluster_glm_predictors_path, $glm_model_path, $predict_prob_R, $tssCluster_info_hsh_ref, $result_glm_dir, $Rscript_bin, $default_cutoff);
-#	calledInLine: 232
+#	calledInLine: 249
 #....................................................................................................................................................#
 	my ($tssCluster_glm_predictors_path, $glm_model_path, $predict_prob_R, $tssCluster_info_hsh_ref, $result_glm_dir, $Rscript_bin, $default_cutoff) = @_;
 	
@@ -1727,11 +1750,11 @@ sub predictLogisticProbability {
 	my $glm_prob_stdout_path = "$predict_prob_dir/00_run.stdout.log.txt";
 	my $glm_prob_stderr_path = "$predict_prob_dir/00_run.stderr.log.txt";
 	
-	&reportAndLogStatus("predicting logistic probablity", 10, "\n");#->2230
+	&reportAndLogStatus("predicting logistic probablity", 10, "\n");#->2284
 	system "$Rscript_bin $predict_prob_R $tssCluster_glm_predictors_path $glm_model_path $default_cutoff $predict_prob_dir 1>$glm_prob_stdout_path 2>$glm_prob_stderr_path";
 	
 	if (-s $glm_prob_path) {
-		&reportAndLogStatus("glm_prob_path is generated", 10, "\n");#->2230
+		&reportAndLogStatus("glm_prob_path is generated", 10, "\n");#->2284
 	} else {
 		die "glm_prob_path is not generated. Quitting\n";
 	}
@@ -1741,9 +1764,9 @@ sub predictLogisticProbability {
 		chomp (my $line = <CUTOFF>);
 		my ($lenient_cutoff, $robust_cutoff) = split /\s+/, $line;
 		close CUTOFF;
-		&reportAndLogStatus("default_cutoff=$default_cutoff", 10, "\n");#->2230
-		&reportAndLogStatus("robust_cutoff=$robust_cutoff and lenient_cutoff=$lenient_cutoff", 10, "\n");#->2230
-		&reportAndLogStatus("Reading glm_prob_path", 10, "\n");#->2230
+		&reportAndLogStatus("default_cutoff=$default_cutoff", 10, "\n");#->2284
+		&reportAndLogStatus("robust_cutoff=$robust_cutoff and lenient_cutoff=$lenient_cutoff", 10, "\n");#->2284
+		&reportAndLogStatus("Reading glm_prob_path", 10, "\n");#->2284
 		open PROB, "<", $glm_prob_path;
 		<PROB>;
 		while (<PROB>) {
@@ -1769,18 +1792,18 @@ sub predictLogisticProbability {
 sub printFilteredBed {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
+#	dependOnSub: reportAndLogStatus|2284
 #	appearInSub: >none
-#	primaryAppearInSection: 8_count|238
+#	primaryAppearInSection: 8_count|255
 #	secondaryAppearInSection: >none
 #	input: $paramTag, $result_bed_dir, $tssCluster_bed_path, $tssCluster_info_hsh_ref
 #	output: 
 #	toCall: &printFilteredBed($tssCluster_bed_path, $tssCluster_info_hsh_ref, $result_bed_dir, $paramTag);
-#	calledInLine: 242
+#	calledInLine: 259
 #....................................................................................................................................................#
 	my ($tssCluster_bed_path, $tssCluster_info_hsh_ref, $result_bed_dir, $paramTag) = @_;
 
-	&reportAndLogStatus("Filtering tssClusters.", 10, "\n");#->2230
+	&reportAndLogStatus("Filtering tssClusters.", 10, "\n");#->2284
 	my $all_tssCluster_bed = "$result_bed_dir/$paramTag.tssCluster.all.bed.gz";
 	my $robust_tssCluster_bed = "$result_bed_dir/$paramTag.tssCluster.robust.filtered.bed.gz";
 	my $lenient_tssCluster_bed = "$result_bed_dir/$paramTag.tssCluster.lenient.filtered.bed.gz";
@@ -1827,12 +1850,12 @@ sub printGeneDensityLog {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 4_backgroundDensityTasks|197
+#	primaryAppearInSection: 4_backgroundDensityTasks|214
 #	secondaryAppearInSection: >none
 #	input: $gene_info_hsh_ref, $paramTag, $result_log_dir
 #	output: 
 #	toCall: &printGeneDensityLog($result_log_dir, $gene_info_hsh_ref, $paramTag);
-#	calledInLine: 202
+#	calledInLine: 219
 #....................................................................................................................................................#
 	my ($result_log_dir, $gene_info_hsh_ref, $paramTag) = @_;
 	
@@ -1864,12 +1887,12 @@ sub printOutputFileListAndReadme {
 #	subroutineCategory: output
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 9_finishingTasks|247
+#	primaryAppearInSection: 9_finishingTasks|264
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $outDir, $paramTag
 #	output: 
 #	toCall: &printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);
-#	calledInLine: 250
+#	calledInLine: 267
 #....................................................................................................................................................#
 	my ($ARGVStr, $paramTag, $outDir) = @_;
 	
@@ -1982,48 +2005,48 @@ sub printOutputFileListAndReadme {
 sub printStartOrFinishMessage {
 #....................................................................................................................................................#
 #	subroutineCategory: general
-#	dependOnSub: currentTime|686
+#	dependOnSub: currentTime|740
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|156, 9_finishingTasks|247
+#	primaryAppearInSection: 2_defineOutDirPath|172, 9_finishingTasks|264
 #	secondaryAppearInSection: >none
 #	input: $StartOrFinishMessage
 #	output: none
 #	toCall: &printStartOrFinishMessage($StartOrFinishMessage);
-#	calledInLine: 171, 251
+#	calledInLine: 188, 268
 #....................................................................................................................................................#
 
 	my ($StartOrFinishMessage) = @_;
 	
 	if ($StartOrFinishMessage eq "startMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] starts running ...... \n";#->686
+		print "[".&currentTime()."] starts running ...... \n";#->740
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->686
+		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->740
 		print $tmplog_fh "=========================================================================\n\n";
 
 	} elsif ($StartOrFinishMessage eq "finishMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] finished running .......\n";#->686
+		print "[".&currentTime()."] finished running .......\n";#->740
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->686
+		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->740
 		print $tmplog_fh "=========================================================================\n\n";
 	}
 }
 sub printTrainingInput {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
-#	appearInSub: performGlmTraining|1588
+#	dependOnSub: reportAndLogStatus|2284
+#	appearInSub: performGlmTraining|1642
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 7_BenchmarkTasks|228
+#	secondaryAppearInSection: 7_BenchmarkTasks|245
 #	input: $result_bed_dir, $result_glm_dir, $tssCluster_info_hsh_ref
 #	output: $tssCluster_glm_predictors_path
 #	toCall: my ($tssCluster_glm_predictors_path) = &printTrainingInput($tssCluster_info_hsh_ref, $result_glm_dir, $result_bed_dir);
-#	calledInLine: 1616
+#	calledInLine: 1670
 #....................................................................................................................................................#
 	my ($tssCluster_info_hsh_ref, $result_glm_dir, $result_bed_dir) = @_;
 	my $golden_set_bed_dir = "$result_bed_dir/golden_set";
@@ -2031,7 +2054,7 @@ sub printTrainingInput {
 	open GDPOS, "| sort -k1,1 -k2,2n >$golden_set_bed_dir/testing.golden_set.positive.tssCluster.bed";
 	open GDNEG, "| sort -k1,1 -k2,2n >$golden_set_bed_dir/testing.golden_set.negative.tssCluster.bed";
 	
-	&reportAndLogStatus("Prining input for benchmark", 10, "\n");#->2230
+	&reportAndLogStatus("Prining input for benchmark", 10, "\n");#->2284
 	my $tssCluster_glm_predictors_path = "$result_glm_dir/tssCluster.glm.predictors.tsv";
 	open ALLTSSCLUSTERSCORE, ">", $tssCluster_glm_predictors_path;
 	print ALLTSSCLUSTERSCORE join "", (join "\t", ('tssClusterID', 'train_binary', 'test_binary', 'train_in_gold_value', 'test_in_gold_value', 'bkgd_region', 'anno_region', 'density', 'cluster_count', 'summit_count', 'flank_count', 'bkgd_rltv_expr', 'ung_pct', 'size', 'peakness', 'stability')), "\n";
@@ -2076,18 +2099,18 @@ sub printTrainingInput {
 sub printTssClusterLog {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2230
+#	dependOnSub: reportAndLogStatus|2284
 #	appearInSub: >none
-#	primaryAppearInSection: 8_count|238
+#	primaryAppearInSection: 8_count|255
 #	secondaryAppearInSection: >none
 #	input: $paramTag, $result_log_dir, $tssCluster_info_hsh_ref
 #	output: 
 #	toCall: &printTssClusterLog($result_log_dir, $tssCluster_info_hsh_ref, $paramTag);
-#	calledInLine: 241
+#	calledInLine: 258
 #....................................................................................................................................................#
 	my ($result_log_dir, $tssCluster_info_hsh_ref, $paramTag) = @_;
 	
-	&reportAndLogStatus("Printing tssCluster log", 10, "\n");#->2230
+	&reportAndLogStatus("Printing tssCluster log", 10, "\n");#->2284
 	
 	my $filePath = "$result_log_dir/$paramTag.tssCluster.log.tsv";
 	open (OUTFILE, ">", "$filePath");
@@ -2157,18 +2180,18 @@ sub printTssClusterLog {
 sub readGeneInfo {
 #....................................................................................................................................................#
 #	subroutineCategory: getTextInfo
-#	dependOnSub: reportAndLogStatus|2230
+#	dependOnSub: reportAndLogStatus|2284
 #	appearInSub: >none
-#	primaryAppearInSection: 3_getInfoTasks|184
+#	primaryAppearInSection: 3_getInfoTasks|201
 #	secondaryAppearInSection: >none
 #	input: $gene_info_path
 #	output: $gene_info_hsh_ref
 #	toCall: my ($gene_info_hsh_ref) = &readGeneInfo($gene_info_path);
-#	calledInLine: 192
+#	calledInLine: 209
 #....................................................................................................................................................#
 	my ($gene_info_path) = @_;
 	
-	&reportAndLogStatus("reading gene info", 10, "\n");#->2230
+	&reportAndLogStatus("reading gene info", 10, "\n");#->2284
 	my $gene_info_hsh_ref = {};
 	
 	if ($gene_info_path =~ m/\.gz$/) {
@@ -2187,7 +2210,7 @@ sub readGeneInfo {
 			$colIndexHsh{$headerItem} = $i if $headerItem eq $headerSplt[$i];
 		}
 		if (not defined $colIndexHsh{$headerItem}) {
-			&reportAndLogStatus("$headerItem item is missing. Dummy values used.", 10, "\n");#->2230
+			&reportAndLogStatus("$headerItem item is missing. Dummy values used.", 10, "\n");#->2284
 		}
 	}
 	
@@ -2196,7 +2219,7 @@ sub readGeneInfo {
 		next if $_ =~ m/^#/;
 		$lineProc++;
 		chomp;
-		&reportAndLogStatus("$lineProc lines processed", 10, "\n") if $lineProc%10000==0;	##->2230
+		&reportAndLogStatus("$lineProc lines processed", 10, "\n") if $lineProc%10000==0;	##->2284
 		my @splt = split /\t/;
 		my $geneID = $splt[$colIndexHsh{'geneID'}];
 
@@ -2212,7 +2235,7 @@ sub readGeneInfo {
 
 	my $num_gene = keys %{$gene_info_hsh_ref};
 	
-	&reportAndLogStatus("$num_gene genes stored", 10, "\n");#->2230
+	&reportAndLogStatus("$num_gene genes stored", 10, "\n");#->2284
 	
 	return ($gene_info_hsh_ref);
 }
@@ -2221,12 +2244,12 @@ sub readParameters {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startingTasks|124
+#	primaryAppearInSection: 0_startingTasks|141
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: $Rscript_bin, $ctss_bed_path, $default_cutoff, $exclude_chrom_list, $genome, $local_bkgd_extend_size, $min_gold_num, $outDir, $outputPrefix, $overwrite, $testing_signal_path, $training_pct, $training_signal_path, $tssCluster_bed_path, $tssCluster_flank_size, $ung_ctss_bed_path, $usr_glm_model_path
 #	toCall: my ($ctss_bed_path, $ung_ctss_bed_path, $tssCluster_bed_path, $training_signal_path, $testing_signal_path, $genome, $tssCluster_flank_size, $local_bkgd_extend_size, $min_gold_num, $training_pct, $Rscript_bin, $usr_glm_model_path, $default_cutoff, $exclude_chrom_list, $outputPrefix, $outDir, $overwrite) = &readParameters();
-#	calledInLine: 127
+#	calledInLine: 144
 #....................................................................................................................................................#
 	
 	my ($ctss_bed_path, $ung_ctss_bed_path, $tssCluster_bed_path, $training_signal_path, $testing_signal_path, $genome, $tssCluster_flank_size, $local_bkgd_extend_size, $min_gold_num, $training_pct, $Rscript_bin, $usr_glm_model_path, $default_cutoff, $exclude_chrom_list, $outputPrefix, $outDir, $overwrite);
@@ -2302,22 +2325,22 @@ sub readParameters {
 sub reportAndLogStatus {
 #....................................................................................................................................................#
 #	subroutineCategory: log
-#	dependOnSub: currentTime|686
-#	appearInSub: assignTssClusterToAnnnotationRegions|296, assignTssClusterToBackgroundRegions|390, buildGlm|481, checkBedtoolsVersion|513, checkBigWigAverageOverBedVersion|544, checkGlmModelRDS|575, checkRScriptVersion|600, defineGoldenSetForTesting|704, generateExcludeChrHsh|824, getBackgroundDensity|848, getBackgroundRelativeExpression|948, getChromSize|998, getDistToCRE|1025, getDistToTSS|1063, getGeneTssClusterRanking|1097, getGoldenSetBed|1148, getGoldenSetBigwig|1195, getTranscriptRegionSize|1252, getTssClusterProperties|1292, performAnnoRegionBenchmark|1505, performGlmTraining|1588, predictLogisticProbability|1636, printFilteredBed|1697, printTrainingInput|1944, printTssClusterLog|2004, readGeneInfo|2085
-#	primaryAppearInSection: 2_defineOutDirPath|156
-#	secondaryAppearInSection: 1_defineHardCodedParam|132, 3_getInfoTasks|184, 4_backgroundDensityTasks|197, 5_tssClusterPropertiesTasks|207, 6_backgroundRelativeExpressionTasks|218, 7_BenchmarkTasks|228, 8_count|238
+#	dependOnSub: currentTime|740
+#	appearInSub: assignTssClusterToAnnnotationRegions|312, assignTssClusterToBackgroundRegions|406, buildGlm|497, checkAllExecutable|529, checkGlmModelRDS|629, checkRScriptVersion|654, defineGoldenSetForTesting|758, generateExcludeChrHsh|878, getBackgroundDensity|902, getBackgroundRelativeExpression|1002, getChromSize|1052, getDistToCRE|1079, getDistToTSS|1117, getGeneTssClusterRanking|1151, getGoldenSetBed|1202, getGoldenSetBigwig|1249, getTranscriptRegionSize|1306, getTssClusterProperties|1346, performAnnoRegionBenchmark|1559, performGlmTraining|1642, predictLogisticProbability|1690, printFilteredBed|1751, printTrainingInput|1998, printTssClusterLog|2058, readGeneInfo|2139
+#	primaryAppearInSection: 2_defineOutDirPath|172
+#	secondaryAppearInSection: 3_getInfoTasks|201, 4_backgroundDensityTasks|214, 5_tssClusterPropertiesTasks|224, 6_backgroundRelativeExpressionTasks|235, 7_BenchmarkTasks|245, 8_count|255
 #	input: $lineEnd, $message, $numTrailingSpace
 #	output: 
 #	toCall: &reportAndLogStatus($message, $numTrailingSpace, $lineEnd);
-#	calledInLine: 174, 175, 176, 177, 178, 309, 330, 355, 364, 377, 403, 422, 447, 456, 469, 501, 505, 531, 535, 562, 566, 592, 621, 627, 633, 639, 745, 776, 777, 840, 869, 933, 961, 1011, 1018, 1038, 1076, 1110, 1189, 1190, 1209, 1246, 1247, 1272, 1305, 1313, 1354, 1358, 1372, 1376, 1423, 1434, 1437, 1439, 1446, 1458, 1469, 1472, 1475, 1521, 1559, 1574, 1581, 1621, 1625, 1629, 1657, 1661, 1671, 1672, 1673, 1710, 1961, 2017, 2098, 2117, 2126, 2142
+#	calledInLine: 191, 192, 193, 194, 195, 325, 346, 371, 380, 393, 419, 438, 463, 472, 485, 517, 521, 552, 557, 566, 575, 584, 593, 602, 611, 620, 646, 675, 681, 687, 693, 799, 830, 831, 894, 923, 987, 1015, 1065, 1072, 1092, 1130, 1164, 1243, 1244, 1263, 1300, 1301, 1326, 1359, 1367, 1408, 1412, 1426, 1430, 1477, 1488, 1491, 1493, 1500, 1512, 1523, 1526, 1529, 1575, 1613, 1628, 1635, 1675, 1679, 1683, 1711, 1715, 1725, 1726, 1727, 1764, 2015, 2071, 2152, 2171, 2180, 2196
 #....................................................................................................................................................#
 	my ($message, $numTrailingSpace, $lineEnd) = @_;
 
 	my $trailingSpaces = '';
 	$trailingSpaces .= " " for (1..$numTrailingSpace);
 	
-	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->686
-	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->686
+	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->740
+	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->740
 	
 	return ();
 }
@@ -2331,7 +2354,7 @@ sub timeStamp {
 #	input: none
 #	output: $curntTimeStamp
 #	toCall: my ($curntTimeStamp) = &timeStamp();
-#	calledInLine: 112
+#	calledInLine: 129
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);

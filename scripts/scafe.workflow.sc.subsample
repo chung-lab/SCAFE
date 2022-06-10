@@ -111,6 +111,8 @@ use Cwd 'abs_path';
    samtools
    paraclu
    paraclu-cut.sh
+   tabix
+   bgzip
 
  For demo, cd to SCAFE dir and run,
    scafe.workflow.sc.subsample \
@@ -124,7 +126,11 @@ use Cwd 'abs_path';
 
 =head1 VERSION
 
-1.0
+v0.9.0-beta [March 20, 2021]
+	-Initial pre-release
+
+v1.0.0 [June 6, 2022]
+	-No update
 
 =cut
 #<\doc>
@@ -167,7 +173,7 @@ my ($scafe_dir, $script_dir, $result_script_dir, $ARGVStr, $scriptAbsPath) = &pr
 #<section ID="run" num="1">
 my ($path_hsh_ref) = &define_path($run_outDir, $run_tag, $UMI_CB_ctss_bed_path, $run_cellbarcode_path, $training_signal_path, $testing_signal_path, $script_dir);#->173
 my ($task_info_hsh_ref) = &define_task($genome, $path_hsh_ref, $max_thread, $subsample_num, $run_tag, $run_outDir);#->221
-&run_task($task_info_hsh_ref, $path_hsh_ref, $result_script_dir);#->458
+&run_task($task_info_hsh_ref, $path_hsh_ref, $result_script_dir);#->479
 #<\section>
 #====================================================================================================================================================#
 
@@ -191,13 +197,13 @@ sub currentTime {
 #....................................................................................................................................................#
 #	subroutineCategory: general
 #	dependOnSub: >none
-#	appearInSub: prepDir|377
+#	appearInSub: prepDir|377, run_task|479
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 0_startTasks|117
+#	secondaryAppearInSection: 0_startTasks|117, 1_run|129
 #	input: none
 #	output: $runTime
 #	toCall: my ($runTime) = &currentTime();
-#	calledInLine: 391
+#	calledInLine: 391, 494, 509, 533, 535, 536, 555
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
@@ -368,6 +374,7 @@ sub define_task {
 			'task_name' => 'count',
 			'script_name' => 'scafe.tool.sc.count',
 			'param' => [
+				['genome', $genome],
 				['countRegion_bed_path', $path_hsh_ref->{"tCRE_bed_path"}],
 				['ctss_bed_path', $path_hsh_ref->{'CB_ctss_bed_path'}],
 				['cellBarcode_list_path', $path_hsh_ref->{'run_cellbarcode_path'}],
@@ -514,20 +521,20 @@ sub readParameters {
 sub run_task {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: currentTime|141
+#	dependOnSub: currentTime|155
 #	appearInSub: >none
-#	primaryAppearInSection: 1_run|115
+#	primaryAppearInSection: 1_run|129
 #	secondaryAppearInSection: >none
 #	input: $path_hsh_ref, $result_script_dir, $task_info_hsh_ref
 #	output: none
 #	toCall: &run_task($task_info_hsh_ref, $path_hsh_ref, $result_script_dir);
-#	calledInLine: 120
+#	calledInLine: 134
 #....................................................................................................................................................#
 	
 	my ($task_info_hsh_ref, $path_hsh_ref, $result_script_dir) = @_;
 	
 	open TASKLOG, ">", "$result_script_dir/task.log.txt";
-	print TASKLOG join "", (join "\t", ('0', 'workflow', 'manager', 'started', &currentTime())), "\n";#->141
+	print TASKLOG join "", (join "\t", ('0', 'workflow', 'manager', 'started', &currentTime())), "\n";#->155
 	foreach my $task_num (sort {$a <=> $b} keys %{$task_info_hsh_ref}) {
 		my $task_name = $task_info_hsh_ref->{$task_num}{'task_name'};
 		my $script_name = $task_info_hsh_ref->{$task_num}{'script_name'};
@@ -542,7 +549,7 @@ sub run_task {
 			print "#===========================#\n";
 			print "Start running $task_name\n";
 			print "#===========================#\n";
-			print TASKLOG join "", (join "\t", ($task_num, $task_name, $script_name, 'started', &currentTime())), "\n";#->141
+			print TASKLOG join "", (join "\t", ($task_num, $task_name, $script_name, 'started', &currentTime())), "\n";#->155
 
 			my $script_path = $path_hsh_ref->{'script_dir'}.'/'.$script_name;
 			die "script of $task_name does not exist at $script_path\n" if not -s $script_path;
@@ -566,10 +573,10 @@ sub run_task {
 				print "#============================================#\n";
 				print "Results of $task_name found. Run successfully.\n";
 				print "#============================================#\n";
-				print TASKLOG join "", (join "\t", ($task_num, $task_name, $script_name, 'successful', &currentTime())), "\n";#->141
+				print TASKLOG join "", (join "\t", ($task_num, $task_name, $script_name, 'successful', &currentTime())), "\n";#->155
 			} else {
-				print TASKLOG join "", (join "\t", ($task_num, $task_name, $script_name, 'failed', &currentTime())), "\n";#->141
-				print TASKLOG join "", (join "\t", ('0', 'workflow', 'workflow', 'failed', &currentTime())), "\n";#->141
+				print TASKLOG join "", (join "\t", ($task_num, $task_name, $script_name, 'failed', &currentTime())), "\n";#->155
+				print TASKLOG join "", (join "\t", ('0', 'workflow', 'workflow', 'failed', &currentTime())), "\n";#->155
 				print "\n";
 				print "#========================================#\n";
 				print "Results of $task_name not found. Quitting.\n";
@@ -588,7 +595,7 @@ sub run_task {
 	print "#=====================================================#\n";
 	print "Results of all tasks found. All tasks run successfully.\n";
 	print "#=====================================================#\n";
-	print TASKLOG join "", (join "\t", ('0', 'workflow', 'manager', 'successful', &currentTime())), "\n";#->141
+	print TASKLOG join "", (join "\t", ('0', 'workflow', 'manager', 'successful', &currentTime())), "\n";#->155
 	close TASKLOG;
 }
 

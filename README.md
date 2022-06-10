@@ -64,7 +64,7 @@ perl --version
 ### R
 *SCAFE* relies on R for logistic regression, ROC analysis and graph plotting. Rscript **(v3.6.1 or later)** and the following R packages have to be properly installed:
 
-* [ROCR](https://cran.r-project.org/web/packages/ROCR/readme/README.html), [PRROC](https://cran.r-project.org/web/packages/PRROC/index.html), [caret](https://cran.r-project.org/web/packages/caret/index.html), [e1071](https://cran.r-project.org/web/packages/e1071/index.html), [ggplot2](https://ggplot2.tidyverse.org/), [scales](https://cran.r-project.org/web/packages/scales/index.html), [reshape2](https://cran.r-project.org/web/packages/reshape2/index.html), [docopt](https://cran.r-project.org/web/packages/docopt/index.html), [data.table](https://cran.r-project.org/web/packages/data.table/index.html), [Matrix](https://cran.r-project.org/web/packages/Matrix/index.html), [R.utils](), [monocle3](https://cole-trapnell-lab.github.io/monocle3/docs/installation/), [cicero](https://cole-trapnell-lab.github.io/cicero-release/docs_m3/#installing-cicero)
+* [ROCR](https://cran.r-project.org/web/packages/ROCR/readme/README.html), [PRROC](https://cran.r-project.org/web/packages/PRROC/index.html), [caret](https://cran.r-project.org/web/packages/caret/index.html), [e1071](https://cran.r-project.org/web/packages/e1071/index.html), [ggplot2](https://ggplot2.tidyverse.org/), [scales](https://cran.r-project.org/web/packages/scales/index.html), [reshape2](https://cran.r-project.org/web/packages/reshape2/index.html), [docopt](https://cran.r-project.org/web/packages/docopt/index.html), [R.utils]()
 
 ```shell
 #--- Check your Rscript version, must be 3.6.1 ot later
@@ -78,13 +78,10 @@ Rscript -e 'install.packages("e1071")'
 Rscript -e 'install.packages("ggplot2")'
 Rscript -e 'install.packages("scales")'
 Rscript -e 'install.packages("reshape2")'
-Rscript -e 'install.packages("docopt")'
-Rscript -e 'install.packages("data.table")'
-Rscript -e 'install.packages("Matrix", repos="http://R-Forge.R-project.org")'
 Rscript -e 'install.packages("R.utils")'
 ```
 
-Please refer to the respective homepages for installing [monocle3](https://cole-trapnell-lab.github.io/monocle3/docs/installation/) and [cicero](https://cole-trapnell-lab.github.io/cicero-release/docs_m3/#installing-cicero). Failed to install these two package will ***NOT*** affect the workflows. Only *scafe.tool.sc.link* requires these two packages.
+Note: *scafe.tool.sc.link* is now obsolete since v1.0.0 now and thus [monocle3](https://cole-trapnell-lab.github.io/monocle3/docs/installation/) and [cicero](https://cole-trapnell-lab.github.io/cicero-release/docs_m3/#installing-cicero) are not needed.
   
 
 ### Other 3rd party applications
@@ -163,64 +160,80 @@ scafe.workflow.sc.solo --help
 It should print the help message as the followings:
 
 ```shell
-          5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~AAA-3'
-                       O~~~AA      O~~         O~       O~~~~~~~AO~~~~~~~~A
-                     O~~    O~~ O~~   O~~     O~O~~     O~~      O~~       
-                      O~~      O~~           O~  O~~    O~~      O~~       
-                        O~~    O~~          O~~   O~~   O~~~~~AA O~~~~~~A  
-                           O~~ O~~         O~~~~~A O~~  O~~      O~~       
-                     O~~    O~~ O~~   O~~ O~~       O~~ O~~      O~~       
-                       O~~~~A     O~~~   O~~         O~~O~~      O~~~~~~~AA
-      ┌─ᐅ 5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-3'
-...===┴========================================================================================...
-
-                     Single Cell Analysis of Five-prime Ends (SCAFE) Tool Suite 
-                               ---> scafe.workflow.sc.solo <---
-                 <--- workflow, single-cell mode, process a single sample --->
-
-Description:
-  This workflow process a single sample, from a cellranger bam file to tCRE UMI/cellbarcode count matrix
-
 Usage:
-  scafe.workflow.sc.solo [options] --run_bam_path --run_cellbarcode_path --genome --run_tag --run_outDir
+               5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~AAA-3'
+                            O~~~AA      O~~         O~       O~~~~~~~AO~~~~~~~~A
+                          O~~    O~~ O~~   O~~     O~O~~     O~~      O~~       
+                           O~~      O~~           O~  O~~    O~~      O~~       
+                             O~~    O~~          O~~   O~~   O~~~~~AA O~~~~~~A  
+                                O~~ O~~         O~~~~~A O~~  O~~      O~~       
+                          O~~    O~~ O~~   O~~ O~~       O~~ O~~      O~~       
+                            O~~~~A     O~~~   O~~         O~~O~~      O~~~~~~~AA
+           ┌─ᐅ 5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-3'
+     ...===┴========================================================================================...
 
-  --run_bam_path         <required> [string]  bam file from cellranger, can be read 1 only or pair-end
-  --run_cellbarcode_path <required> [string]  tsv file contains a list of cell barcodes,
-                                              barcodes.tsv.gz from cellranger
-  --genome               <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
-  --run_tag              <required> [string]  prefix for the output files
-  --run_outDir           <required> [string]  directory for the output files
-  --training_signal_path (optional) [string]  quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
-                                              regions (e.g. annotated CRE, in bed format) used for training of logical 
-                                              regression model If null, $usr_glm_model_path must be supplied for 
-                                              pre-built logical regression model. It overrides usr_glm_model_path 
-                                              (default=null)
-  --testing_signal_path  (optional) [string]  quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
-                                              regions (e.g. annotated CRE, in bed format) used for testing the performance 
-                                              of the logical regression model. If null, annotated TSS from $genome will be 
-                                              used as binary genomic regions. (default=null)
-  --max_thread           (optional) [integer] maximum number of parallel threads, capped at 10 to 
-                                              avoid memory overflow (default=5)
-  --overwrite            (optional) [yes/no]  erase run_outDir before running (default=no)
+                          Single Cell Analysis of Five-prime End (SCAFE) Tool Suite 
+                                    ---> scafe.workflow.sc.solo <---
+                      <--- workflow, single-cell mode, process a single sample --->
 
-Dependencies:
-  R packages: 'ROCR','PRROC', 'caret', 'e1071', 'ggplot2', 'scales', 'reshape2'
-  bigWigAverageOverBed
-  bedGraphToBigWig
-  bedtools
-  samtools
-  paraclu
-  paraclu-cut.sh
+     Description:
+       This workflow process a single sample, from a cellranger bam file to tCRE UMI/cellbarcode count matrix
 
-For demo, cd to SCAFE dir and run,
-  scafe.workflow.sc.solo \
-  --overwrite=yes \
-  --run_bam_path=./demo/input/sc.solo/demo.cellranger.bam \
-  --run_cellbarcode_path=./demo/input/sc.solo/demo.barcodes.tsv.gz \
-  --genome=hg19.gencode_v32lift37 \
-  --run_tag=demo \
-  --run_outDir=./demo/output/sc.solo/
+     Usage:
+       scafe.workflow.sc.solo [options] --run_bam_path --run_cellbarcode_path --genome --run_tag --run_outDir
+   
+       --run_bam_path                  <required> [string] bam file from cellranger, can be read 1 only or pair-end
+       --run_cellbarcode_path          <required> [string] tsv file contains a list of cell barcodes,
+                                                           barcodes.tsv.gz from cellranger
+       --genome                        <required> [string] name of genome reference, e.g. hg19.gencode_v32lift37
+       --run_tag                       <required> [string] prefix for the output files
+       --run_outDir                    <required> [string] directory for the output files
+       --training_signal_path          (optional) [string] quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
+                                                           regions (e.g. annotated CRE, in bed format) used for training of logical 
+                                                           regression model If null, $usr_glm_model_path must be supplied for 
+                                                           pre-built logical regression model. It overrides usr_glm_model_path 
+                                                           (default=null)
+       --testing_signal_path           (optional) [string] quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
+                                                           regions (e.g. annotated CRE, in bed format) used for testing the performance 
+                                                           of the logical regression model. If null, annotated TSS from $genome will be 
+                                                           used as binary genomic regions. (default=null)
+       --detect_TS_oligo (optional) [match|trim|skip|auto] in bam_to_ctss step, the modes of detecting TS oligo. 1. match: search for 
+                                                           TS oligo sequence on the read, identify the TSO/cDNA junction as 5'end of 
+                                                           the read. This works only when the error rate of the TS oligo region on 
+                                                           the read is low, otherwise a considerable number of read will be invalid. 
+                                                           2. trim: assuming the 1st N bases of the reads are TS oligo, without 
+                                                           checking the actual sequence. N is determined by the length of TS oligo. 
+                                                           3. skip: assuming the TS oligo was not sequenced, the 1st base of the read
+                                                           will be treated as the 1st base after the TS oligo. 4. auto: automatically 
+                                                           determines the best mode, best of the observed error rate of the TS oligo
+                                                           and the frequency of 5'end softclipped bases by the aligner. If softcliped 
+                                                           bases is close to the length of TS oligo, mode 1 or 2 will be chosen, 
+                                                           depending on the observed error rate of the TS oligo (error rate <= 0.1, 
+                                                           mode 1 will be chosen or mode 2 otherwise). If softcliped base os close to 
+                                                           zero, mode 3 will be chosen. (default=auto).
+       --max_thread                   (optional) [integer] maximum number of parallel threads, capped at 10 to 
+                                                           avoid memory overflow (default=5)
+       --overwrite                     (optional) [yes/no] erase run_outDir before running (default=no)
 
+     Dependencies:
+       R packages: 'ROCR','PRROC', 'caret', 'e1071', 'ggplot2', 'scales', 'reshape2'
+       bigWigAverageOverBed
+       bedGraphToBigWig
+       bedtools
+       samtools
+       paraclu
+       paraclu-cut.sh
+       tabix
+       bgzip
+
+     For demo, cd to SCAFE dir and run,
+       scafe.workflow.sc.solo \
+       --overwrite=yes \
+       --run_bam_path=./demo/input/sc.solo/demo.cellranger.bam \
+       --run_cellbarcode_path=./demo/input/sc.solo/demo.barcodes.tsv.gz \
+       --genome=hg19.gencode_v32lift37 \
+       --run_tag=demo \
+       --run_outDir=./demo/output/sc.solo/
 ```
 
 The help message details the input options, noted some are ***\<required\>*** and ***(optional)***. *workflow.sc.solo* takes a bam file (*--run\_bam\_path=*), a cellbarcode list file (*--run\_cellbarcode\_path=*), the corresponding reference genome (*--genome=*) and the output prefix (*--run_tag=*) and directory (*--run_outDir=*). At the end of the message, it also prints the commands for running the script on demo data. Now, copy the command and run as the following:
@@ -267,78 +280,6 @@ scafe.demo.test.run \
 --overwrite=yes \
 --run_outDir=./demo/output/
 ```
-
-### Test linking tCRE by coactivity
-Finally, try using *scafe.tool.sc.link* to run [cicero](https://cole-trapnell-lab.github.io/cicero-release/docs_m3/#abstract) for linking tCREs based on their coactivity. We provide a demo dataset from our PBMC data. *scafe.tool.sc.link* parallelize cicero by chromosomes, and it'll take around 20 minutes to run. We'll use *--max_thread=10* to run with 10 threads.
-```shell
-#--- check out the help message of scafe.tool.sc.link
-scafe.tool.sc.link --help
-
-#--- run scafe.tool.sc.link to link tCRE by their coactivity
-#--- it'll take a around 20 minutes
-scafe.tool.sc.link \
---overwrite=yes \
---max_thread=10 \
---CRE_bed_path=./demo/input/sc.link/demo.CRE.coord.bed.gz \
---CRE_info_path=./demo/input/sc.link/demo.CRE.info.tsv.gz \
---count_dir=./demo/input/sc.link/matrix/ \
---genome=hg19.gencode_v32lift37 \
---outputPrefix=demo \
---outDir=./demo/output/sc.link/
-```
-
-*scafe.tool.sc.link* calculates the coactivity between tCREs and define cis-coactivity networks of tCREs. You can check these results in the log directory.
-
-```shell
-#--- check connectivity
-gzip -dc ./demo/output/sc.link/demo/log/cicero.coactivity.link.redundant.non_zero.tsv.gz | head -n 20
-
-CRE1                          CRE2                         coactivity
-chr10_101190280_101190781_-   chr10_101370561_101371062_-  -0.11747
-chr10_101190280_101190781_-   chr10_101491567_101492125_+  0.39047
-chr10_101190280_101190781_-   chr10_101491783_101492284_-  0.01331
-chr10_101370561_101371062_-   chr10_101190280_101190781_-  -0.11747
-chr10_101370561_101371062_-   chr10_101491567_101492125_+  -0.30085
-chr10_101370561_101371062_-   chr10_101491783_101492284_-  -0.01026
-chr10_101380086_101380587_-   chr10_101380794_101381295_+  -0.08749
-chr10_101380794_101381295_+   chr10_101380086_101380587_-  -0.08749
-chr10_101491567_101492125_+   chr10_101190280_101190781_-  0.39047
-chr10_101491567_101492125_+   chr10_101370561_101371062_-  -0.30085
-chr10_101491567_101492125_+   chr10_101491783_101492284_-  0.0341
-chr10_101491783_101492284_-   chr10_101190280_101190781_-  0.01331
-chr10_101491783_101492284_-   chr10_101370561_101371062_-  -0.01026
-chr10_101491783_101492284_-   chr10_101491567_101492125_+  0.0341
-chr10_101945538_101946039_+   chr10_101945685_101946186_-  -0.04648
-chr10_101945685_101946186_-   chr10_101945538_101946039_+  -0.04648
-chr10_102027294_102027795_-   chr10_102046013_102046828_-  0.01844
-chr10_102027294_102027795_-   chr10_102289535_102290036_-  0.23593
-chr10_102027294_102027795_-   chr10_102295299_102295800_+  0.02627
-
-#--- check cis-coactivity network
-gzip -dc ./demo/output/sc.link/demo/log/cicero.coactivity.network.tsv.gz | head -n 20
-
-CCANID                           CREID
-CCAN_chr10_102027395_102792196   chr10_102672325_102672826_+
-CCAN_chr10_102027395_102792196   chr10_102790607_102791339_+
-CCAN_chr10_102027395_102792196   chr10_102289535_102290036_-
-CCAN_chr10_102027395_102792196   chr10_102295299_102295800_+
-CCAN_chr10_102027395_102792196   chr10_102046013_102046828_-
-CCAN_chr10_102027395_102792196   chr10_102746899_102747400_+
-CCAN_chr10_102027395_102792196   chr10_102746902_102747654_-
-CCAN_chr10_102027395_102792196   chr10_102756412_102756913_+
-CCAN_chr10_102027395_102792196   chr10_102027294_102027795_-
-CCAN_chr10_102027395_102792196   chr10_102791429_102792296_+
-CCAN_chr10_102027395_102792196   chr10_102673005_102673506_-
-CCAN_chr10_1034402_1282508       chr10_1282407_1282908_-
-CCAN_chr10_1034402_1282508       chr10_1094738_1095693_-
-CCAN_chr10_1034402_1282508       chr10_1034001_1034502_+
-CCAN_chr10_1034402_1282508       chr10_1102543_1103044_-
-CCAN_chr10_1034402_1282508       chr10_1101951_1102886_+
-CCAN_chr10_103543152_104614260   chr10_104155091_104155592_+
-CCAN_chr10_103543152_104614260   chr10_104613618_104614134_+
-CCAN_chr10_103543152_104614260   chr10_103543051_103543552_-
-```
-
 
 ## Run *SCAFE* on your own data<a name="8"></a>
 

@@ -106,6 +106,8 @@ use Cwd 'abs_path';
 
  Dependencies:
    bedtools
+   tabix
+   bgzip
 
  For demo, cd to SCAFE dir and run,
    scafe.tool.cm.remove_strand_invader \
@@ -117,7 +119,11 @@ use Cwd 'abs_path';
 
 =head1 VERSION
 
-1.0
+v0.9.0-beta [March 20, 2021]
+	-Initial pre-release
+
+v1.0.0 [June 6, 2022]
+	-No update
 
 =cut#
 #<\doc>
@@ -137,8 +143,8 @@ use Cwd 'abs_path';
 #<global>
 my $scriptDirPath = dirname(rel2abs($0));
 my $scriptAbsPath = abs_path($0);
-my ($curntTimeStamp) = &timeStamp();#->1061
-my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->364
+my ($curntTimeStamp) = &timeStamp();#->1158
+my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->462
 my $globalReadmeHsh_ref = {};
 our $tmplog_fh;
 #<\global>
@@ -152,7 +158,7 @@ our $tmplog_fh;
 #	section 0_startingTasks
 #
 #<section ID="startingTasks" num="0">
-my ($ctss_bed_path, $TS_oligo_seq, $min_edit_distance, $min_end_non_G_num, $max_thread, $genome, $outputPrefix, $outDir, $overwrite) = &readParameters();#->986
+my ($ctss_bed_path, $TS_oligo_seq, $min_edit_distance, $min_end_non_G_num, $max_thread, $genome, $outputPrefix, $outDir, $overwrite) = &readParameters();#->1083
 #<\section>
 #====================================================================================================================================================#
 
@@ -161,6 +167,7 @@ my ($ctss_bed_path, $TS_oligo_seq, $min_edit_distance, $min_end_non_G_num, $max_
 #
 #<section ID="defineHardCodedParam" num="1">
 my $chunk_size = 100000000;
+my $bgzip_sort_thread = 5;
 $max_thread = 10 if $max_thread > 10;
 my $output_cutoff_hsh_ref = {
 	'min_edit_distance' => $min_edit_distance, #---[2019/12/19 20:21] is strand invader if <= X edit distance in the whole 13 nucleotides (i.e. 13 to turn out)
@@ -185,8 +192,8 @@ my $result_script_dir = "$result_dir/script/"; push @mkDirAry, $result_script_di
 foreach my $dir (@mkDirAry) {system ("mkdir -pm 777 $dir");}
 
 open $tmplog_fh, ">", "$result_dir/00_screen_log.$curntTimeStamp.log.txt";
-&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->613
-&printStartOrFinishMessage("startMessage");#->843
+&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->711
+&printStartOrFinishMessage("startMessage");#->940
 #<\section>
 #====================================================================================================================================================#
 
@@ -194,12 +201,12 @@ open $tmplog_fh, ">", "$result_dir/00_screen_log.$curntTimeStamp.log.txt";
 #	section 3_count
 #
 #<section ID="count" num="3">
-my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
-my ($fasta_path, $chrom_size_path) = &checkFastaChromSizePath($genome);#->342
-my ($chrom_size_hsh_ref) = &readChromSize($chrom_size_path);#->961
-my ($chunk_info_hsh_ref) = &generateChunkInfoHsh($chrom_size_hsh_ref, $chunk_size, $result_tmp_dir);#->489
-&processPerChunk($ctss_bed_path, $fasta_path, $result_fasta_dir, $TS_oligo_seq, $bedtools_bin, $max_thread, $output_cutoff_hsh_ref, $chunk_info_hsh_ref, $chrom_size_path, $paramTag);#->877
-&poolChunkResults($chunk_info_hsh_ref, $result_bed_dir, $result_log_dir, $paramTag);#->638
+my ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();#->311
+my ($fasta_path, $chrom_size_path) = &checkFastaChromSizePath($genome);#->440
+my ($chrom_size_hsh_ref) = &readChromSize($chrom_size_path);#->1058
+my ($chunk_info_hsh_ref) = &generateChunkInfoHsh($chrom_size_hsh_ref, $chunk_size, $result_tmp_dir);#->587
+&processPerChunk($ctss_bed_path, $fasta_path, $result_fasta_dir, $TS_oligo_seq, $bedtools_bin, $tabix_bin, $bgzip_bin, $bgzip_sort_thread, $max_thread, $output_cutoff_hsh_ref, $chunk_info_hsh_ref, $chrom_size_path, $paramTag);#->974
+&poolChunkResults($tabix_bin, $chunk_info_hsh_ref, $result_bed_dir, $result_log_dir, $paramTag);#->736
 system("rm -rf $result_tmp_dir");
 #<\section>
 #====================================================================================================================================================#
@@ -208,8 +215,8 @@ system("rm -rf $result_tmp_dir");
 #	section 4_finishingTasks
 #
 #<section ID="finishingTasks" num="4">
-&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->723
-&printStartOrFinishMessage("finishMessage");#->843
+&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->820
+&printStartOrFinishMessage("finishMessage");#->940
 #<\section>
 #====================================================================================================================================================#
 
@@ -220,12 +227,9 @@ system("rm -rf $result_tmp_dir");
 #====================================================================================================================================================#
 #List of subroutines by category
 #
-#	checkTools [n=1]:
-#		checkBedtoolsVersion
-#
-#	general [n=6]:
-#		checkBedtoolsVersion, currentTime, logCalledCMDAndScript
-#		printStartOrFinishMessage, readParameters, timeStamp
+#	general [n=5]:
+#		currentTime, logCalledCMDAndScript, printStartOrFinishMessage
+#		readParameters, timeStamp
 #
 #	log [n=1]:
 #		reportAndLogStatus
@@ -236,10 +240,11 @@ system("rm -rf $result_tmp_dir");
 #	time [n=1]:
 #		timeStamp
 #
-#	unassigned [n=9]:
-#		calculateEditDistance, checkChunkResults, checkFastaChromSizePath
-#		filterCTSS, generateChunkInfoHsh, generateUpstreamSeq
-#		poolChunkResults, processPerChunk, readChromSize
+#	unassigned [n=10]:
+#		calculateEditDistance, checkAllExecutable, checkChunkResults
+#		checkFastaChromSizePath, filterCTSS, generateChunkInfoHsh
+#		generateUpstreamSeq, poolChunkResults, processPerChunk
+#		readChromSize
 #
 #====================================================================================================================================================#
 
@@ -247,13 +252,13 @@ sub calculateEditDistance {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
-#	appearInSub: filterCTSS|382
+#	appearInSub: filterCTSS|480
 #	primaryAppearInSection: >none
 #	secondaryAppearInSection: >none
 #	input: $seq1, $seq2
 #	output: $edit
 #	toCall: my ($edit) = &calculateEditDistance($seq1, $seq2);
-#	calledInLine: 437
+#	calledInLine: 535
 #....................................................................................................................................................#
 	my ($seq1, $seq2) = @_;
 
@@ -353,18 +358,20 @@ sub calculateEditDistance {
 sub checkAllExecutable {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|1254
+#	dependOnSub: reportAndLogStatus|1136
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|129
+#	primaryAppearInSection: 3_count|153
 #	secondaryAppearInSection: >none
 #	input: none
-#	output: $bedGraphToBigWig_bin, $bedtools_bin, $bigWigAverageOverBed_bin, $cut_sh_path, $paraclu_bin, $samtools_bin
-#	toCall: my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
-#	calledInLine: 144
+#	output: $bedGraphToBigWig_bin, $bedtools_bin, $bgzip_bin, $bigWigAverageOverBed_bin, $cut_sh_path, $paraclu_bin, $samtools_bin, $tabix_bin
+#	toCall: my ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
+#	calledInLine: 156
 #....................................................................................................................................................#
 	
 	my $dirPath = dirname(rel2abs($0));
 
+	my $tabix_bin = "$dirPath/../resources/bin/tabix/tabix";
+	my $bgzip_bin = "$dirPath/../resources/bin/bgzip/bgzip";
 	my $bedtools_bin = "$dirPath/../resources/bin/bedtools/bedtools";
 	my $samtools_bin = "$dirPath/../resources/bin/samtools/samtools";
 	my $paraclu_bin = "$dirPath/../resources/bin/paraclu/paraclu";
@@ -372,12 +379,30 @@ sub checkAllExecutable {
 	my $bedGraphToBigWig_bin = "$dirPath/../resources/bin/bedGraphToBigWig/bedGraphToBigWig";
 	my $bigWigAverageOverBed_bin = "$dirPath/../resources/bin/bigWigAverageOverBed/bigWigAverageOverBed";
 	
-	&reportAndLogStatus("Checking all SCAFE executables", 10, "\n");#->1254
+	&reportAndLogStatus("Checking all SCAFE executables", 10, "\n");#->1136
 	
+	{
+		my $stdOut = `$tabix_bin  --version 2>&1`;
+		if ($stdOut =~ m/tabix \(htslib\) (\S+)/) {
+			&reportAndLogStatus("Checking: tabix version: $1", 0, "\n");#->1136
+		} else {
+			die "tabix is not installed properly. Quitting.\n";
+		}
+	}
+
+	{
+		my $stdOut = `$bgzip_bin --version 2>&1`;
+		if ($stdOut =~ m/bgzip \(htslib\) (\S+)/) {
+			&reportAndLogStatus("Checking: bgzip version: $1", 0, "\n");#->1136
+		} else {
+			die "bgzip is not installed properly. Quitting.\n";
+		}
+	}
+
 	{
 		my $stdOut = `$bedtools_bin --version 2>&1`;
 		if ($stdOut =~ m/bedtools v(\S+)/) {
-			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->1136
 		} else {
 			die "bedtools is not installed properly. Quitting.\n";
 		}
@@ -386,7 +411,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$samtools_bin 2>&1`;
 		if ($stdOut =~ m/\s+(Version: \S+)\s+/) {
-			&reportAndLogStatus("Checking: samtools version: $1", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: samtools version: $1", 0, "\n");#->1136
 		} else {
 			die "samtools is not installed properly. Quitting.\n";
 		}
@@ -395,7 +420,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$paraclu_bin 2>&1`;
 		if ($stdOut =~ m/paraclu: I need a minValue and a fileName/) {
-			&reportAndLogStatus("Checking: paraclu found.", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: paraclu found.", 0, "\n");#->1136
 		} else {
 			die "paraclu is not installed properly. Quitting.\n";
 		}
@@ -404,7 +429,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$cut_sh_path 55C7128A 2>&1`;
 		if ($stdOut =~ m/awk:/) {
-			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->1136
 		} else {
 			die "paraclu-cut is not installed properly. Quitting.\n";
 		}
@@ -413,7 +438,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bedGraphToBigWig_bin 2>&1`;
 		if ($stdOut =~ m/bedGraphToBigWig v (\S+)/) {
-			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->1136
 		} else {
 			die "bedGraphToBigWig not installed properly. Quitting.\n";
 		}
@@ -422,35 +447,41 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bigWigAverageOverBed_bin 2>&1`;
 		if ($stdOut =~ m/bigWigAverageOverBed v(\S+)/) {
-			&reportAndLogStatus("Checking: bigWigAverageOverBed version: $1", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: bigWigAverageOverBed version: $1", 0, "\n");#->1136
 		} else {
 			die "bigWigAverageOverBed is not installed properly. Quitting.\n";
 		}
 	}
 
-	return ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin);
+	return ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin);
 }
 sub checkChunkResults {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|1039
-#	appearInSub: poolChunkResults|638, processPerChunk|877
+#	dependOnSub: reportAndLogStatus|1136
+#	appearInSub: poolChunkResults|736, processPerChunk|974
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 3_count|128
+#	secondaryAppearInSection: 3_count|153
 #	input: $chunk_info_hsh_ref, $chunk_num
 #	output: $valid
 #	toCall: my ($valid) = &checkChunkResults($chunk_info_hsh_ref, $chunk_num);
-#	calledInLine: 662, 919
+#	calledInLine: 761, 1016
 #....................................................................................................................................................#
 	my ($chunk_info_hsh_ref, $chunk_num) = @_;
 	
 	my $valid = 'yes';
-	foreach my $file_to_check (qw/chunk_pass_ctss_bed_path chunk_invader_ctss_bed_path chunk_log_path/) {
+	foreach my $file_to_check (qw/chunk_log_path/) {
 		my $file_path =  $chunk_info_hsh_ref->{$chunk_num}{$file_to_check};
-		#&reportAndLogStatus("$file_path", 10, "\n");#->1039
+		#&reportAndLogStatus("$file_path", 10, "\n");#->1136
 		$valid = 'no' if not -s $file_path;
 	}
-	
+ 
+	foreach my $ctss_type (qw/chunk_pass_ctss chunk_invader_ctss/) {
+		my $file_path =  $chunk_info_hsh_ref->{$chunk_num}{'ctss'}{'sorted'}{$ctss_type};
+		#&reportAndLogStatus("$file_path", 10, "\n");#->1136
+		$valid = 'no' if not -s $file_path;
+	}
+
 	return ($valid);
 }
 sub checkFastaChromSizePath {
@@ -458,12 +489,12 @@ sub checkFastaChromSizePath {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 3_count|128
+#	primaryAppearInSection: 3_count|153
 #	secondaryAppearInSection: >none
 #	input: $genome
 #	output: $chrom_size_path, $fasta_path
 #	toCall: my ($fasta_path, $chrom_size_path) = &checkFastaChromSizePath($genome);
-#	calledInLine: 132
+#	calledInLine: 157
 #....................................................................................................................................................#
 	my ($genome) = @_;
 	
@@ -479,13 +510,13 @@ sub currentTime {
 #....................................................................................................................................................#
 #	subroutineCategory: general
 #	dependOnSub: >none
-#	appearInSub: printStartOrFinishMessage|843, reportAndLogStatus|1039
+#	appearInSub: printStartOrFinishMessage|940, reportAndLogStatus|1136
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 2_defineOutDirPath|108, 4_finishingTasks|142
+#	secondaryAppearInSection: 2_defineOutDirPath|133, 4_finishingTasks|167
 #	input: none
 #	output: $runTime
 #	toCall: my ($runTime) = &currentTime();
-#	calledInLine: 75, 859, 863, 868, 872, 1055, 1056
+#	calledInLine: 99, 956, 960, 965, 969, 1152, 1153
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
@@ -496,21 +527,21 @@ sub currentTime {
 sub filterCTSS {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: calculateEditDistance|181, reportAndLogStatus|1039
-#	appearInSub: processPerChunk|877
+#	dependOnSub: calculateEditDistance|204, reportAndLogStatus|1136
+#	appearInSub: processPerChunk|974
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 3_count|128
-#	input: $TS_oligo_seq, $chunk_info_hsh_ref, $chunk_num, $count_cutoff_hsh_ref, $output_cutoff_hsh_ref
+#	secondaryAppearInSection: 3_count|153
+#	input: $TS_oligo_seq, $bgzip_bin, $bgzip_sort_thread, $chunk_info_hsh_ref, $chunk_num, $count_cutoff_hsh_ref, $output_cutoff_hsh_ref
 #	output: 
-#	toCall: &filterCTSS($chunk_info_hsh_ref, $chunk_num, $TS_oligo_seq, $output_cutoff_hsh_ref, $count_cutoff_hsh_ref);
-#	calledInLine: 927
+#	toCall: &filterCTSS($chunk_info_hsh_ref, $chunk_num, $TS_oligo_seq, $bgzip_bin, $bgzip_sort_thread, $output_cutoff_hsh_ref, $count_cutoff_hsh_ref);
+#	calledInLine: 1024
 #....................................................................................................................................................#
-	my ($chunk_info_hsh_ref, $chunk_num, $TS_oligo_seq, $output_cutoff_hsh_ref, $count_cutoff_hsh_ref) = @_;
+	my ($chunk_info_hsh_ref, $chunk_num, $TS_oligo_seq, $bgzip_bin, $bgzip_sort_thread, $output_cutoff_hsh_ref, $count_cutoff_hsh_ref) = @_;
 	
-	my $chunk_unsort_pass_ctss_bed_path = $chunk_info_hsh_ref->{$chunk_num}{'chunk_unsort_pass_ctss_bed_path'};
-	my $chunk_unsort_invader_ctss_bed_path = $chunk_info_hsh_ref->{$chunk_num}{'chunk_unsort_invader_ctss_bed_path'};
-	my $chunk_pass_ctss_bed_path = $chunk_info_hsh_ref->{$chunk_num}{'chunk_pass_ctss_bed_path'};
-	my $chunk_invader_ctss_bed_path = $chunk_info_hsh_ref->{$chunk_num}{'chunk_invader_ctss_bed_path'};
+	my $chunk_pass_ctss_bed_path = $chunk_info_hsh_ref->{$chunk_num}{'ctss'}{'sorted'}{'chunk_pass_ctss'};
+	my $chunk_unsort_pass_ctss_bed_path = $chunk_info_hsh_ref->{$chunk_num}{'ctss'}{'unsort'}{'chunk_pass_ctss'};
+	my $chunk_invader_ctss_bed_path = $chunk_info_hsh_ref->{$chunk_num}{'ctss'}{'sorted'}{'chunk_invader_ctss'};
+	my $chunk_unsort_invader_ctss_bed_path = $chunk_info_hsh_ref->{$chunk_num}{'ctss'}{'unsort'}{'chunk_invader_ctss'};
 
 	my $chunk_log_path = $chunk_info_hsh_ref->{$chunk_num}{'chunk_log_path'};
 	my $chunk_upstream_seq_fasta_path = $chunk_info_hsh_ref->{$chunk_num}{'chunk_upstream_seq_fasta_path'};
@@ -545,11 +576,11 @@ sub filterCTSS {
 			$total_pos++;
 			$total_read += $score;
 
-			&reportAndLogStatus("getting edit distance for chunk $chunk_num. $total_pos ctss position processed", 10, "\n") if $total_pos%100000==0;#->1039
+			&reportAndLogStatus("getting edit distance for chunk $chunk_num. $total_pos ctss position processed", 10, "\n") if $total_pos%100000==0;#->1136
 
 			chomp (my $upstream_seq = <FASTA>);
 			$upstream_seq = uc($upstream_seq);
-			my ($edit_distance) = &calculateEditDistance($TS_oligo_seq, $upstream_seq);#->181
+			my ($edit_distance) = &calculateEditDistance($TS_oligo_seq, $upstream_seq);#->204
 			my $last_3_nt = substr($upstream_seq, -3);
 			my $end_non_G_num = ($last_3_nt ^ 'GGG') =~ tr/\0//c;
 			
@@ -573,12 +604,12 @@ sub filterCTSS {
 	close PASSCTSS;
 	close STRNDINVADCTSS;
 
-	system "sort -k1,1 -k2,2n -k6,6 $chunk_unsort_pass_ctss_bed_path >$chunk_pass_ctss_bed_path";
+	system "sort --parallel $bgzip_sort_thread -k2,2n -k6,6 $chunk_unsort_pass_ctss_bed_path | $bgzip_bin -@ $bgzip_sort_thread >$chunk_pass_ctss_bed_path";
 	system "rm $chunk_unsort_pass_ctss_bed_path";
-	system "sort -k1,1 -k2,2n -k6,6 $chunk_unsort_invader_ctss_bed_path >$chunk_invader_ctss_bed_path";
+	system "sort --parallel $bgzip_sort_thread -k2,2n -k6,6 $chunk_unsort_invader_ctss_bed_path | $bgzip_bin -@ $bgzip_sort_thread >$chunk_invader_ctss_bed_path";
 	system "rm $chunk_unsort_invader_ctss_bed_path";
 
-	&reportAndLogStatus("done getting edit distance for chunk $chunk_num. $total_pos ctss position processed", 10, "\n") if $total_pos%100000==0;#->1039
+	&reportAndLogStatus("done getting edit distance for chunk $chunk_num. $total_pos ctss position processed", 10, "\n") if $total_pos%100000==0;#->1136
 			
 	open LOG, ">", $chunk_log_path;
 	print LOG join "", (join "\t", ('min_edit_distance', 'min_end_non_G_num', 'pos', 'read', 'pos_pct', 'read_pct', 'total_read', 'total_pos')), "\n";
@@ -603,14 +634,14 @@ sub filterCTSS {
 sub generateChunkInfoHsh {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|1039
+#	dependOnSub: reportAndLogStatus|1136
 #	appearInSub: >none
-#	primaryAppearInSection: 3_count|128
+#	primaryAppearInSection: 3_count|153
 #	secondaryAppearInSection: >none
 #	input: $chrom_size_hsh_ref, $chunk_size, $result_tmp_dir
 #	output: $chunk_info_hsh_ref
 #	toCall: my ($chunk_info_hsh_ref) = &generateChunkInfoHsh($chrom_size_hsh_ref, $chunk_size, $result_tmp_dir);
-#	calledInLine: 134
+#	calledInLine: 159
 #....................................................................................................................................................#
 	my ($chrom_size_hsh_ref, $chunk_size, $result_tmp_dir) = @_;
 	
@@ -624,28 +655,31 @@ sub generateChunkInfoHsh {
 			my $file_tag = "$chrom.$startPos.$endPos";
 			
 			my $size_in_chunk = $endPos - $startPos;
-			&reportAndLogStatus("chunk $chunk_num contains $size_in_chunk nt covering $chrom $startPos to $endPos", 10, "\n");#->1039
+			&reportAndLogStatus("chunk $chunk_num contains $size_in_chunk nt covering $chrom $startPos to $endPos", 10, "\n");#->1136
 
 			my $chunk_upstream_seq_fasta_path = "$result_tmp_dir/$file_tag.upstream_seq.fasta";
 			my $chunk_ctss_in_scope_bed_path = "$result_tmp_dir/$file_tag.ctss_in_scope.bed";
 			my $chunk_scope_bed_path = "$result_tmp_dir/$file_tag.scope.bed";
-			my $chunk_pass_ctss_bed_path = "$result_tmp_dir/$file_tag.pass.ctss.bed";
-			my $chunk_invader_ctss_bed_path = "$result_tmp_dir/$file_tag.invader.ctss.bed";
+			my $chunk_pass_ctss_bed_path = "$result_tmp_dir/$file_tag.pass.ctss.bed.gz";
+			my $chunk_invader_ctss_bed_path = "$result_tmp_dir/$file_tag.invader.ctss.bed.gz";
 			my $chunk_unsort_pass_ctss_bed_path = "$result_tmp_dir/$file_tag.unsort.pass.ctss.bed";
 			my $chunk_unsort_invader_ctss_bed_path = "$result_tmp_dir/$file_tag.unsort.invader.ctss.bed";
 
 			my $chunk_log_path = "$result_tmp_dir/$file_tag.log.txt";
 			
 			my ($chunk_chrom, $chunk_startPos, $chunk_endPos) = ($chrom, $startPos, $endPos);
+			my $tabix_startPos = $chunk_startPos + 1; #---[2021/09/01 22:58] everything is zero based except tabix
+			$chunk_info_hsh_ref->{$chunk_num}{'region_str'} = "$chunk_chrom:$chunk_startPos-$chunk_endPos";
 			$chunk_info_hsh_ref->{$chunk_num}{'loc'} = [$chunk_chrom, $chunk_startPos, $chunk_endPos];
 			$chunk_info_hsh_ref->{$chunk_num}{'chunk_upstream_seq_fasta_path'} = $chunk_upstream_seq_fasta_path;
 			$chunk_info_hsh_ref->{$chunk_num}{'chunk_ctss_in_scope_bed_path'} = $chunk_ctss_in_scope_bed_path;
-			$chunk_info_hsh_ref->{$chunk_num}{'chunk_scope_bed_path'} = $chunk_scope_bed_path;
+			$chunk_info_hsh_ref->{$chunk_num}{'tabix_region_str'} = "$chunk_chrom:$tabix_startPos-$chunk_endPos";
 			$chunk_info_hsh_ref->{$chunk_num}{'chunk_log_path'} = $chunk_log_path;
-			$chunk_info_hsh_ref->{$chunk_num}{'chunk_pass_ctss_bed_path'} = $chunk_pass_ctss_bed_path;
-			$chunk_info_hsh_ref->{$chunk_num}{'chunk_invader_ctss_bed_path'} = $chunk_invader_ctss_bed_path;
-			$chunk_info_hsh_ref->{$chunk_num}{'chunk_unsort_pass_ctss_bed_path'} = $chunk_unsort_pass_ctss_bed_path;
-			$chunk_info_hsh_ref->{$chunk_num}{'chunk_unsort_invader_ctss_bed_path'} = $chunk_unsort_invader_ctss_bed_path;
+
+			$chunk_info_hsh_ref->{$chunk_num}{'ctss'}{'sorted'}{'chunk_pass_ctss'} = $chunk_pass_ctss_bed_path;
+			$chunk_info_hsh_ref->{$chunk_num}{'ctss'}{'unsort'}{'chunk_pass_ctss'} = $chunk_unsort_pass_ctss_bed_path;
+			$chunk_info_hsh_ref->{$chunk_num}{'ctss'}{'sorted'}{'chunk_invader_ctss'} = $chunk_invader_ctss_bed_path;
+			$chunk_info_hsh_ref->{$chunk_num}{'ctss'}{'unsort'}{'chunk_invader_ctss'} = $chunk_unsort_invader_ctss_bed_path;
 
 			$chunk_num++;
 		}
@@ -656,34 +690,31 @@ sub generateChunkInfoHsh {
 sub generateUpstreamSeq {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|1039
-#	appearInSub: processPerChunk|877
+#	dependOnSub: reportAndLogStatus|1136
+#	appearInSub: processPerChunk|974
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 3_count|128
-#	input: $TS_oligo_seq, $bedtools_bin, $chrom_size_path, $chunk_info_hsh_ref, $chunk_num, $ctss_bed_path, $fasta_path
+#	secondaryAppearInSection: 3_count|153
+#	input: $TS_oligo_seq, $bedtools_bin, $chrom_size_path, $chunk_info_hsh_ref, $chunk_num, $ctss_bed_path, $fasta_path, $tabix_bin
 #	output: $chunk_upstream_seq_fasta_path
-#	toCall: my ($chunk_upstream_seq_fasta_path) = &generateUpstreamSeq($ctss_bed_path, $fasta_path, $TS_oligo_seq, $bedtools_bin, $chunk_num, $chunk_info_hsh_ref, $chrom_size_path);
-#	calledInLine: 926
+#	toCall: my ($chunk_upstream_seq_fasta_path) = &generateUpstreamSeq($ctss_bed_path, $fasta_path, $TS_oligo_seq, $bedtools_bin, $tabix_bin, $chunk_num, $chunk_info_hsh_ref, $chrom_size_path);
+#	calledInLine: 1023
 #....................................................................................................................................................#
-	my ($ctss_bed_path, $fasta_path, $TS_oligo_seq, $bedtools_bin, $chunk_num, $chunk_info_hsh_ref, $chrom_size_path) = @_;
+	my ($ctss_bed_path, $fasta_path, $TS_oligo_seq, $bedtools_bin, $tabix_bin, $chunk_num, $chunk_info_hsh_ref, $chrom_size_path) = @_;
 	
 	my $length = length($TS_oligo_seq);
 
 	my ($chunk_chrom, $chunk_startPos, $chunk_endPos) = @{$chunk_info_hsh_ref->{$chunk_num}{'loc'}};
 	my $chunk_upstream_seq_fasta_path = $chunk_info_hsh_ref->{$chunk_num}{'chunk_upstream_seq_fasta_path'};
-	my $chunk_scope_bed_path = $chunk_info_hsh_ref->{$chunk_num}{'chunk_scope_bed_path'};
 	my $chunk_ctss_in_scope_bed_path = $chunk_info_hsh_ref->{$chunk_num}{'chunk_ctss_in_scope_bed_path'};
+	my $tabix_region_str = $chunk_info_hsh_ref->{$chunk_num}{'tabix_region_str'};
 	
-	open SCOPEBED, ">", $chunk_scope_bed_path;
-	print SCOPEBED join "", (join "\t", ($chunk_chrom, $chunk_startPos, $chunk_endPos)), "\n";
-	close SCOPEBED;
-	&reportAndLogStatus("extracting ctss upstream seq for chunk $chunk_num", 10, "\n");#->1039
-	
-	open CTSSBED, "$bedtools_bin intersect -sorted -g $chrom_size_path -wa -a $ctss_bed_path -b $chunk_scope_bed_path |";
+	&reportAndLogStatus("extracting ctss upstream seq for chunk $chunk_num", 10, "\n");#->1136
+
+	open (TABIX, "$tabix_bin $ctss_bed_path $tabix_region_str |");
 	open CTSSINSCOPE, ">", "$chunk_ctss_in_scope_bed_path";
 	my $num_ctss_proc = 0;
 	
-	while (<CTSSBED>) {
+	while (<TABIX>) {
 		chomp;
 		my ($chrom, $chromStart, $chromEnd, $original_ctssID, $score, $strand) = split /\t/;
 		$num_ctss_proc++;
@@ -692,7 +723,7 @@ sub generateUpstreamSeq {
 		$original_ctssID =~ s/\:/_/g;
 		my $ctss_ID = "$chrom.$chromEnd.$strand.$original_ctssID.$score";
 		
-		&reportAndLogStatus("getting upstream seq for $chrom. $num_ctss_proc ctss position processed for chunk $chunk_num", 10, "\n") if $num_ctss_proc%1000000==0;#->1039
+		&reportAndLogStatus("getting upstream seq for $chrom. $num_ctss_proc ctss position processed for chunk $chunk_num", 10, "\n") if $num_ctss_proc%1000000==0;#->1136
 		
 		my $upstream_start;
 		my $upstream_end;
@@ -706,7 +737,7 @@ sub generateUpstreamSeq {
 				$upstream_start = $upstream_start + $shift;
 				$upstream_end = $upstream_end + $shift;
 			}
-					
+			
 		} elsif ($strand eq '-') {
 			$upstream_start = $chromEnd;
 			$upstream_end = $chromEnd + $length;
@@ -715,12 +746,12 @@ sub generateUpstreamSeq {
 		}
 		print CTSSINSCOPE join "", (join "\t", ($chrom, $upstream_start, $upstream_end, $ctss_ID, $score, $strand)), "\n";
 	}
-	close CTSSBED;
+	close TABIX;
 	close CTSSINSCOPE;
 	
-	&reportAndLogStatus("getting upstream seq for chunk $chunk_num", 10, "\n");#->1039
+	&reportAndLogStatus("getting upstream seq for chunk $chunk_num", 10, "\n");#->1136
 	system "$bedtools_bin getfasta -s -name -fi $fasta_path -bed $chunk_ctss_in_scope_bed_path -fo $chunk_upstream_seq_fasta_path";
-	&reportAndLogStatus("done getting upstream seq for chunk $chunk_num. $num_ctss_proc ctss position processed", 10, "\n");#->1039
+	&reportAndLogStatus("done getting upstream seq for chunk $chunk_num. $num_ctss_proc ctss position processed", 10, "\n");#->1136
 	
 	return ($chunk_upstream_seq_fasta_path);
 }
@@ -729,12 +760,12 @@ sub logCalledCMDAndScript {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|108
+#	primaryAppearInSection: 2_defineOutDirPath|133
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $result_script_dir, $scriptAbsPath
 #	output: 
 #	toCall: &logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);
-#	calledInLine: 122
+#	calledInLine: 147
 #....................................................................................................................................................#
 	my ($ARGVStr, $result_script_dir, $scriptAbsPath) = @_;
 
@@ -752,72 +783,71 @@ sub logCalledCMDAndScript {
 sub poolChunkResults {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: checkChunkResults|319, reportAndLogStatus|1039
+#	dependOnSub: checkChunkResults|411, reportAndLogStatus|1136
 #	appearInSub: >none
-#	primaryAppearInSection: 3_count|128
+#	primaryAppearInSection: 3_count|153
 #	secondaryAppearInSection: >none
-#	input: $chunk_info_hsh_ref, $paramTag, $result_bed_dir, $result_log_dir
+#	input: $chunk_info_hsh_ref, $paramTag, $result_bed_dir, $result_log_dir, $tabix_bin
 #	output: 
-#	toCall: &poolChunkResults($chunk_info_hsh_ref, $result_bed_dir, $result_log_dir, $paramTag);
-#	calledInLine: 136
+#	toCall: &poolChunkResults($tabix_bin, $chunk_info_hsh_ref, $result_bed_dir, $result_log_dir, $paramTag);
+#	calledInLine: 161
 #....................................................................................................................................................#
-	my ($chunk_info_hsh_ref, $result_bed_dir, $result_log_dir, $paramTag) = @_;
+	my ($tabix_bin, $chunk_info_hsh_ref, $result_bed_dir, $result_log_dir, $paramTag) = @_;
 	
-	my $pass_ctss_bed_path = "$result_bed_dir/$paramTag.pass.ctss.bed.gz";
-	my $invader_ctss_bed_path = "$result_bed_dir/$paramTag.invader.ctss.bed.gz";
 	my $all_log_path = "$result_log_dir/$paramTag.invader.log.tsv";
+
+	my $out_bed_hsh_ref = {
+		'chunk_pass_ctss' => "$result_bed_dir/$paramTag.pass.ctss.bed.gz",
+		'chunk_invader_ctss' => "$result_bed_dir/$paramTag.invader.ctss.bed.gz",
+	};
 	
-	open ALLPASSCTSS, "| gzip -c >$pass_ctss_bed_path";
-	open ALLSTRNDINVADCTSS, "| gzip -c >$invader_ctss_bed_path";
+	#---[2021/09/01 23:25] pool chunk bed
+	foreach my $ctss_type (keys %{$out_bed_hsh_ref}) {
+		my $out_ctss_type = $out_bed_hsh_ref->{$ctss_type};
+		my @file_path_ary = ();
+		foreach my $chunk_num (sort {$a <=> $b} keys %{$chunk_info_hsh_ref}) {
+			my ($valid) = &checkChunkResults($chunk_info_hsh_ref, $chunk_num);#->411
+			if ($valid eq 'yes') {
+				my $chunk_sorted_ctss = $chunk_info_hsh_ref->{$chunk_num}{'ctss'}{'sorted'}{$ctss_type};
+				push @file_path_ary, $chunk_sorted_ctss;
+				&reportAndLogStatus("$ctss_type of chunk $chunk_num is found", 10, "\n");#->1136
+			} else {
+				die "results of chunk $chunk_num is not found. quitting\n";
+			}
+		}
+		&reportAndLogStatus("Concatenating $ctss_type files", 10, "\n");#->1136
+		my $file_path_str = join " ", @file_path_ary;
+		system "cat $file_path_str >$out_ctss_type";
+		&reportAndLogStatus("Tabix indexing combined $ctss_type", 10, "\n");#->1136
+		system "$tabix_bin -p bed $out_ctss_type";
+	}
+
+	#---[2021/09/01 23:25] pool chunk log
 	my $filter_count_hsh_ref = {};
 	my $all_total_pos = 0;
 	my $all_total_read = 0;
 	foreach my $chunk_num (sort {$a <=> $b} keys %{$chunk_info_hsh_ref}) {
 
-		my ($valid) = &checkChunkResults($chunk_info_hsh_ref, $chunk_num);#->319
-
-		if ($valid eq 'yes') {
-			&reportAndLogStatus("results of chunk $chunk_num is found. start parsing.", 10, "\n");#->1039
-			my $chunk_pass_ctss_bed_path = $chunk_info_hsh_ref->{$chunk_num}{'chunk_pass_ctss_bed_path'};
-			my $chunk_invader_ctss_bed_path = $chunk_info_hsh_ref->{$chunk_num}{'chunk_invader_ctss_bed_path'};
-			my $chunk_log_path = $chunk_info_hsh_ref->{$chunk_num}{'chunk_log_path'};
+		my $chunk_log_path = $chunk_info_hsh_ref->{$chunk_num}{'chunk_log_path'};
 		
-			open (CHUNKPASSCTSS, "<", $chunk_pass_ctss_bed_path);
-			while (<CHUNKPASSCTSS>) {
-				print ALLPASSCTSS $_;
-			}
-			close CHUNKPASSCTSS;
-
-			open (CHUNKINVADERCTSS, "<", $chunk_invader_ctss_bed_path);
-			while (<CHUNKINVADERCTSS>) {
-				print ALLSTRNDINVADCTSS $_;
-			}
-			close CHUNKINVADERCTSS;
-			
-			my $chunk_total_pos;
-			my $chunk_total_read;
-			open (CHUNKLOG, "<", $chunk_log_path);
-			<CHUNKLOG>;
-			while (<CHUNKLOG>) {
-				chomp;
-				my ($min_edit_distance, $min_end_non_G_num, $pos, $read, $pos_pct, $read_pct, $total_read, $total_pos) = split /\t/;
-				$filter_count_hsh_ref->{$min_edit_distance}{$min_end_non_G_num}{'read'} += $read;
-				$filter_count_hsh_ref->{$min_edit_distance}{$min_end_non_G_num}{'pos'} += $pos;
-				$chunk_total_pos = $total_pos;
-				$chunk_total_read = $total_read;
-			}
-			close CHUNKLOG;
-			
-			$all_total_pos += $chunk_total_pos;
-			$all_total_read += $chunk_total_read;
-
-		} else {
-			die "results of chunk $chunk_num is not found. quitting\n";
+		my $chunk_total_pos;
+		my $chunk_total_read;
+		open (CHUNKLOG, "<", $chunk_log_path);
+		<CHUNKLOG>;
+		while (<CHUNKLOG>) {
+			chomp;
+			my ($min_edit_distance, $min_end_non_G_num, $pos, $read, $pos_pct, $read_pct, $total_read, $total_pos) = split /\t/;
+			$filter_count_hsh_ref->{$min_edit_distance}{$min_end_non_G_num}{'read'} += $read;
+			$filter_count_hsh_ref->{$min_edit_distance}{$min_end_non_G_num}{'pos'} += $pos;
+			$chunk_total_pos = $total_pos;
+			$chunk_total_read = $total_read;
 		}
+		close CHUNKLOG;
 		
+		$all_total_pos += $chunk_total_pos;
+		$all_total_read += $chunk_total_read;
+
 	}
-	close ALLPASSCTSS;
-	close ALLSTRNDINVADCTSS;
 
 	open ALLLOG, ">", $all_log_path;
 	print ALLLOG join "", (join "\t", ('min_edit_distance', 'min_end_non_G_num', 'pos', 'read', 'pos_pct', 'read_pct')), "\n";
@@ -839,12 +869,12 @@ sub printOutputFileListAndReadme {
 #	subroutineCategory: output
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 4_finishingTasks|142
+#	primaryAppearInSection: 4_finishingTasks|167
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $outDir, $paramTag
 #	output: 
 #	toCall: &printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);
-#	calledInLine: 145
+#	calledInLine: 170
 #....................................................................................................................................................#
 	my ($ARGVStr, $paramTag, $outDir) = @_;
 	
@@ -957,50 +987,50 @@ sub printOutputFileListAndReadme {
 sub printStartOrFinishMessage {
 #....................................................................................................................................................#
 #	subroutineCategory: general
-#	dependOnSub: currentTime|364
+#	dependOnSub: currentTime|462
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|108, 4_finishingTasks|142
+#	primaryAppearInSection: 2_defineOutDirPath|133, 4_finishingTasks|167
 #	secondaryAppearInSection: >none
 #	input: $StartOrFinishMessage
 #	output: none
 #	toCall: &printStartOrFinishMessage($StartOrFinishMessage);
-#	calledInLine: 123, 146
+#	calledInLine: 148, 171
 #....................................................................................................................................................#
 
 	my ($StartOrFinishMessage) = @_;
 	
 	if ($StartOrFinishMessage eq "startMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] starts running ...... \n";#->364
+		print "[".&currentTime()."] starts running ...... \n";#->462
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->364
+		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->462
 		print $tmplog_fh "=========================================================================\n\n";
 
 	} elsif ($StartOrFinishMessage eq "finishMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] finished running .......\n";#->364
+		print "[".&currentTime()."] finished running .......\n";#->462
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->364
+		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->462
 		print $tmplog_fh "=========================================================================\n\n";
 	}
 }
 sub processPerChunk {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: checkChunkResults|319, filterCTSS|382, generateUpstreamSeq|542, reportAndLogStatus|1039
+#	dependOnSub: checkChunkResults|411, filterCTSS|480, generateUpstreamSeq|643, reportAndLogStatus|1136
 #	appearInSub: >none
-#	primaryAppearInSection: 3_count|128
+#	primaryAppearInSection: 3_count|153
 #	secondaryAppearInSection: >none
-#	input: $TS_oligo_seq, $bedtools_bin, $chrom_size_path, $chunk_info_hsh_ref, $ctss_bed_path, $fasta_path, $max_thread, $output_cutoff_hsh_ref, $paramTag, $result_fasta_dir
+#	input: $TS_oligo_seq, $bedtools_bin, $bgzip_bin, $bgzip_sort_thread, $chrom_size_path, $chunk_info_hsh_ref, $ctss_bed_path, $fasta_path, $max_thread, $output_cutoff_hsh_ref, $paramTag, $result_fasta_dir, $tabix_bin
 #	output: 
-#	toCall: &processPerChunk($ctss_bed_path, $fasta_path, $result_fasta_dir, $TS_oligo_seq, $bedtools_bin, $max_thread, $output_cutoff_hsh_ref, $chunk_info_hsh_ref, $chrom_size_path, $paramTag);
-#	calledInLine: 135
+#	toCall: &processPerChunk($ctss_bed_path, $fasta_path, $result_fasta_dir, $TS_oligo_seq, $bedtools_bin, $tabix_bin, $bgzip_bin, $bgzip_sort_thread, $max_thread, $output_cutoff_hsh_ref, $chunk_info_hsh_ref, $chrom_size_path, $paramTag);
+#	calledInLine: 160
 #....................................................................................................................................................#
-	my ($ctss_bed_path, $fasta_path, $result_fasta_dir, $TS_oligo_seq, $bedtools_bin, $max_thread, $output_cutoff_hsh_ref, $chunk_info_hsh_ref, $chrom_size_path, $paramTag) = @_;
+	my ($ctss_bed_path, $fasta_path, $result_fasta_dir, $TS_oligo_seq, $bedtools_bin, $tabix_bin, $bgzip_bin, $bgzip_sort_thread, $max_thread, $output_cutoff_hsh_ref, $chunk_info_hsh_ref, $chrom_size_path, $paramTag) = @_;
 
 	$TS_oligo_seq = uc($TS_oligo_seq);
 	my %itemForThrHsh = ();
@@ -1028,18 +1058,18 @@ sub processPerChunk {
 				my ($itemForThrHsh_ref) = @_;
 				my $total_chunk = keys %{$itemForThrHsh_ref};
 				
-				&reportAndLogStatus("$total_chunk chunks spawned to thread $threadID.", 10, "\n");#->1039
+				&reportAndLogStatus("$total_chunk chunks spawned to thread $threadID.", 10, "\n");#->1136
 				foreach my $chunk_num (keys %{$itemForThrHsh_ref}) {
 
-					my ($valid) = &checkChunkResults($chunk_info_hsh_ref, $chunk_num);#->319
+					my ($valid) = &checkChunkResults($chunk_info_hsh_ref, $chunk_num);#->411
 
 					if ($valid eq 'yes') {
-						&reportAndLogStatus("results of chunk $chunk_num is found. skipping", 10, "\n");#->1039
+						&reportAndLogStatus("results of chunk $chunk_num is found. skipping", 10, "\n");#->1136
 
 					} else {
-						&reportAndLogStatus("start processing chunk $chunk_num in thread $threadID.", 10, "\n");#->1039
-						&generateUpstreamSeq($ctss_bed_path, $fasta_path, $TS_oligo_seq, $bedtools_bin, $chunk_num, $chunk_info_hsh_ref, $chrom_size_path);#->542
-						&filterCTSS($chunk_info_hsh_ref, $chunk_num, $TS_oligo_seq, $output_cutoff_hsh_ref, $count_cutoff_hsh_ref);#->382
+						&reportAndLogStatus("start processing chunk $chunk_num in thread $threadID.", 10, "\n");#->1136
+						&generateUpstreamSeq($ctss_bed_path, $fasta_path, $TS_oligo_seq, $bedtools_bin, $tabix_bin, $chunk_num, $chunk_info_hsh_ref, $chrom_size_path);#->643
+						&filterCTSS($chunk_info_hsh_ref, $chunk_num, $TS_oligo_seq, $bgzip_bin, $bgzip_sort_thread, $output_cutoff_hsh_ref, $count_cutoff_hsh_ref);#->480
 					}
 				}
 
@@ -1058,16 +1088,16 @@ sub processPerChunk {
 		my $running_count = @running;
 		my $joinable_count = @joinable;
 
-		&reportAndLogStatus("$thread_count threads exists. $running_count running and $joinable_count joinable", 10, "\n");#->1039
+		&reportAndLogStatus("$thread_count threads exists. $running_count running and $joinable_count joinable", 10, "\n");#->1136
 
 		foreach my $threadID (keys %threadHsh) {
 			if (not $threadHsh{$threadID}->is_running() or $threadHsh{$threadID}->is_joinable() or $threadHsh{$threadID}->is_detached()) {
-				&reportAndLogStatus("thread $threadID is finishing.", 10, "\n");#->1039
+				&reportAndLogStatus("thread $threadID is finishing.", 10, "\n");#->1136
 				$threadHsh{$threadID}->join();
 				delete $threadHsh{$threadID};
 			}
 		}
-		sleep 1;
+		sleep 10;
 	}
 
 	return ();
@@ -1077,12 +1107,12 @@ sub readChromSize {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 3_count|128
+#	primaryAppearInSection: 3_count|153
 #	secondaryAppearInSection: >none
 #	input: $chrom_size_path
 #	output: $chrom_size_hsh_ref
 #	toCall: my ($chrom_size_hsh_ref) = &readChromSize($chrom_size_path);
-#	calledInLine: 133
+#	calledInLine: 158
 #....................................................................................................................................................#
 	my ($chrom_size_path) = @_;
 	
@@ -1102,12 +1132,12 @@ sub readParameters {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startingTasks|86
+#	primaryAppearInSection: 0_startingTasks|110
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: $TS_oligo_seq, $ctss_bed_path, $genome, $max_thread, $min_edit_distance, $min_end_non_G_num, $outDir, $outputPrefix, $overwrite
 #	toCall: my ($ctss_bed_path, $TS_oligo_seq, $min_edit_distance, $min_end_non_G_num, $max_thread, $genome, $outputPrefix, $outDir, $overwrite) = &readParameters();
-#	calledInLine: 89
+#	calledInLine: 113
 #....................................................................................................................................................#
 	
 	my ($ctss_bed_path, $TS_oligo_seq, $min_edit_distance, $min_end_non_G_num, $max_thread, $genome, $outputPrefix, $outDir, $overwrite);
@@ -1153,22 +1183,22 @@ sub readParameters {
 sub reportAndLogStatus {
 #....................................................................................................................................................#
 #	subroutineCategory: log
-#	dependOnSub: currentTime|364
-#	appearInSub: checkBedtoolsVersion|288, checkChunkResults|319, filterCTSS|382, generateChunkInfoHsh|489, generateUpstreamSeq|542, poolChunkResults|638, processPerChunk|877
+#	dependOnSub: currentTime|462
+#	appearInSub: checkAllExecutable|311, checkChunkResults|411, filterCTSS|480, generateChunkInfoHsh|587, generateUpstreamSeq|643, poolChunkResults|736, processPerChunk|974
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 3_count|128
+#	secondaryAppearInSection: 3_count|153
 #	input: $lineEnd, $message, $numTrailingSpace
 #	output: 
 #	toCall: &reportAndLogStatus($message, $numTrailingSpace, $lineEnd);
-#	calledInLine: 306, 310, 335, 433, 466, 512, 565, 580, 606, 608, 665, 916, 922, 925, 946, 950
+#	calledInLine: 334, 339, 348, 357, 366, 375, 384, 393, 402, 427, 433, 531, 564, 610, 663, 678, 704, 706, 765, 770, 773, 1013, 1019, 1022, 1043, 1047
 #....................................................................................................................................................#
 	my ($message, $numTrailingSpace, $lineEnd) = @_;
 
 	my $trailingSpaces = '';
 	$trailingSpaces .= " " for (1..$numTrailingSpace);
 	
-	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->364
-	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->364
+	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->462
+	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->462
 	
 	return ();
 }
@@ -1182,7 +1212,7 @@ sub timeStamp {
 #	input: none
 #	output: $curntTimeStamp
 #	toCall: my ($curntTimeStamp) = &timeStamp();
-#	calledInLine: 74
+#	calledInLine: 98
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);

@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>README</title>
+
+
+<style type="text/css">
+body {
+  font-family: Helvetica, arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: white;
+  padding: 30px; }
+
+body > *:first-child {
+  margin-top: 0 !important; }
+body > *:last-child {
+  margin-bottom: 0 !important; }
+
+a {
+  color: #4183C4; }
+a.absent {
+  color: #cc0000; }
+a.anchor {
+  display: block;
+  padding-left: 30px;
+  margin-left: -30px;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0; }
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+  cursor: text;
+  position: relative; }
+
+h1:hover a.anchor, h2:hover a.anchor, h3:hover a.anchor, h4:hover a.anchor, h5:hover a.anchor, h6:hover a.anchor {
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA09pVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoMTMuMCAyMDEyMDMwNS5tLjQxNSAyMDEyLzAzLzA1OjIxOjAwOjAwKSAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OUM2NjlDQjI4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OUM2NjlDQjM4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo5QzY2OUNCMDg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo5QzY2OUNCMTg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PsQhXeAAAABfSURBVHjaYvz//z8DJYCRUgMYQAbAMBQIAvEqkBQWXI6sHqwHiwG70TTBxGaiWwjCTGgOUgJiF1J8wMRAIUA34B4Q76HUBelAfJYSA0CuMIEaRP8wGIkGMA54bgQIMACAmkXJi0hKJQAAAABJRU5ErkJggg==) no-repeat 10px center;
+  text-decoration: none; }
+
+h1 tt, h1 code {
+  font-size: inherit; }
+
+h2 tt, h2 code {
+  font-size: inherit; }
+
+h3 tt, h3 code {
+  font-size: inherit; }
+
+h4 tt, h4 code {
+  font-size: inherit; }
+
+h5 tt, h5 code {
+  font-size: inherit; }
+
+h6 tt, h6 code {
+  font-size: inherit; }
+
+h1 {
+  font-size: 28px;
+  color: black; }
+
+h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #cccccc;
+  color: black; }
+
+h3 {
+  font-size: 18px; }
+
+h4 {
+  font-size: 16px; }
+
+h5 {
+  font-size: 14px; }
+
+h6 {
+  color: #777777;
+  font-size: 14px; }
+
+p, blockquote, ul, ol, dl, li, table, pre {
+  margin: 15px 0; }
+
+hr {
+  background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAECAYAAACtBE5DAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OENDRjNBN0E2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OENDRjNBN0I2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo4Q0NGM0E3ODY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo4Q0NGM0E3OTY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PqqezsUAAAAfSURBVHjaYmRABcYwBiM2QSA4y4hNEKYDQxAEAAIMAHNGAzhkPOlYAAAAAElFTkSuQmCC) repeat-x 0 0;
+  border: 0 none;
+  color: #cccccc;
+  height: 4px;
+  padding: 0;
+}
+
+body > h2:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+body > h1:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+  body > h1:first-child + h2 {
+    margin-top: 0;
+    padding-top: 0; }
+body > h3:first-child, body > h4:first-child, body > h5:first-child, body > h6:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+  margin-top: 0;
+  padding-top: 0; }
+
+h1 p, h2 p, h3 p, h4 p, h5 p, h6 p {
+  margin-top: 0; }
+
+li p.first {
+  display: inline-block; }
+li {
+  margin: 0; }
+ul, ol {
+  padding-left: 30px; }
+
+ul :first-child, ol :first-child {
+  margin-top: 0; }
+
+dl {
+  padding: 0; }
+  dl dt {
+    font-size: 14px;
+    font-weight: bold;
+    font-style: italic;
+    padding: 0;
+    margin: 15px 0 5px; }
+    dl dt:first-child {
+      padding: 0; }
+    dl dt > :first-child {
+      margin-top: 0; }
+    dl dt > :last-child {
+      margin-bottom: 0; }
+  dl dd {
+    margin: 0 0 15px;
+    padding: 0 15px; }
+    dl dd > :first-child {
+      margin-top: 0; }
+    dl dd > :last-child {
+      margin-bottom: 0; }
+
+blockquote {
+  border-left: 4px solid #dddddd;
+  padding: 0 15px;
+  color: #777777; }
+  blockquote > :first-child {
+    margin-top: 0; }
+  blockquote > :last-child {
+    margin-bottom: 0; }
+
+table {
+  padding: 0;border-collapse: collapse; }
+  table tr {
+    border-top: 1px solid #cccccc;
+    background-color: white;
+    margin: 0;
+    padding: 0; }
+    table tr:nth-child(2n) {
+      background-color: #f8f8f8; }
+    table tr th {
+      font-weight: bold;
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr td {
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr th :first-child, table tr td :first-child {
+      margin-top: 0; }
+    table tr th :last-child, table tr td :last-child {
+      margin-bottom: 0; }
+
+img {
+  max-width: 100%; }
+
+span.frame {
+  display: block;
+  overflow: hidden; }
+  span.frame > span {
+    border: 1px solid #dddddd;
+    display: block;
+    float: left;
+    overflow: hidden;
+    margin: 13px 0 0;
+    padding: 7px;
+    width: auto; }
+  span.frame span img {
+    display: block;
+    float: left; }
+  span.frame span span {
+    clear: both;
+    color: #333333;
+    display: block;
+    padding: 5px 0 0; }
+span.align-center {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-center > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: center; }
+  span.align-center span img {
+    margin: 0 auto;
+    text-align: center; }
+span.align-right {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px 0 0;
+    text-align: right; }
+  span.align-right span img {
+    margin: 0;
+    text-align: right; }
+span.float-left {
+  display: block;
+  margin-right: 13px;
+  overflow: hidden;
+  float: left; }
+  span.float-left span {
+    margin: 13px 0 0; }
+span.float-right {
+  display: block;
+  margin-left: 13px;
+  overflow: hidden;
+  float: right; }
+  span.float-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: right; }
+
+code, tt {
+  margin: 0 2px;
+  padding: 0 5px;
+  white-space: nowrap;
+  border: 1px solid #eaeaea;
+  background-color: #f8f8f8;
+  border-radius: 3px; }
+
+pre code {
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  border: none;
+  background: transparent; }
+
+.highlight pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+  pre code, pre tt {
+    background-color: transparent;
+    border: none; }
+
+sup {
+    font-size: 0.83em;
+    vertical-align: super;
+    line-height: 0;
+}
+
+kbd {
+  display: inline-block;
+  padding: 3px 5px;
+  font-size: 11px;
+  line-height: 10px;
+  color: #555;
+  vertical-align: middle;
+  background-color: #fcfcfc;
+  border: solid 1px #ccc;
+  border-bottom-color: #bbb;
+  border-radius: 3px;
+  box-shadow: inset 0 -1px 0 #bbb
+}
+
+* {
+	-webkit-print-color-adjust: exact;
+}
+@media screen and (min-width: 914px) {
+    body {
+        width: 854px;
+        margin:0 auto;
+    }
+}
+@media print {
+	table, pre {
+		page-break-inside: avoid;
+	}
+	pre {
+		word-wrap: break-word;
+	}
+  body {
+    padding: 2cm; 
+  }
+}
+</style>
+
+
+</head>
+
+<body>
+
+<h1 align="center"> <i>SCAFE</i> (Single Cell Analysis of Five-prime Ends)</h1>
+
+<div><pre><code class="language-shell">           5&#39;-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~AAA-3&#39;
+                        O~~~AA      O~~         O~       O~~~~~~~AO~~~~~~~~A
+                      O~~    O~~ O~~   O~~     O~O~~     O~~      O~~       
+                       O~~      O~~           O~  O~~    O~~      O~~       
+                         O~~    O~~          O~~   O~~   O~~~~~AA O~~~~~~A  
+                            O~~ O~~         O~~~~~A O~~  O~~      O~~       
+                      O~~    O~~ O~~   O~~ O~~       O~~ O~~      O~~       
+                        O~~~~A     O~~~   O~~         O~~O~~      O~~~~~~~AA
+       ┌─ᐅ 5&#39;-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-3&#39;
+ ...===┴========================================================================================...</code></pre></div>
+
+<p><em>SCAFE</em> (Single Cell Analysis of Five-prime Ends) provides an end-to-end solution for processing of single cell 5’end RNA-seq data. It takes a read alignment file (*.bam) from single-cell RNA-5’end-sequencing (e.g. 10xGenomics Chromimum®), precisely maps the cDNA 5&#39;ends (i.e. transcription start sites, TSS), filters for the artefacts and identifies genuine TSS clusters using logistic regression. Based on the TSS clusters, it defines transcribed cis-regulatory elements (tCRE) and annotated them to gene models. It then counts the UMI in tCRE in single cells and returns a tCRE UMI/cellbarcode matrix ready for downstream analyses, e.g. cell-type clustering, linking promoters to enhancers by co-activity <em>etc</em>.</p>
+
+<h2 id="toc_0">Table of contents</h2>
+
+<ul>
+<li><a href="#1">Publications</a></li>
+<li><a href="#2">Versions</a></li>
+<li><a href="#3">What does <em>SCAFE</em> do?</a></li>
+<li><a href="#4">How does <em>SCAFE</em> do it?</a></li>
+<li><a href="#5">Dependencies</a></li>
+<li><a href="#6">Installation</a></li>
+<li><a href="#7">Getting started with demo data</a></li>
+<li><a href="#8">Run <em>SCAFE</em> on your own data</a></li>
+</ul>
+
+<h2 id="toc_1">Publications<a name="1"></a></h2>
+
+<p>Jonathan Moody and Tsukasa Kouno <em>et al</em>. Profiling of transcribed cis-regulatory elements in single cells. <a href="https://www.biorxiv.org/content/10.1101/2021.04.04.438388v1">bioRxiv 2021.04.04.438388</a></p>
+
+<h2 id="toc_2">Versions<a name="2"></a></h2>
+
+<p><em>SCAFE</em> is currently in the beta phase of its development, which means there are likely bugs and performance issues. We are currently testing <em>SCAFE</em> under various user-scenerios to make sure it runs for most users. A stable release will be made public at the time when its companion manuscript is published in a scientific journal.</p>
+
+<h2 id="toc_3">What does <em>SCAFE</em> do?<a name="3"></a></h2>
+
+<div style="text-align:center"><img src=".github/images/tCRE_definition.png?" width="860"></div>
+
+<h3 id="toc_4"><em>SCAFE</em> extracts transcribed cis-regulatory elements from single-cell RNA-5’end-sequencing data</h3>
+
+<p>Profiling of cis-regulatory elements (CREs, mostly promoters and enhancers) in single cells allows us to interrogate the cell-type specific contexts of gene regulation and genetic predisposition to diseases. Single-cell RNA-5’end-sequencing methods (sc-end5-seq, available from <a href="https://kb.10xgenomics.com/hc/en-us/articles/360000939852-What-is-the-difference-between-Single-Cell-3-and-5-Gene-Expression-libraries-">10xGenomics Chromimum®</a>) theorectically captures the 5&#39;end of cDNA, which represents transcription start sites (TSS). Measuring the RNA output at TSS allows us to precisely locate transcribed CREs (tCREs) on the genome, enabling the quantification of promoter and enhancer activities in single cells. <strong>Figure (a)</strong> shows the sc-end5-seq signal at the two promoters of gene <em>DHX30</em>. It highlights the consistency between sc-end5-seq and sc-ATAC-seq data, as well as the dynamic alternaitve TSS usage between cell states (i.e. resting and stimulated immune cells). <em>SCAFE</em> identify genuine TSS information from sc-end5-seq data. <strong>Figure (b)</strong> illustrates the stretagies of SCAFE to defined tCRE from TSS information. <strong>Figure (c)</strong> shows the proximal and distal tCREs defined by <em>SCAFE</em> at <em>PTGER4</em> locus. <strong>Figure (d)</strong> shows the activities of the proximal and distal tCREs at <em>PTGER4</em> locus in resting and simulated immune cells, demonstarting the capability of <em>SCAFE</em> to study CRE activities in single cells.</p>
+
+<h2 id="toc_5">How does <em>SCAFE</em> do it?<a name="4"></a></h2>
+
+<div style="text-align:center"><img src=".github/images/flowchart.png?" width="860"></div>
+
+<h3 id="toc_6"><em>SCAFE</em> Core Tools and Workflows</h3>
+
+<p><em>SCAFE</em> consists of <a href="scripts/">a set of perl programs</a> for processing of sc-end5-seq data. Major tools are listed in <strong>Figure (a)</strong>. <em>SCAFE</em> accepts read alignment in <em>*.bam</em> format from 10xGenomics Chromimum® software <em>cellranger</em>. Tool <strong><em>bam_to_ctss</em></strong> extracts the 5’ position of reads, taking the 5’ unencoded-Gs into account. Tool <strong><em>remove_strand_invader</em></strong> removes read 5’ends that are strand invasion artifacts by aligning the TS oligo sequence to the immediate upstream sequence of the read 5’end. Tool <em>cluster</em> performs clustering of read 5’ends using 3rd-party tool <em>Paraclu</em>. Tool <strong><em>filter</em></strong> extracts the properties of TSS clusters and performs multiple logistic regression to distinguish genuine TSS clusters from artifacts. Tool <strong><em>annotate</em></strong> define tCREs by merging closely located TSS clusters and annotate tCREs based on their proximity to known genes. Tool <strong><em>count</em></strong> counts the number of UMI within each tCRE in single cells and generates a tCRE-Cell UMI count matrix. SCAFE tools were also implemented workflows for processing of individual samples or pooling of multiple samples.</p>
+
+<p><em>P.S.</em> <em>SCAFE</em> also accepts bulk 5&#39;end RNA-Seq data (e.g. bulk CAGE). See <a href="scripts/">scripts</a> for details.</p>
+
+<h3 id="toc_7"><em>SCAFE</em> discovers <em>de novo</em> genunie TSS clusters and tCREs</h3>
+
+<p>A fraction of TSS identified based on read 5′ends from template switching (TS) reactions (used in 10xGenomics Chromimum®) may not be genuine, attributed to various artefacts including strand invasion and other sources. This results in excessive artifactual TSS misidentified along the gene body, collectively known as “exon painting”. While strand invasion artefacts can be specifically minimized by considering the complementarity of TSS upstream sequence to TS oligo sequence, a non-negligible fraction of artefactual TSS remains after filtering for strand invasion. To minimize the artifactual TSS, <em>SCAFE</em> examines the properties of TSS clusters, as shown in <strong>Figure (b)</strong>, and devised a classifier to identify genuine TSS based on multiple logistic regression. This classifier, i.e. logistic probability, achieved excellent performance with AUC&gt;0.98 across sequencing depths and outperformed all individual metrics. This is implemented in the tool <strong><em>filter</em></strong>.</p>
+
+<h2 id="toc_8">Dependencies<a name="5"></a></h2>
+
+<h3 id="toc_9">TL;DR</h3>
+
+<p>Go straight to the <a href="#docker">Docker Image</a> section if you do not want to deal with dependencies and already have <a href="https://www.docker.com/">docker</a> installed.</p>
+
+<h3 id="toc_10">perl</h3>
+
+<p><em>SCAFE</em> is mainly written in perl (<strong>v5.24.1 or later</strong>). All scripts are standalone applications and <strong>DO NOT require installations</strong> of extra perl modules. Check whether perl is properly installed on your system.</p>
+
+<div><pre><code class="language-shell">#--- Check your perl version
+perl --version</code></pre></div>
+
+<h3 id="toc_11">R</h3>
+
+<p><em>SCAFE</em> relies on R for logistic regression, ROC analysis and graph plotting. Rscript <strong>(v3.6.1 or later)</strong> and the following R packages have to be properly installed:</p>
+
+<ul>
+<li><a href="https://cran.r-project.org/web/packages/ROCR/readme/README.html">ROCR</a>, <a href="https://cran.r-project.org/web/packages/PRROC/index.html">PRROC</a>, <a href="https://cran.r-project.org/web/packages/caret/index.html">caret</a>, <a href="https://cran.r-project.org/web/packages/e1071/index.html">e1071</a>, <a href="https://ggplot2.tidyverse.org/">ggplot2</a>, <a href="https://cran.r-project.org/web/packages/scales/index.html">scales</a>, <a href="https://cran.r-project.org/web/packages/reshape2/index.html">reshape2</a>, <a href="https://cran.r-project.org/web/packages/docopt/index.html">docopt</a>, <a href="https://cran.r-project.org/web/packages/data.table/index.html">data.table</a>, <a href="https://cran.r-project.org/web/packages/Matrix/index.html">Matrix</a>, <a href="">R.utils</a>, <a href="https://cole-trapnell-lab.github.io/monocle3/docs/installation/">monocle3</a>, <a href="https://cole-trapnell-lab.github.io/cicero-release/docs_m3/#installing-cicero">cicero</a></li>
+</ul>
+
+<div><pre><code class="language-shell">#--- Check your Rscript version, must be 3.6.1 ot later
+Rscript --version
+
+#--- Check your R packages, install if missing
+Rscript -e &#39;install.packages(&quot;ROCR&quot;)&#39;
+Rscript -e &#39;install.packages(&quot;PRROC&quot;)&#39;
+Rscript -e &#39;install.packages(&quot;caret&quot;)&#39;
+Rscript -e &#39;install.packages(&quot;e1071&quot;)&#39;
+Rscript -e &#39;install.packages(&quot;ggplot2&quot;)&#39;
+Rscript -e &#39;install.packages(&quot;scales&quot;)&#39;
+Rscript -e &#39;install.packages(&quot;reshape2&quot;)&#39;
+Rscript -e &#39;install.packages(&quot;docopt&quot;)&#39;
+Rscript -e &#39;install.packages(&quot;data.table&quot;)&#39;
+Rscript -e &#39;install.packages(&quot;Matrix&quot;, repos=&quot;http://R-Forge.R-project.org&quot;)&#39;
+Rscript -e &#39;install.packages(&quot;R.utils&quot;)&#39;</code></pre></div>
+
+<p>Please refer to the respective homepages for installing <a href="https://cole-trapnell-lab.github.io/monocle3/docs/installation/">monocle3</a> and <a href="https://cole-trapnell-lab.github.io/cicero-release/docs_m3/#installing-cicero">cicero</a>. Failed to install these two package will <strong><em>NOT</em></strong> affect the workflows. Only <em>scafe.tool.sc.link</em> requires these two packages.</p>
+
+<h3 id="toc_12">Other 3rd party applications</h3>
+
+<p><em>SCAFE</em> also relies on a number of 3rd party applications. The binaries and executables (Linux) of these applications are distributed with this reprository in the directory ./resources/bin and <strong>DO NOT require installations</strong>.</p>
+
+<ul>
+<li><a href="https://github.com/ENCODE-DCC/kentUtils">bigWigAverageOverBed</a>, <a href="https://github.com/ENCODE-DCC/kentUtils">bedGraphToBigWig</a>,  <a href="https://bedtools.readthedocs.io/en/latest/">bedtools</a>, <a href="http://www.htslib.org/">samtools</a>, <a href="http://cbrc3.cbrc.jp/%7Emartin/paraclu/">paraclu</a>, <a href="http://cbrc3.cbrc.jp/%7Emartin/paraclu/">paraclu-cut.sh</a></li>
+</ul>
+
+<h3 id="toc_13">OS</h3>
+
+<p>SCAFE was developed and tested on Debian GNU/Linux 9, with R (3.6.1) and perl (5.24.1) installed. Running SACFE on other OS with other version of R and perl are not guranteed. In you want to run <em>SCAFE</em> on other OS, we would recommend running it from docker container, see <a href="#1">below</a>. If you would like to run <em>SCAFE</em> natively on other OS, you have to ensure the R and perl versions, and might consider downloading and compiling the other 3rd party applications from their own sources. The binaries of 3rd party applications have to be execuatble in <em>SCAFE</em> directoty at ./resources/bin/.</p>
+
+<h2 id="toc_14">Installation<a name="6"></a></h2>
+
+<p>Once you ensured the above dependencies are met, you are ready to download <em>SCAFE</em> to your system.</p>
+
+<h3 id="toc_15">Clone this respository</h3>
+
+<div><pre><code class="language-shell">#--- make a directory to install SCAFE
+mkdir -pm 755 /my/path/to/install/
+cd /my/path/to/install/
+
+#--- Obtain SCAFE from github
+git clone https://github.com/chung-lab/SCAFE
+cd SCAFE
+
+#--- export SCAFE scripts dir to PATH for system-wide call of SCAFE commands 
+echo &quot;export PATH=\$PATH:$(pwd)/scripts&quot; &gt;&gt;~/.bashrc
+source ~/.bashrc
+
+#--- making sure the scripts and binaries are executable
+chmod 755 -R ./scripts/
+chmod 755 -R ./resources/bin/</code></pre></div>
+
+<h3 id="toc_16">Check the dependencies</h3>
+
+<p>To ensure the dependencies, please run check.dependencies.</p>
+
+<div><pre><code class="language-shell">#--- run check.dependencies to check 
+scafe.check.dependencies</code></pre></div>
+
+<h3 id="toc_17">Docker image<a name="docker"></a></h3>
+
+<p>If you have docker installed on your system, you might also consider pulling the <em>SCAFE</em> docker image and run it in a docker container. Once you are logged into the <em>SCAFE</em> docker container, the following tutorial on the demo data can be ran with exactly the same command. </p>
+
+<p>To install docker, please see <a href="https://www.docker.com/">here</a>. Noted that all files reads/writes are within the docker container by default. To share files (i.e. input and output of <em>SCAFE</em>) between the container and the host, please see <a href="https://flaviocopes.com/docker-access-files-outside-container/">here</a>. If you are running Docker on a labtop, make sure the allocated resources (e.g. memory and disk space) are enough, see <a href="https://docs.docker.com/docker-for-mac/">here</a>. We suggest to allocate at least 16GB of memory.</p>
+
+<div><pre><code class="language-shell">#---to pull the docker image
+docker pull cchon/scafe:latest
+
+#---to run scafe within a docker container, run
+docker run -it cchon/scafe:latest</code></pre></div>
+
+<h2 id="toc_18">Getting started with demo data<a name="7"></a></h2>
+
+<p>Now you have enssured all dependencies and downloaded SCAFE, time to get the demo data and test a few runs on the demo data.</p>
+
+<h3 id="toc_19">Download demo data and reference genome</h3>
+
+<p>Demo data and reference genome must be downloaded for testing <em>SCAFE</em> on your system.</p>
+
+<div><pre><code class="language-shell">#--- download the demo data using script download.demo.input
+scafe.download.demo.input
+    
+#--- download the reference genome hg19.gencode_v32lift37 for testing demo data
+scafe.download.resources.genome --genome=hg19.gencode_v32lift37</code></pre></div>
+
+<h3 id="toc_20">Test run a single cell solo workflow for demo data</h3>
+
+<p>Now, let&#39;s test <em>SCAFE</em> with a workflow (<em>workflow.sc.solo</em>) that processes one library of single cell 5&#39;end RNA-seq data. First we check out the help message of <em>workflow.sc.solo</em>. Remember you can always check the help message for all scripts of <em>SCAFE</em> using the <em>--help</em> flag. </p>
+
+<div><pre><code class="language-shell">#--- check out the help message of workflow.sc.solo
+scafe.workflow.sc.solo --help</code></pre></div>
+
+<p>It should print the help message as the followings:</p>
+
+<div><pre><code class="language-shell">          5&#39;-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~AAA-3&#39;
+                       O~~~AA      O~~         O~       O~~~~~~~AO~~~~~~~~A
+                     O~~    O~~ O~~   O~~     O~O~~     O~~      O~~       
+                      O~~      O~~           O~  O~~    O~~      O~~       
+                        O~~    O~~          O~~   O~~   O~~~~~AA O~~~~~~A  
+                           O~~ O~~         O~~~~~A O~~  O~~      O~~       
+                     O~~    O~~ O~~   O~~ O~~       O~~ O~~      O~~       
+                       O~~~~A     O~~~   O~~         O~~O~~      O~~~~~~~AA
+      ┌─ᐅ 5&#39;-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-3&#39;
+...===┴========================================================================================...
+
+                     Single Cell Analysis of Five-prime Ends (SCAFE) Tool Suite 
+                               ---&gt; scafe.workflow.sc.solo &lt;---
+                 &lt;--- workflow, single-cell mode, process a single sample ---&gt;
+
+Description:
+  This workflow process a single sample, from a cellranger bam file to tCRE UMI/cellbarcode count matrix
+
+Usage:
+  scafe.workflow.sc.solo [options] --run_bam_path --run_cellbarcode_path --genome --run_tag --run_outDir
+
+  --run_bam_path         &lt;required&gt; [string]  bam file from cellranger, can be read 1 only or pair-end
+  --run_cellbarcode_path &lt;required&gt; [string]  tsv file contains a list of cell barcodes,
+                                              barcodes.tsv.gz from cellranger
+  --genome               &lt;required&gt; [string]  name of genome reference, e.g. hg19.gencode_v32lift37
+  --run_tag              &lt;required&gt; [string]  prefix for the output files
+  --run_outDir           &lt;required&gt; [string]  directory for the output files
+  --training_signal_path (optional) [string]  quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
+                                              regions (e.g. annotated CRE, in bed format) used for training of logical 
+                                              regression model If null, $usr_glm_model_path must be supplied for 
+                                              pre-built logical regression model. It overrides usr_glm_model_path 
+                                              (default=null)
+  --testing_signal_path  (optional) [string]  quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
+                                              regions (e.g. annotated CRE, in bed format) used for testing the performance 
+                                              of the logical regression model. If null, annotated TSS from $genome will be 
+                                              used as binary genomic regions. (default=null)
+  --max_thread           (optional) [integer] maximum number of parallel threads, capped at 10 to 
+                                              avoid memory overflow (default=5)
+  --overwrite            (optional) [yes/no]  erase run_outDir before running (default=no)
+
+Dependencies:
+  R packages: &#39;ROCR&#39;,&#39;PRROC&#39;, &#39;caret&#39;, &#39;e1071&#39;, &#39;ggplot2&#39;, &#39;scales&#39;, &#39;reshape2&#39;
+  bigWigAverageOverBed
+  bedGraphToBigWig
+  bedtools
+  samtools
+  paraclu
+  paraclu-cut.sh
+
+For demo, cd to SCAFE dir and run,
+  scafe.workflow.sc.solo \
+  --overwrite=yes \
+  --run_bam_path=./demo/input/sc.solo/demo.cellranger.bam \
+  --run_cellbarcode_path=./demo/input/sc.solo/demo.barcodes.tsv.gz \
+  --genome=hg19.gencode_v32lift37 \
+  --run_tag=demo \
+  --run_outDir=./demo/output/sc.solo/
+</code></pre></div>
+
+<p>The help message details the input options, noted some are <strong><em>&lt;required&gt;</em></strong> and <strong><em>(optional)</em></strong>. <em>workflow.sc.solo</em> takes a bam file (<em>--run_bam_path=</em>), a cellbarcode list file (<em>--run_cellbarcode_path=</em>), the corresponding reference genome (<em>--genome=</em>) and the output prefix (<em>--run_tag=</em>) and directory (<em>--run_outDir=</em>). At the end of the message, it also prints the commands for running the script on demo data. Now, copy the command and run as the following:</p>
+
+<div><pre><code class="language-shell">#--- run the workflow on the demo.cellranger.bam, it&#39;ll take a couple of minutes 
+scafe.workflow.sc.solo \
+--overwrite=yes \
+--run_bam_path=./demo/input/sc.solo/demo.cellranger.bam \
+--run_cellbarcode_path=./demo/input/sc.solo/demo.barcodes.tsv.gz \
+--genome=hg19.gencode_v32lift37 \
+--run_tag=demo \
+--run_outDir=./demo/output/sc.solo/</code></pre></div>
+
+<p>If it finishes smoothly, you should see the following message on screen:</p>
+
+<div><pre><code class="language-shell"> #=====================================================
+ Results of all tasks found. All tasks run successfully
+ #=====================================================</code></pre></div>
+
+<p>You can also check out some of the outputs: </p>
+
+<div><pre><code class="language-shell">#--- check the output of tCRE annotation tables
+ls -alh ./demo/output/sc.solo/annotate/demo/log
+
+#--- check the output of tCRE UMI count matrix
+ls -alh ./demo/output/sc.solo/count/demo/matrix</code></pre></div>
+
+<h3 id="toc_21">Test run all workflows on bulk and single cell data</h3>
+
+<p>We recommended a test run for all 6 available workflows on the demo data. It will take around ~20 minutes on a regular system running at 5 threads (default).</p>
+
+<div><pre><code class="language-shell">#--- check out the help message of demo.test.run
+scafe.demo.test.run --help
+
+#--- run the all six available workflows on the demo bulk and single
+#--- it&#39;ll take a around 20 minutes
+scafe.demo.test.run \
+--overwrite=yes \
+--run_outDir=./demo/output/</code></pre></div>
+
+<h3 id="toc_22">Test linking tCRE by coactivity</h3>
+
+<p>Finally, try using <em>scafe.tool.sc.link</em> to run <a href="https://cole-trapnell-lab.github.io/cicero-release/docs_m3/#abstract">cicero</a> for linking tCREs based on their coactivity. We provide a demo dataset from our PBMC data. <em>scafe.tool.sc.link</em> parallelize cicero by chromosomes, and it&#39;ll take around 20 minutes to run. We&#39;ll use <em>--max_thread=10</em> to run with 10 threads.
+```shell</p>
+
+<h1 id="toc_23">--- check out the help message of scafe.tool.sc.link</h1>
+
+<p>scafe.tool.sc.link --help</p>
+
+<h1 id="toc_24">--- run scafe.tool.sc.link to link tCRE by their coactivity</h1>
+
+<h1 id="toc_25">--- it&#39;ll take a around 20 minutes</h1>
+
+<p>scafe.tool.sc.link \
+--overwrite=yes \
+--max<em>thread=10 \
+--CRE</em>bed<em>path=./demo/input/sc.link/demo.CRE.coord.bed.gz \
+--CRE</em>info<em>path=./demo/input/sc.link/demo.CRE.info.tsv.gz \
+--count</em>dir=./demo/input/sc.link/matrix/ \
+--genome=hg19.gencode_v32lift37 \
+--outputPrefix=demo \
+--outDir=./demo/output/sc.link/
+```</p>
+
+<p><em>scafe.tool.sc.link</em> calculates the coactivity between tCREs and define cis-coactivity networks of tCREs. You can check these results in the log directory.</p>
+
+<div><pre><code class="language-shell">#--- check connectivity
+gzip -dc ./demo/output/sc.link/demo/log/cicero.coactivity.link.redundant.non_zero.tsv.gz | head -n 20
+
+CRE1                          CRE2                         coactivity
+chr10_101190280_101190781_-   chr10_101370561_101371062_-  -0.11747
+chr10_101190280_101190781_-   chr10_101491567_101492125_+  0.39047
+chr10_101190280_101190781_-   chr10_101491783_101492284_-  0.01331
+chr10_101370561_101371062_-   chr10_101190280_101190781_-  -0.11747
+chr10_101370561_101371062_-   chr10_101491567_101492125_+  -0.30085
+chr10_101370561_101371062_-   chr10_101491783_101492284_-  -0.01026
+chr10_101380086_101380587_-   chr10_101380794_101381295_+  -0.08749
+chr10_101380794_101381295_+   chr10_101380086_101380587_-  -0.08749
+chr10_101491567_101492125_+   chr10_101190280_101190781_-  0.39047
+chr10_101491567_101492125_+   chr10_101370561_101371062_-  -0.30085
+chr10_101491567_101492125_+   chr10_101491783_101492284_-  0.0341
+chr10_101491783_101492284_-   chr10_101190280_101190781_-  0.01331
+chr10_101491783_101492284_-   chr10_101370561_101371062_-  -0.01026
+chr10_101491783_101492284_-   chr10_101491567_101492125_+  0.0341
+chr10_101945538_101946039_+   chr10_101945685_101946186_-  -0.04648
+chr10_101945685_101946186_-   chr10_101945538_101946039_+  -0.04648
+chr10_102027294_102027795_-   chr10_102046013_102046828_-  0.01844
+chr10_102027294_102027795_-   chr10_102289535_102290036_-  0.23593
+chr10_102027294_102027795_-   chr10_102295299_102295800_+  0.02627
+
+#--- check cis-coactivity network
+gzip -dc ./demo/output/sc.link/demo/log/cicero.coactivity.network.tsv.gz | head -n 20
+
+CCANID                           CREID
+CCAN_chr10_102027395_102792196   chr10_102672325_102672826_+
+CCAN_chr10_102027395_102792196   chr10_102790607_102791339_+
+CCAN_chr10_102027395_102792196   chr10_102289535_102290036_-
+CCAN_chr10_102027395_102792196   chr10_102295299_102295800_+
+CCAN_chr10_102027395_102792196   chr10_102046013_102046828_-
+CCAN_chr10_102027395_102792196   chr10_102746899_102747400_+
+CCAN_chr10_102027395_102792196   chr10_102746902_102747654_-
+CCAN_chr10_102027395_102792196   chr10_102756412_102756913_+
+CCAN_chr10_102027395_102792196   chr10_102027294_102027795_-
+CCAN_chr10_102027395_102792196   chr10_102791429_102792296_+
+CCAN_chr10_102027395_102792196   chr10_102673005_102673506_-
+CCAN_chr10_1034402_1282508       chr10_1282407_1282908_-
+CCAN_chr10_1034402_1282508       chr10_1094738_1095693_-
+CCAN_chr10_1034402_1282508       chr10_1034001_1034502_+
+CCAN_chr10_1034402_1282508       chr10_1102543_1103044_-
+CCAN_chr10_1034402_1282508       chr10_1101951_1102886_+
+CCAN_chr10_103543152_104614260   chr10_104155091_104155592_+
+CCAN_chr10_103543152_104614260   chr10_104613618_104614134_+
+CCAN_chr10_103543152_104614260   chr10_103543051_103543552_-</code></pre></div>
+
+<h2 id="toc_26">Run <em>SCAFE</em> on your own data<a name="8"></a></h2>
+
+<h3 id="toc_27">Input <em>*.bam</em> files</h3>
+
+<p><em>SCAFE</em> maps the cDNA 5&#39;end by identifying the junction between the TS oligo and the cDNA on <strong>Read 1</strong> of sc-end5-seq data on the 10xGenomics Chromimum® platform. Therefore, <strong>Read 1</strong> must be sequenced long enough (e.g. &gt;50nt) to allow mappnig to genome. The <em>*.bam</em> files are commonly generated from 10xGenomics Chromimum® <em>cellranger count</em> pipeline. When running <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/count"><em>cellranger count</em></a>, the <em>--chemistry</em>  option must be <em>SC5P-PE</em> (Pair-end). The <em>*.bam</em> generated from both <em>--chemistry fiveprime</em> and <em>--chemistry SC5P-R2</em> options are <strong>NOT COMPATIBLE</strong> with <em>SCAFE</em> as the former will remove the junction between the TS oligo and the cDNA on Read 1 and the latter does not even contain Read 1. If users sequecnced Read 1 only, they could run <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/count"><em>cellranger count</em></a> with <em>--chemistry SC5P-PE</em> option by supplying <em>cellranger</em> a <em>dummy</em> Read 2 fastq with Read 1 reverse complemented. If users wish to generate their own <em>*.bam</em> from other custom pipelines, make sure that:</p>
+
+<ol>
+<li>the UMI and cellbarcode information must be present in the <em>*.bam</em> file as custom tags CB:Z and UB:Z respectively, in this order.</li>
+<li>TS oligo sequence must keep intact on Read 1.</li>
+</ol>
+
+<h3 id="toc_28">Run <em>SCAFE</em> workflows on single cell data with default options</h3>
+
+<p>We recommend most users to run <em>SCAFE</em> using workflows with default options. There are 3 types of workflow: <strong>(1)</strong> &quot;<strong><em>solo</em></strong>&quot; for processing of a single library, <strong>(2)</strong> &quot;<strong><em>pool</em></strong>&quot; for pooling of multiple libraries and <strong>(3)</strong> &quot;<strong><em>subsample</em></strong>&quot; for down-sampling a single library (for assessment of sequencing depth). &quot;<strong><em>solo</em></strong>&quot; accepts <em>*.bam</em> while &quot;<strong><em>pool</em></strong>&quot;/&quot;<strong><em>subsample</em></strong>&quot; accepts <em>*.ctss.bed</em> files (generated from <em>tool.sc.bam_to_ctss</em>). For multiple libraries, we recommend users to first run either <em>workflow.sc.solo</em> or <em>tool.sc.bam_to_ctss</em> on indiviudal libraries, and then take the <em>*.ctss.bed</em> file from all libraries to run <em>workflow.sc.pool</em>. Pooling of libraries for defining tCRE is recommended because <strong>(1)</strong> it generally increases the sensitivity of tCRE detection and <strong>(2)</strong> it produces a common set of tCREs for all libraries so the IDs are portable between libraries. Please check the help messages for details of running the workflows: </p>
+
+<div><pre><code class="language-shell">#--- check out the help message of the three single cell workflows
+scafe.workflow.sc.solo --help
+scafe.workflow.sc.pool --help
+scafe.workflow.sc.subsample --help
+</code></pre></div>
+
+<h3 id="toc_29">Run <em>SCAFE</em> individual tools with custom options</h3>
+
+<p>For the sake of flexibiity, <em>SCAFE</em> allows users to run individual tools with custom options for exploring the effect of cutoffs or supplying alternative intermediate inputs. See <a href="scripts/">here</a> for the full list of tools and their usage. Let&#39;s walk through  a couple of individual tools with the demo data.</p>
+
+<ul>
+<li><strong><em>tool.sc.bam_to_ctss</em></strong>: First, we convert a cellranger <em>*.bam</em> file to <em>*.ctss.bed</em> files. &quot;ctss&quot; refers as capped TSS, and <em>*.ctss.bed</em> file is a common format for storing TSS information. For procedural convenenice, <em>tool.sc.bam_to_ctss</em> generates multiple <em>*.ctss.bed</em> files at various levels of collapsing the signal (e.g. piling up UMI at TSS or not, summing up UMI of different cellbarcode or not). By default, the <em>tool.sc.bam_to_ctss</em> process <strong>ONLY</strong> primary alignments regardless of MAPQ. If users wants to, for example, include also secondary aligments with a minimum MAPQ (e.g. 10), the user could run as the followings:</li>
+</ul>
+
+<div><pre><code class="language-shell">#--- check out the help message of tool.sc.bam_to_ctss
+scafe.tool.sc.bam_to_ctss --help
+
+#--- run tool.sc.bam_to_ctss with custom options
+scafe.tool.sc.bam_to_ctss \
+--min_MAPQ 10 \
+--exclude_flag &#39;128,4&#39; \
+--overwrite=yes \
+--bamPath=./demo/input/sc.solo/demo.cellranger.bam \
+--genome=hg19.gencode_v32lift37 \
+--outputPrefix=demo \
+--outDir=./demo/output/sc.solo/bam_to_ctss/</code></pre></div>
+
+<ul>
+<li><strong><em>tool.cm.remove_strand_invader</em></strong>: Then, we removes the strand invader artefacts from the <em>*.ctss.bed</em> file generated from  <em>tool.sc.bam_to_ctss</em>. Please refer to <a href="https://academic.oup.com/nar/article/41/3/e44/2902349">here</a> for the rationale of removing strand invader artefacts. If the users would like to use a more stringent cutoff to define strand invader artefacts, e.g. --min_edit_distance=3 and --min_end_non_G_num=1, so that less reads will be removed, and the user could run as the followings: </li>
+</ul>
+
+<div><pre><code class="language-shell">#--- check out the help message of tool.cm.remove_strand_invader
+scafe.tool.cm.remove_strand_invader --help
+
+#--- run tool.cm.remove_strand_invader with custom options
+scafe.tool.cm.remove_strand_invader \
+--min_edit_distance=3 \
+--min_end_non_G_num=1 \
+--overwrite=yes \
+--ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.collapse.ctss.bed.gz \
+--genome=hg19.gencode_v32lift37 \
+--outputPrefix=demo \
+--outDir=./demo/output/sc.solo/remove_strand_invader/</code></pre></div>
+
+<ul>
+<li><strong><em>tool.cm.cluster</em></strong>: Then, we cluster the <em>*.ctss.bed</em> file into TSS clusters. Please refer to <a href="http://cbrc3.cbrc.jp/%7Emartin/paraclu/">here</a> for the rationale of clustering. By default, the clusters with &lt;5 UMI within cluster, &lt;3 UMI at summit or expressed in &lt;3 cells were removed. If the users would like to use a more stringent cutoff to remove more lowly expressed TSS clusters, e.g. --min<em>cluster</em>count=10, --min<em>summit</em>count=5 and --min<em>num</em>sample<em>expr</em>cluster=5,the user could run as the followings: </li>
+</ul>
+
+<div><pre><code class="language-shell">#--- check out the help message of tool.cm.cluster
+scafe.tool.cm.cluster --help
+
+#--- run tool.cm.cluster with custom options
+scafe.tool.cm.cluster \
+--min_cluster_count=10 \
+--min_summit_count=5 \
+--min_num_sample_expr_cluster=5 \
+--overwrite=yes \
+--cluster_ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.collapse.ctss.bed.gz \
+--outputPrefix=demo \
+--outDir=./demo/output/sc.solo/cluster/</code></pre></div>
+
+<ul>
+<li><strong><em>tool.cm.filter</em></strong>: Then, we filter the TSS cluster using logistic regression. By default, <em>tool.cm.filter</em> uses a pre-trained multiple logistic regression model from human iPSC cells using matched ATAC-Seq data. If the users would like to use their own matched ATAC-Seq data (–logP as <em>*.bigwig</em> file) for training of the regression model using <em>--training<em>signal</em>path</em> and <em>--testing<em>signal</em>path</em> options. Also, the user can set a permissive logistic probablity threshold (default=0.5) using <em>--default_cutoff</em> option (e.g. 0.3). The user could run as the followings:</li>
+</ul>
+
+<div><pre><code class="language-shell">#--- check out the help message of tool.cm.filter
+scafe.tool.cm.filter --help
+
+#--- run tool.cm.cluster with custom options
+scafe.tool.cm.filter \
+--default_cutoff=0.3 \
+--overwrite=yes \
+--ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.collapse.ctss.bed.gz \
+--ung_ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.unencoded_G.collapse.ctss.bed.gz \
+--tssCluster_bed_path=./demo/output/sc.solo/cluster/demo/bed/demo.tssCluster.bed.gz \
+--training_signal_path=./demo/input/atac/demo.atac.bw \
+--testing_signal_path=./demo/input/atac/demo.atac.bw \
+--genome=hg19.gencode_v32lift37 \
+--outputPrefix=demo \
+--outDir=./demo/output/sc.solo/filter/</code></pre></div>
+
+<ul>
+<li><strong><em>tool.cm.annotate</em></strong>: Finally, we will define and annotate tCREs based on the gene models in reference genome. By default, <em>tool.cm.annotate</em> merge TSS clusters located within +100nt and –400nt as a tCRE (defined by combination of option <em>--CRE<em>extend</em>size</em> and <em>--CRE<em>extend</em>upstrm_ratio</em>). Also, the tCREs with +/-500nt of annotated gene TSS will be assigned as proximal tCRE (defined by option <em>--proximity<em>slop</em>rng</em>). If the users would like to define tCRE by merging more distant TSS clusters (e.g. +200nt and –600nt) and assign tCRE further away (+/-1000nt) from gene TSS as proximal, the user could run as the followings:</li>
+</ul>
+
+<div><pre><code class="language-shell">#--- check out the help message of tool.cm.annotate
+scafe.tool.cm.annotate --help
+
+#--- run tool.cm.annotate with custom options
+scafe.tool.cm.annotate \
+--CRE_extend_size=800 \
+--CRE_extend_upstrm_ratio=3 \
+--proximity_slop_rng=1000 \
+--overwrite=yes \
+--tssCluster_bed_path=./demo/output/sc.solo/filter/demo/bed/demo.tssCluster.default.filtered.bed.gz \
+--tssCluster_info_path=./demo/output/sc.solo/filter/demo/log/demo.tssCluster.log.tsv \
+--genome=hg19.gencode_v32lift37 \
+--outputPrefix=demo \
+--outDir=./demo/output/sc.solo/annotate/</code></pre></div>
+
+<h3 id="toc_30">Making a custom reference genome</h3>
+
+<p>Currently, four reference genomes ara available. See <code>./scripts/scafe.download.resources.genome</code> for downloading. Alternatively, some users might work on genomes of other organisms, or prefer to use custom gene models for annotating tCREs.  <em>tool.cm.prep_genome</em> converts user-supplied genome <em>*.fasta</em> and gene model <em>*.gtf</em> into necessary files for <em>SCAFE</em>. You can check out the help message for inputs of <em>tool.cm.prep_genome</em> and then test run a demo using TAIR10 genome with AtRTDv2 gene model.</p>
+
+<div><pre><code class="language-shell">#--- check out the help message of tool.cm.prep_genome
+scafe.tool.cm.prep_genome --help
+
+#--- run the tool on the TAIR10 assembly with gene model AtRTDv2 
+scafe.tool.cm.prep_genome \
+--overwrite=yes \
+--gtf_path=./demo/input/genome/TAIR10.AtRTDv2.gtf.gz \
+--fasta_path=./demo/input/genome/TAIR10.genome.fa.gz \
+--chrom_list_path=./demo/input/genome/TAIR10.chrom_list.txt \
+--mask_bed_path=./demo/input/genome/TAIR10.ATAC.bed.gz \
+--outputPrefix=TAIR10.AtRTDv2 \
+--outDir=./demo/output/genome/</code></pre></div>
+
+<h3 id="toc_31">Run <em>SCAFE</em> with bulk CAGE data</h3>
+
+<p><em>SCAFE</em> also accepts <em>.*bam</em> files from bulk CAGE. The major difference between singel cell and bulk workflow is cellbarcode is not considered. Otherwise, the options between single cell and bulk workflow are large the same. Please check the help messages for details of running the workflows: </p>
+
+<div><pre><code class="language-shell">#--- check out the help message of the three single cell workflows
+scafe.workflow.bk.solo --help
+scafe.workflow.bk.pool --help
+scafe.workflow.bk.subsample --help</code></pre></div>
+
+
+
+
+</body>
+
+</html>

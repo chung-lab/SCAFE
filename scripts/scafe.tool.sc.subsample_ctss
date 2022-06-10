@@ -87,7 +87,7 @@ use Cwd 'abs_path';
    scafe.tool.sc.subsample_ctss [options] --UMI_CB_ctss_bed_path --subsample_num --outputPrefix --outDir
    
    --UMI_CB_ctss_bed_path <required> [string]  ctss file for subsampling, one line one cellbarcode-UMI combination,
-                                               *UMI_CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
+                                               *UMI_CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss, 
                                                4th column cellbarcode-UMI and 5th column is number of unencoded-G
    --subsample_num        <required> [integer] number of UMI to be subsampled
    --outputPrefix         <required> [string]  prefix for the output files
@@ -96,6 +96,8 @@ use Cwd 'abs_path';
 
  Dependencies:
    bedtools
+   tabix
+   bgzip
 
  For demo, cd to SCAFE dir and run,
    scafe.tool.sc.subsample_ctss \
@@ -107,7 +109,11 @@ use Cwd 'abs_path';
 
 =head1 VERSION
 
-1.0
+v0.9.0-beta [March 20, 2021]
+	-Initial pre-release
+
+v1.0.0 [June 6, 2022]
+	-output bgzip bed and indexed by tabix
 
 =cut
 #<\doc>
@@ -127,8 +133,8 @@ use Cwd 'abs_path';
 #<global>
 my $scriptDirPath = dirname(rel2abs($0));
 my $scriptAbsPath = abs_path($0);
-my ($curntTimeStamp) = &timeStamp();#->642
-my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->210
+my ($curntTimeStamp) = &timeStamp();#->718
+my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->286
 my $globalReadmeHsh_ref = {};
 our $tmplog_fh;
 #<\global>
@@ -142,7 +148,7 @@ our $tmplog_fh;
 #	section 0_startingTasks
 #
 #<section ID="startingTasks" num="0">
-my ($UMI_CB_ctss_bed_path, $subsample_num, $outputPrefix, $outDir, $overwrite) = &readParameters();#->445
+my ($UMI_CB_ctss_bed_path, $subsample_num, $outputPrefix, $outDir, $overwrite) = &readParameters();#->521
 #<\section>
 #====================================================================================================================================================#
 
@@ -151,6 +157,7 @@ my ($UMI_CB_ctss_bed_path, $subsample_num, $outputPrefix, $outDir, $overwrite) =
 #
 #<section ID="defineHardCodedParam" num="1">
 my $paramTag = "$outputPrefix";
+my $max_thread = 5; #---[2022/06/06 15:34] num of thread for bgzip tabix
 #<\section>
 #====================================================================================================================================================#
 
@@ -166,8 +173,8 @@ my $result_script_dir = "$result_dir/script/"; push @mkDirAry, $result_script_di
 foreach my $dir (@mkDirAry) {system ("mkdir -pm 777 $dir");}
 
 open $tmplog_fh, ">", "$result_dir/00_screen_log.$curntTimeStamp.log.txt";
-&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->271
-&printStartOrFinishMessage("startMessage");#->411
+&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->347
+&printStartOrFinishMessage("startMessage");#->487
 #<\section>
 #====================================================================================================================================================#
 
@@ -175,9 +182,9 @@ open $tmplog_fh, ">", "$result_dir/00_screen_log.$curntTimeStamp.log.txt";
 #	section 3_subsample
 #
 #<section ID="subsample" num="3">
-my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
-my ($target_fraction) = &getTargetFraction($UMI_CB_ctss_bed_path, $subsample_num);#->228
-&subsampleCTSS($UMI_CB_ctss_bed_path, $result_bed_dir, $bedtools_bin, $target_fraction, $outputPrefix);#->511
+my ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();#->186
+my ($target_fraction) = &getTargetFraction($UMI_CB_ctss_bed_path, $subsample_num);#->304
+&subsampleCTSS($UMI_CB_ctss_bed_path, $result_bed_dir, $bedtools_bin, $target_fraction, $tabix_bin, $bgzip_bin, $max_thread, $outputPrefix);#->587
 #<\section>
 #====================================================================================================================================================#
 
@@ -192,8 +199,8 @@ my ($target_fraction) = &getTargetFraction($UMI_CB_ctss_bed_path, $subsample_num
 #	section 5_finishingTasks
 #
 #<section ID="finishingTasks" num="5">
-&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->296
-&printStartOrFinishMessage("finishMessage");#->411
+&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->372
+&printStartOrFinishMessage("finishMessage");#->487
 #<\section>
 #====================================================================================================================================================#
 
@@ -204,12 +211,9 @@ my ($target_fraction) = &getTargetFraction($UMI_CB_ctss_bed_path, $subsample_num
 #====================================================================================================================================================#
 #List of subroutines by category
 #
-#	checkTools [n=1]:
-#		checkBedtoolsVersion
-#
-#	general [n=6]:
-#		checkBedtoolsVersion, currentTime, logCalledCMDAndScript
-#		printStartOrFinishMessage, readParameters, timeStamp
+#	general [n=5]:
+#		currentTime, logCalledCMDAndScript, printStartOrFinishMessage
+#		readParameters, timeStamp
 #
 #	log [n=1]:
 #		reportAndLogStatus
@@ -220,26 +224,28 @@ my ($target_fraction) = &getTargetFraction($UMI_CB_ctss_bed_path, $subsample_num
 #	time [n=1]:
 #		timeStamp
 #
-#	unassigned [n=2]:
-#		getTargetFraction, subsampleCTSS
+#	unassigned [n=3]:
+#		checkAllExecutable, getTargetFraction, subsampleCTSS
 #
 #====================================================================================================================================================#
 
 sub checkAllExecutable {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|1254
+#	dependOnSub: reportAndLogStatus|565
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|129
+#	primaryAppearInSection: 3_subsample|135
 #	secondaryAppearInSection: >none
 #	input: none
-#	output: $bedGraphToBigWig_bin, $bedtools_bin, $bigWigAverageOverBed_bin, $cut_sh_path, $paraclu_bin, $samtools_bin
-#	toCall: my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
-#	calledInLine: 144
+#	output: $bedGraphToBigWig_bin, $bedtools_bin, $bgzip_bin, $bigWigAverageOverBed_bin, $cut_sh_path, $paraclu_bin, $samtools_bin, $tabix_bin
+#	toCall: my ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
+#	calledInLine: 138
 #....................................................................................................................................................#
 	
 	my $dirPath = dirname(rel2abs($0));
 
+	my $tabix_bin = "$dirPath/../resources/bin/tabix/tabix";
+	my $bgzip_bin = "$dirPath/../resources/bin/bgzip/bgzip";
 	my $bedtools_bin = "$dirPath/../resources/bin/bedtools/bedtools";
 	my $samtools_bin = "$dirPath/../resources/bin/samtools/samtools";
 	my $paraclu_bin = "$dirPath/../resources/bin/paraclu/paraclu";
@@ -247,12 +253,30 @@ sub checkAllExecutable {
 	my $bedGraphToBigWig_bin = "$dirPath/../resources/bin/bedGraphToBigWig/bedGraphToBigWig";
 	my $bigWigAverageOverBed_bin = "$dirPath/../resources/bin/bigWigAverageOverBed/bigWigAverageOverBed";
 	
-	&reportAndLogStatus("Checking all SCAFE executables", 10, "\n");#->1254
+	&reportAndLogStatus("Checking all SCAFE executables", 10, "\n");#->565
 	
+	{
+		my $stdOut = `$tabix_bin  --version 2>&1`;
+		if ($stdOut =~ m/tabix \(htslib\) (\S+)/) {
+			&reportAndLogStatus("Checking: tabix version: $1", 0, "\n");#->565
+		} else {
+			die "tabix is not installed properly. Quitting.\n";
+		}
+	}
+
+	{
+		my $stdOut = `$bgzip_bin --version 2>&1`;
+		if ($stdOut =~ m/bgzip \(htslib\) (\S+)/) {
+			&reportAndLogStatus("Checking: bgzip version: $1", 0, "\n");#->565
+		} else {
+			die "bgzip is not installed properly. Quitting.\n";
+		}
+	}
+
 	{
 		my $stdOut = `$bedtools_bin --version 2>&1`;
 		if ($stdOut =~ m/bedtools v(\S+)/) {
-			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->565
 		} else {
 			die "bedtools is not installed properly. Quitting.\n";
 		}
@@ -261,7 +285,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$samtools_bin 2>&1`;
 		if ($stdOut =~ m/\s+(Version: \S+)\s+/) {
-			&reportAndLogStatus("Checking: samtools version: $1", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: samtools version: $1", 0, "\n");#->565
 		} else {
 			die "samtools is not installed properly. Quitting.\n";
 		}
@@ -270,7 +294,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$paraclu_bin 2>&1`;
 		if ($stdOut =~ m/paraclu: I need a minValue and a fileName/) {
-			&reportAndLogStatus("Checking: paraclu found.", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: paraclu found.", 0, "\n");#->565
 		} else {
 			die "paraclu is not installed properly. Quitting.\n";
 		}
@@ -279,7 +303,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$cut_sh_path 55C7128A 2>&1`;
 		if ($stdOut =~ m/awk:/) {
-			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->565
 		} else {
 			die "paraclu-cut is not installed properly. Quitting.\n";
 		}
@@ -288,7 +312,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bedGraphToBigWig_bin 2>&1`;
 		if ($stdOut =~ m/bedGraphToBigWig v (\S+)/) {
-			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->565
 		} else {
 			die "bedGraphToBigWig not installed properly. Quitting.\n";
 		}
@@ -297,25 +321,25 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bigWigAverageOverBed_bin 2>&1`;
 		if ($stdOut =~ m/bigWigAverageOverBed v(\S+)/) {
-			&reportAndLogStatus("Checking: bigWigAverageOverBed version: $1", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: bigWigAverageOverBed version: $1", 0, "\n");#->565
 		} else {
 			die "bigWigAverageOverBed is not installed properly. Quitting.\n";
 		}
 	}
 
-	return ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin);
+	return ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin);
 }
 sub currentTime {
 #....................................................................................................................................................#
 #	subroutineCategory: general
 #	dependOnSub: >none
-#	appearInSub: printStartOrFinishMessage|411, reportAndLogStatus|489
+#	appearInSub: printStartOrFinishMessage|487, reportAndLogStatus|565
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 2_defineOutDirPath|108, 5_finishingTasks|142
+#	secondaryAppearInSection: 2_defineOutDirPath|118, 5_finishingTasks|152
 #	input: none
 #	output: $runTime
 #	toCall: my ($runTime) = &currentTime();
-#	calledInLine: 81, 427, 431, 436, 440, 505, 506
+#	calledInLine: 91, 503, 507, 512, 516, 581, 582
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
@@ -326,18 +350,18 @@ sub currentTime {
 sub getTargetFraction {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|489
+#	dependOnSub: reportAndLogStatus|565
 #	appearInSub: >none
-#	primaryAppearInSection: 3_subsample|125
+#	primaryAppearInSection: 3_subsample|135
 #	secondaryAppearInSection: >none
 #	input: $UMI_CB_ctss_bed_path, $subsample_num
 #	output: $target_fraction
 #	toCall: my ($target_fraction) = &getTargetFraction($UMI_CB_ctss_bed_path, $subsample_num);
-#	calledInLine: 129
+#	calledInLine: 139
 #....................................................................................................................................................#
 	my ($UMI_CB_ctss_bed_path, $subsample_num) = @_;
 	
-	&reportAndLogStatus("getting total num", 10, "\n");#->489
+	&reportAndLogStatus("getting total num", 10, "\n");#->565
 	my $total_num = 0;
 	my $ung_num = 0;
 	if ($UMI_CB_ctss_bed_path =~ m/\.gz$/) {
@@ -355,14 +379,14 @@ sub getTargetFraction {
 	my $target_fraction = $subsample_num/$total_num;
 	if ($target_fraction > 1) {
 		$target_fraction = 1;
-		&reportAndLogStatus("subsample_num is greater than total_num", 10, "\n");#->489
-		&reportAndLogStatus("limiting target_fraction to 1", 10, "\n");#->489
+		&reportAndLogStatus("subsample_num is greater than total_num", 10, "\n");#->565
+		&reportAndLogStatus("limiting target_fraction to 1", 10, "\n");#->565
 	}
 	
-	&reportAndLogStatus("total_num=$total_num", 10, "\n");#->489
-	&reportAndLogStatus("unencoded_G_num=$ung_num", 10, "\n");#->489
-	&reportAndLogStatus("subsample_num=$subsample_num", 10, "\n");#->489
-	&reportAndLogStatus("target_fraction=$target_fraction", 10, "\n");#->489
+	&reportAndLogStatus("total_num=$total_num", 10, "\n");#->565
+	&reportAndLogStatus("unencoded_G_num=$ung_num", 10, "\n");#->565
+	&reportAndLogStatus("subsample_num=$subsample_num", 10, "\n");#->565
+	&reportAndLogStatus("target_fraction=$target_fraction", 10, "\n");#->565
 
 	return ($target_fraction);
 }
@@ -371,12 +395,12 @@ sub logCalledCMDAndScript {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|108
+#	primaryAppearInSection: 2_defineOutDirPath|118
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $result_script_dir, $scriptAbsPath
 #	output: 
 #	toCall: &logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);
-#	calledInLine: 119
+#	calledInLine: 129
 #....................................................................................................................................................#
 	my ($ARGVStr, $result_script_dir, $scriptAbsPath) = @_;
 
@@ -396,12 +420,12 @@ sub printOutputFileListAndReadme {
 #	subroutineCategory: output
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 5_finishingTasks|142
+#	primaryAppearInSection: 5_finishingTasks|152
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $outDir, $paramTag
 #	output: 
 #	toCall: &printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);
-#	calledInLine: 145
+#	calledInLine: 155
 #....................................................................................................................................................#
 	my ($ARGVStr, $paramTag, $outDir) = @_;
 	
@@ -509,34 +533,34 @@ sub printOutputFileListAndReadme {
 sub printStartOrFinishMessage {
 #....................................................................................................................................................#
 #	subroutineCategory: general
-#	dependOnSub: currentTime|210
+#	dependOnSub: currentTime|286
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|108, 5_finishingTasks|142
+#	primaryAppearInSection: 2_defineOutDirPath|118, 5_finishingTasks|152
 #	secondaryAppearInSection: >none
 #	input: $StartOrFinishMessage
 #	output: none
 #	toCall: &printStartOrFinishMessage($StartOrFinishMessage);
-#	calledInLine: 120, 146
+#	calledInLine: 130, 156
 #....................................................................................................................................................#
 
 	my ($StartOrFinishMessage) = @_;
 	
 	if ($StartOrFinishMessage eq "startMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] starts running ...... \n";#->210
+		print "[".&currentTime()."] starts running ...... \n";#->286
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->210
+		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->286
 		print $tmplog_fh "=========================================================================\n\n";
 
 	} elsif ($StartOrFinishMessage eq "finishMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] finished running .......\n";#->210
+		print "[".&currentTime()."] finished running .......\n";#->286
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->210
+		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->286
 		print $tmplog_fh "=========================================================================\n\n";
 	}
 }
@@ -545,12 +569,12 @@ sub readParameters {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startingTasks|92
+#	primaryAppearInSection: 0_startingTasks|102
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: $UMI_CB_ctss_bed_path, $outDir, $outputPrefix, $overwrite, $subsample_num
 #	toCall: my ($UMI_CB_ctss_bed_path, $subsample_num, $outputPrefix, $outDir, $overwrite) = &readParameters();
-#	calledInLine: 95
+#	calledInLine: 105
 #....................................................................................................................................................#
 	
 	my ($UMI_CB_ctss_bed_path, $subsample_num, $outputPrefix, $outDir, $overwrite);
@@ -587,38 +611,38 @@ sub readParameters {
 sub reportAndLogStatus {
 #....................................................................................................................................................#
 #	subroutineCategory: log
-#	dependOnSub: currentTime|210
-#	appearInSub: checkBedtoolsVersion|179, getTargetFraction|228, subsampleCTSS|511
+#	dependOnSub: currentTime|286
+#	appearInSub: checkAllExecutable|186, getTargetFraction|304, subsampleCTSS|587
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 3_subsample|125
+#	secondaryAppearInSection: 3_subsample|135
 #	input: $lineEnd, $message, $numTrailingSpace
 #	output: 
 #	toCall: &reportAndLogStatus($message, $numTrailingSpace, $lineEnd);
-#	calledInLine: 197, 201, 241, 259, 260, 263, 264, 265, 266, 550
+#	calledInLine: 209, 214, 223, 232, 241, 250, 259, 268, 277, 317, 335, 336, 339, 340, 341, 342, 626
 #....................................................................................................................................................#
 	my ($message, $numTrailingSpace, $lineEnd) = @_;
 
 	my $trailingSpaces = '';
 	$trailingSpaces .= " " for (1..$numTrailingSpace);
 	
-	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->210
-	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->210
+	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->286
+	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->286
 	
 	return ();
 }
 sub subsampleCTSS {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|489
+#	dependOnSub: reportAndLogStatus|565
 #	appearInSub: >none
-#	primaryAppearInSection: 3_subsample|125
+#	primaryAppearInSection: 3_subsample|135
 #	secondaryAppearInSection: >none
 #	input: $UMI_CB_ctss_bed_path, $bedtools_bin, $outputPrefix, $result_bed_dir, $target_fraction
 #	output: 
 #	toCall: &subsampleCTSS($UMI_CB_ctss_bed_path, $result_bed_dir, $bedtools_bin, $target_fraction, $outputPrefix);
-#	calledInLine: 130
+#	calledInLine: 140
 #....................................................................................................................................................#
-	my ($UMI_CB_ctss_bed_path, $result_bed_dir, $bedtools_bin, $target_fraction, $outputPrefix) = @_;
+	my ($UMI_CB_ctss_bed_path, $result_bed_dir, $bedtools_bin, $target_fraction, $tabix_bin, $bgzip_bin, $max_thread, $outputPrefix) = @_;
 	
 	my $sub_collapse_ctss_bed_path = "$result_bed_dir/$outputPrefix.subsample.collapse.ctss.bed";
 	my $sub_ung_collapse_ctss_bed_path = "$result_bed_dir/$outputPrefix.subsample.unencoded_G.collapse.ctss.bed";
@@ -646,7 +670,7 @@ sub subsampleCTSS {
 		
 		$num_proc++;
 		if ($num_proc%10000 == 0) {
-			&reportAndLogStatus("$num_proc CTSS subsampled", 10, "\n");#->489
+			&reportAndLogStatus("$num_proc CTSS subsampled", 10, "\n");#->565
 		}
 
 		{
@@ -731,9 +755,22 @@ sub subsampleCTSS {
 	close SUBCOLLAPSECTSS;
 	close SUBUNGCOLLAPSECTSS;
 
-	system "gzip $sub_collapse_ctss_bed_path";
-	system "gzip $sub_ung_collapse_ctss_bed_path";
-	system "gzip $sub_CB_ctss_bed_path";
+
+	my $ctss_hsh_ref = {
+		'sub_collapse_ctss_bed_path' => $sub_collapse_ctss_bed_path,
+		'sub_ung_collapse_ctss_bed_path' => $sub_ung_collapse_ctss_bed_path,
+		'sub_CB_ctss_bed_path' => $sub_CB_ctss_bed_path,
+	};
+	
+	foreach my $ctss_name (sort keys %{$ctss_hsh_ref}) {
+		my $ctss_path = $ctss_hsh_ref->{$ctss_name};
+		my $tabix_ctss_path = "$ctss_path.gz";
+		&reportAndLogStatus("Compressing $ctss_name.", 10, "\n");#->1098
+		system "$bgzip_bin -@ $max_thread -c $ctss_path >$tabix_ctss_path";
+		system "rm -f $ctss_path";
+		&reportAndLogStatus("Tabix indexing $ctss_name.", 10, "\n");#->1098
+		system "$tabix_bin -p bed $tabix_ctss_path";
+	}
 
 	return ();
 }
@@ -747,7 +784,7 @@ sub timeStamp {
 #	input: none
 #	output: $curntTimeStamp
 #	toCall: my ($curntTimeStamp) = &timeStamp();
-#	calledInLine: 80
+#	calledInLine: 90
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);

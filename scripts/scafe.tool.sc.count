@@ -91,9 +91,21 @@ use Cwd 'abs_path';
    --ctss_bed_path          <required> [string] ctss file for counting,
                                                 *CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
                                                 4th column cellbarcode and 5th column is number UMI
+   --genome                 <required> [string] name of genome reference, e.g. hg19.gencode_v32lift37
+   --ctss_scope_bed_path    <optional> [string] bed file contains the regions for filtering CTSS, e.g. tssCluster ranges, 
+                                                so only the ctss within these ranges (i.e. scope) will be count. This is to 
+                                                prevent over permissive counting to ctss in the CRE range by stricting only 
+                                                ctss within valid tssClusters to be counted. 
+                                                *.tssCluster.default.filtered.bed.gz from scafe.tool.cm.filter.
+                                                It will skip filtering if not file was provide (default=null).
+   --ctss_scope_slop_bp    <optional> [integer] the length of the boundary extension (in bp) for filter region provided in
+                                                option ctss_scope_bed_path. All regions in ctss_scope_bed_path will be 
+                                                extended both side by ctss_scope_slop_bp, for controlling the permissiveness
+                                                of the counting. A large value of ctss_scope_slop_bp (e.g. 400) will be 
+                                                equivalent to no filtering (default=0).
    --outputPrefix           <required> [string] prefix for the output files
    --outDir                 <required> [string] directory for the output files
-   --overwrite              (optional) [yes/no]  erase outDir/outputPrefix before running (default=no)
+   --overwrite              (optional) [yes/no] erase outDir/outputPrefix before running (default=no)
 
  Dependencies:
    bedtools
@@ -109,7 +121,11 @@ use Cwd 'abs_path';
 
 =head1 VERSION
 
-1.0
+v0.9.0-beta [March 20, 2021]
+	-Initial pre-release
+
+v1.0.0 [June 6, 2022]
+	-Implemented region filter, will only count the ctss within the region filter, used for counting tssCluster only instead of the whole CRE
 
 =cut
 #<\doc>
@@ -129,8 +145,8 @@ use Cwd 'abs_path';
 #<global>
 my $scriptDirPath = dirname(rel2abs($0));
 my $scriptAbsPath = abs_path($0);
-my ($curntTimeStamp) = &timeStamp();#->693
-my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->214
+my ($curntTimeStamp) = &timeStamp();#->831
+my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->325
 my $globalReadmeHsh_ref = {};
 our $tmplog_fh;
 #<\global>
@@ -144,7 +160,7 @@ our $tmplog_fh;
 #	section 0_startingTasks
 #
 #<section ID="startingTasks" num="0">
-my ($countRegion_bed_path, $ctss_bed_path, $cellBarcode_list_path, $outputPrefix, $outDir, $overwrite) = &readParameters();#->545
+my ($countRegion_bed_path, $ctss_bed_path, $cellBarcode_list_path, $ctss_scope_bed_path, $ctss_scope_slop_bp, $genome, $outputPrefix, $outDir, $overwrite) = &readParameters();#->655
 #<\section>
 #====================================================================================================================================================#
 
@@ -164,14 +180,13 @@ my @mkDirAry;
 my $result_dir = "$outDir/$paramTag/"; push @mkDirAry, $result_dir;
 system "rm -rf $result_dir" if ($overwrite eq 'yes');
 my $result_matrix_dir = "$result_dir/matrix/"; push @mkDirAry, $result_matrix_dir;
-my $result_bed_dir = "$result_dir/bed/"; push @mkDirAry, $result_bed_dir;
 my $result_log_dir = "$result_dir/log/"; push @mkDirAry, $result_log_dir;
 my $result_script_dir = "$result_dir/script/"; push @mkDirAry, $result_script_dir;
 foreach my $dir (@mkDirAry) {system ("mkdir -pm 777 $dir");}
 open $tmplog_fh, ">", "$result_dir/00_screen_log.$curntTimeStamp.log.txt";
-&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->232
-&printStartOrFinishMessage("startMessage");#->428
-my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
+&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->343
+&printStartOrFinishMessage("startMessage");#->539
+my ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();#->203
 #<\section>
 #====================================================================================================================================================#
 
@@ -179,10 +194,11 @@ my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_
 #	section 3_output
 #
 #<section ID="output" num="3">
-my ($countRegion_info_hsh_ref) = &readCountRegionInfo($countRegion_bed_path);#->502
-my ($cellBarcode_info_hsh_ref) = &readCellBarcodeList($cellBarcode_list_path);#->462
-my ($tmp_count_path) = &runBedToolsIntersect($countRegion_bed_path, $ctss_bed_path, $countRegion_info_hsh_ref, $cellBarcode_info_hsh_ref, $result_matrix_dir, $result_log_dir, $bedtools_bin);#->612
-&printMatrix($countRegion_info_hsh_ref, $cellBarcode_info_hsh_ref, $tmp_count_path, $result_log_dir, $result_matrix_dir);#->257
+my ($countRegion_info_hsh_ref) = &readCountRegionInfo($countRegion_bed_path);#->614
+my ($cellBarcode_info_hsh_ref) = &readCellBarcodeList($cellBarcode_list_path);#->573
+my ($chrom_size_path) = &checkChromSizePath($genome);#->303
+my ($tmp_count_path) = &runBedToolsIntersect($countRegion_bed_path, $ctss_bed_path, $countRegion_info_hsh_ref, $cellBarcode_info_hsh_ref, $result_matrix_dir, $ctss_scope_bed_path, $ctss_scope_slop_bp, $chrom_size_path, $result_log_dir, $bedtools_bin);#->731
+&printMatrix($countRegion_info_hsh_ref, $cellBarcode_info_hsh_ref, $tmp_count_path, $result_log_dir, $result_matrix_dir);#->368
 #<\section>
 #====================================================================================================================================================#
 
@@ -190,8 +206,8 @@ my ($tmp_count_path) = &runBedToolsIntersect($countRegion_bed_path, $ctss_bed_pa
 #	section 4_finishingTasks
 #
 #<section ID="finishingTasks" num="4">
-&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->313
-&printStartOrFinishMessage("finishMessage");#->428
+&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->424
+&printStartOrFinishMessage("finishMessage");#->539
 #<\section>
 #====================================================================================================================================================#
 
@@ -202,12 +218,9 @@ my ($tmp_count_path) = &runBedToolsIntersect($countRegion_bed_path, $ctss_bed_pa
 #====================================================================================================================================================#
 #List of subroutines by category
 #
-#	checkTools [n=1]:
-#		checkBedtoolsVersion
-#
-#	general [n=6]:
-#		checkBedtoolsVersion, currentTime, logCalledCMDAndScript
-#		printStartOrFinishMessage, readParameters, timeStamp
+#	general [n=5]:
+#		currentTime, logCalledCMDAndScript, printStartOrFinishMessage
+#		readParameters, timeStamp
 #
 #	log [n=1]:
 #		reportAndLogStatus
@@ -221,26 +234,29 @@ my ($tmp_count_path) = &runBedToolsIntersect($countRegion_bed_path, $ctss_bed_pa
 #	time [n=1]:
 #		timeStamp
 #
-#	unassigned [n=3]:
-#		printMatrix, readCellBarcodeList, readCountRegionInfo
+#	unassigned [n=5]:
+#		checkAllExecutable, checkChromSizePath, printMatrix
+#		readCellBarcodeList, readCountRegionInfo
 #
 #====================================================================================================================================================#
 
 sub checkAllExecutable {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|1254
+#	dependOnSub: reportAndLogStatus|709
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|129
+#	primaryAppearInSection: 2_defineOutDirPath|134
 #	secondaryAppearInSection: >none
 #	input: none
-#	output: $bedGraphToBigWig_bin, $bedtools_bin, $bigWigAverageOverBed_bin, $cut_sh_path, $paraclu_bin, $samtools_bin
-#	toCall: my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
-#	calledInLine: 144
+#	output: $bedGraphToBigWig_bin, $bedtools_bin, $bgzip_bin, $bigWigAverageOverBed_bin, $cut_sh_path, $paraclu_bin, $samtools_bin, $tabix_bin
+#	toCall: my ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
+#	calledInLine: 148
 #....................................................................................................................................................#
 	
 	my $dirPath = dirname(rel2abs($0));
 
+	my $tabix_bin = "$dirPath/../resources/bin/tabix/tabix";
+	my $bgzip_bin = "$dirPath/../resources/bin/bgzip/bgzip";
 	my $bedtools_bin = "$dirPath/../resources/bin/bedtools/bedtools";
 	my $samtools_bin = "$dirPath/../resources/bin/samtools/samtools";
 	my $paraclu_bin = "$dirPath/../resources/bin/paraclu/paraclu";
@@ -248,12 +264,30 @@ sub checkAllExecutable {
 	my $bedGraphToBigWig_bin = "$dirPath/../resources/bin/bedGraphToBigWig/bedGraphToBigWig";
 	my $bigWigAverageOverBed_bin = "$dirPath/../resources/bin/bigWigAverageOverBed/bigWigAverageOverBed";
 	
-	&reportAndLogStatus("Checking all SCAFE executables", 10, "\n");#->1254
+	&reportAndLogStatus("Checking all SCAFE executables", 10, "\n");#->709
 	
+	{
+		my $stdOut = `$tabix_bin  --version 2>&1`;
+		if ($stdOut =~ m/tabix \(htslib\) (\S+)/) {
+			&reportAndLogStatus("Checking: tabix version: $1", 0, "\n");#->709
+		} else {
+			die "tabix is not installed properly. Quitting.\n";
+		}
+	}
+
+	{
+		my $stdOut = `$bgzip_bin --version 2>&1`;
+		if ($stdOut =~ m/bgzip \(htslib\) (\S+)/) {
+			&reportAndLogStatus("Checking: bgzip version: $1", 0, "\n");#->709
+		} else {
+			die "bgzip is not installed properly. Quitting.\n";
+		}
+	}
+
 	{
 		my $stdOut = `$bedtools_bin --version 2>&1`;
 		if ($stdOut =~ m/bedtools v(\S+)/) {
-			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->709
 		} else {
 			die "bedtools is not installed properly. Quitting.\n";
 		}
@@ -262,7 +296,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$samtools_bin 2>&1`;
 		if ($stdOut =~ m/\s+(Version: \S+)\s+/) {
-			&reportAndLogStatus("Checking: samtools version: $1", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: samtools version: $1", 0, "\n");#->709
 		} else {
 			die "samtools is not installed properly. Quitting.\n";
 		}
@@ -271,7 +305,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$paraclu_bin 2>&1`;
 		if ($stdOut =~ m/paraclu: I need a minValue and a fileName/) {
-			&reportAndLogStatus("Checking: paraclu found.", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: paraclu found.", 0, "\n");#->709
 		} else {
 			die "paraclu is not installed properly. Quitting.\n";
 		}
@@ -280,7 +314,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$cut_sh_path 55C7128A 2>&1`;
 		if ($stdOut =~ m/awk:/) {
-			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->709
 		} else {
 			die "paraclu-cut is not installed properly. Quitting.\n";
 		}
@@ -289,7 +323,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bedGraphToBigWig_bin 2>&1`;
 		if ($stdOut =~ m/bedGraphToBigWig v (\S+)/) {
-			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->709
 		} else {
 			die "bedGraphToBigWig not installed properly. Quitting.\n";
 		}
@@ -298,25 +332,47 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bigWigAverageOverBed_bin 2>&1`;
 		if ($stdOut =~ m/bigWigAverageOverBed v(\S+)/) {
-			&reportAndLogStatus("Checking: bigWigAverageOverBed version: $1", 0, "\n");#->1254
+			&reportAndLogStatus("Checking: bigWigAverageOverBed version: $1", 0, "\n");#->709
 		} else {
 			die "bigWigAverageOverBed is not installed properly. Quitting.\n";
 		}
 	}
 
-	return ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin);
+	return ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin);
+}
+sub checkChromSizePath {
+#....................................................................................................................................................#
+#	subroutineCategory: unassigned
+#	dependOnSub: >none
+#	appearInSub: >none
+#	primaryAppearInSection: 3_output|153
+#	secondaryAppearInSection: >none
+#	input: $genome
+#	output: $chrom_size_path
+#	toCall: my ($chrom_size_path) = &checkChromSizePath($genome);
+#	calledInLine: 158
+#....................................................................................................................................................#
+	my ($genome) = @_;
+
+	#$chrom_size_path, $gene_info_path, $transcript_bed_path, $transcript_info_path,
+
+	my $dirPath = dirname(rel2abs($0));
+	my $chrom_size_path = "$dirPath/../resources/genome/$genome/tsv/chrom.sizes.tsv";
+	die "genome $genome does not have chrom_size_path. Please rerun prep_genome step\n" if not -s $chrom_size_path;
+
+	return ($chrom_size_path);
 }
 sub currentTime {
 #....................................................................................................................................................#
 #	subroutineCategory: general
 #	dependOnSub: >none
-#	appearInSub: printStartOrFinishMessage|428, reportAndLogStatus|590
+#	appearInSub: printStartOrFinishMessage|539, reportAndLogStatus|709
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 2_defineOutDirPath|113, 4_finishingTasks|143
+#	secondaryAppearInSection: 2_defineOutDirPath|134, 4_finishingTasks|165
 #	input: none
 #	output: $runTime
 #	toCall: my ($runTime) = &currentTime();
-#	calledInLine: 86, 444, 448, 453, 457, 606, 607
+#	calledInLine: 107, 555, 559, 564, 568, 725, 726
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
@@ -329,12 +385,12 @@ sub logCalledCMDAndScript {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|113
+#	primaryAppearInSection: 2_defineOutDirPath|134
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $result_script_dir, $scriptAbsPath
 #	output: 
 #	toCall: &logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);
-#	calledInLine: 125
+#	calledInLine: 146
 #....................................................................................................................................................#
 	my ($ARGVStr, $result_script_dir, $scriptAbsPath) = @_;
 
@@ -352,18 +408,18 @@ sub logCalledCMDAndScript {
 sub printMatrix {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|590
+#	dependOnSub: reportAndLogStatus|709
 #	appearInSub: >none
-#	primaryAppearInSection: 3_output|132
+#	primaryAppearInSection: 3_output|153
 #	secondaryAppearInSection: >none
 #	input: $cellBarcode_info_hsh_ref, $countRegion_info_hsh_ref, $result_log_dir, $result_matrix_dir, $tmp_count_path
 #	output: 
 #	toCall: &printMatrix($countRegion_info_hsh_ref, $cellBarcode_info_hsh_ref, $tmp_count_path, $result_log_dir, $result_matrix_dir);
-#	calledInLine: 138
+#	calledInLine: 160
 #....................................................................................................................................................#
 	my ($countRegion_info_hsh_ref, $cellBarcode_info_hsh_ref, $tmp_count_path, $result_log_dir, $result_matrix_dir) = @_;
 	
-	&reportAndLogStatus("printing matrix", 0, "\n");#->590
+	&reportAndLogStatus("printing matrix", 0, "\n");#->709
 	
 	open (CAGECLUSTERLOG, ">", "$result_log_dir/genes.log.tsv");
 	print CAGECLUSTERLOG join "", ((join "\t", ('countRegion_ID', 'countRegion_name', 'umi_count')), "\n");
@@ -410,12 +466,12 @@ sub printOutputFileListAndReadme {
 #	subroutineCategory: output
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 4_finishingTasks|143
+#	primaryAppearInSection: 4_finishingTasks|165
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $outDir, $paramTag
 #	output: 
 #	toCall: &printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);
-#	calledInLine: 146
+#	calledInLine: 168
 #....................................................................................................................................................#
 	my ($ARGVStr, $paramTag, $outDir) = @_;
 	
@@ -523,54 +579,54 @@ sub printOutputFileListAndReadme {
 sub printStartOrFinishMessage {
 #....................................................................................................................................................#
 #	subroutineCategory: general
-#	dependOnSub: currentTime|214
+#	dependOnSub: currentTime|325
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|113, 4_finishingTasks|143
+#	primaryAppearInSection: 2_defineOutDirPath|134, 4_finishingTasks|165
 #	secondaryAppearInSection: >none
 #	input: $StartOrFinishMessage
 #	output: none
 #	toCall: &printStartOrFinishMessage($StartOrFinishMessage);
-#	calledInLine: 126, 147
+#	calledInLine: 147, 169
 #....................................................................................................................................................#
 
 	my ($StartOrFinishMessage) = @_;
 	
 	if ($StartOrFinishMessage eq "startMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] starts running ...... \n";#->214
+		print "[".&currentTime()."] starts running ...... \n";#->325
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->214
+		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->325
 		print $tmplog_fh "=========================================================================\n\n";
 
 	} elsif ($StartOrFinishMessage eq "finishMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] finished running .......\n";#->214
+		print "[".&currentTime()."] finished running .......\n";#->325
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->214
+		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->325
 		print $tmplog_fh "=========================================================================\n\n";
 	}
 }
 sub readCellBarcodeList {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|590
+#	dependOnSub: reportAndLogStatus|709
 #	appearInSub: >none
-#	primaryAppearInSection: 3_output|132
+#	primaryAppearInSection: 3_output|153
 #	secondaryAppearInSection: >none
 #	input: $cellBarcode_list_path
 #	output: $cellBarcode_info_hsh_ref
 #	toCall: my ($cellBarcode_info_hsh_ref) = &readCellBarcodeList($cellBarcode_list_path);
-#	calledInLine: 136
+#	calledInLine: 157
 #....................................................................................................................................................#
 	my ($cellBarcode_list_path) = @_;
 
 	my $cellBarcode_info_hsh_ref = {};
 
-	&reportAndLogStatus("reading cell barcode info", 0, "\n");#->590
+	&reportAndLogStatus("reading cell barcode info", 0, "\n");#->709
 	
 	if ($cellBarcode_list_path =~ m/\.gz$/) {
 		open (CELLBARCODE, " gzip -dc $cellBarcode_list_path|");
@@ -581,6 +637,7 @@ sub readCellBarcodeList {
 	
 	while (<CELLBARCODE>) {
 		chomp;
+		next if $_ =~ m/^#/;
 		my ($cellBarcode) = split /\t/;
 		die "$cellBarcode is duplicated\n" if exists $cellBarcode_info_hsh_ref->{$cellBarcode};
 		$cellBarcode_info_hsh_ref->{$cellBarcode}{'cellBarcode_index'} = $cellBarcode_index;
@@ -590,27 +647,27 @@ sub readCellBarcodeList {
 	close CELLBARCODE;
 	
 	my $num_cellBarcode = keys %{$cellBarcode_info_hsh_ref};
-	&reportAndLogStatus("info of $num_cellBarcode cell barcode stored", 0, "\n");#->590
+	&reportAndLogStatus("info of $num_cellBarcode cell barcode stored", 0, "\n");#->709
 		
 	return ($cellBarcode_info_hsh_ref);
 }
 sub readCountRegionInfo {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|590
+#	dependOnSub: reportAndLogStatus|709
 #	appearInSub: >none
-#	primaryAppearInSection: 3_output|132
+#	primaryAppearInSection: 3_output|153
 #	secondaryAppearInSection: >none
 #	input: $countRegion_bed_path
 #	output: $countRegion_info_hsh_ref
 #	toCall: my ($countRegion_info_hsh_ref) = &readCountRegionInfo($countRegion_bed_path);
-#	calledInLine: 135
+#	calledInLine: 156
 #....................................................................................................................................................#
 	my ($countRegion_bed_path) = @_;
 	
 	my $countRegion_info_hsh_ref = {};
 
-	&reportAndLogStatus("reading count region info", 0, "\n");#->590
+	&reportAndLogStatus("reading count region info", 0, "\n");#->709
 	if ($countRegion_bed_path =~ m/\.gz$/) {
 		open (COUNTREGION, " gzip -dc $countRegion_bed_path |");
 	} else {
@@ -631,7 +688,7 @@ sub readCountRegionInfo {
 	close COUNTREGION;
 	
 	my $num_countRegion = keys %{$countRegion_info_hsh_ref};
-	&reportAndLogStatus("info of $num_countRegion countRegion stored", 0, "\n");#->590
+	&reportAndLogStatus("info of $num_countRegion countRegion stored", 0, "\n");#->709
 		
 	return ($countRegion_info_hsh_ref);
 }
@@ -640,23 +697,28 @@ sub readParameters {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startingTasks|97
+#	primaryAppearInSection: 0_startingTasks|118
 #	secondaryAppearInSection: >none
 #	input: none
-#	output: $cellBarcode_list_path, $countRegion_bed_path, $ctss_bed_path, $outDir, $outputPrefix, $overwrite
-#	toCall: my ($countRegion_bed_path, $ctss_bed_path, $cellBarcode_list_path, $outputPrefix, $outDir, $overwrite) = &readParameters();
-#	calledInLine: 100
+#	output: $cellBarcode_list_path, $countRegion_bed_path, $ctss_bed_path, $ctss_scope_bed_path, $ctss_scope_slop_bp, $genome, $outDir, $outputPrefix, $overwrite
+#	toCall: my ($countRegion_bed_path, $ctss_bed_path, $cellBarcode_list_path, $ctss_scope_bed_path, $ctss_scope_slop_bp, $genome, $outputPrefix, $outDir, $overwrite) = &readParameters();
+#	calledInLine: 121
 #....................................................................................................................................................#
 	
-	my ($countRegion_bed_path, $ctss_bed_path, $cellBarcode_list_path, $outputPrefix, $outDir, $overwrite);
+	my ($countRegion_bed_path, $ctss_bed_path, $cellBarcode_list_path, $ctss_scope_bed_path, $ctss_scope_slop_bp, $genome, $outputPrefix, $outDir, $overwrite);
 	$overwrite = 'no';
+	$ctss_scope_slop_bp = 0;
+	$ctss_scope_bed_path = undef;
 	
 	GetOptions 	(
 		"countRegion_bed_path=s"	=>	\$countRegion_bed_path,
 		"cellBarcode_list_path=s"	=>	\$cellBarcode_list_path,
+		"genome=s"						=>	\$genome,
 		"ctss_bed_path=s"				=>	\$ctss_bed_path,
 		"outputPrefix=s"				=>	\$outputPrefix,
-		"outDir:s"						=>	\$outDir,
+		"outDir=s"						=>	\$outDir,
+		"ctss_scope_bed_path:s"		=>	\$ctss_scope_bed_path,
+		"ctss_scope_slop_bp:s"		=>	\$ctss_scope_slop_bp,
 		"overwrite:s"					=>	\$overwrite,
 		'help'							=>	sub { HelpMessage(0) },
 	) or HelpMessage(1);
@@ -670,73 +732,93 @@ sub readParameters {
 		'ctss_bed_path' => $ctss_bed_path,
 	};
 	
+	$file_check_hsh_ref->{'ctss_scope_bed_path'} = $ctss_scope_bed_path if defined $ctss_scope_bed_path;
+	
 	foreach my $option_name (keys %{$file_check_hsh_ref}) {
 		my $file_path = $file_check_hsh_ref->{$option_name};
 		die "Quitting: File $option_name does not exists at $file_path" if not -s $file_path;
 	}
 	
+	die "Quitting: ctss_scope_slop_bp must be integer\n" if ($ctss_scope_slop_bp !~ m/^\d+$/);
+	
 	chop $outDir if ($outDir =~ m/\/$/); #---remove the last slash
 	system "mkdir -p -m 755 $outDir/";
 	
-	return($countRegion_bed_path, $ctss_bed_path, $cellBarcode_list_path, $outputPrefix, $outDir, $overwrite);
+	return($countRegion_bed_path, $ctss_bed_path, $cellBarcode_list_path, $ctss_scope_bed_path, $ctss_scope_slop_bp, $genome, $outputPrefix, $outDir, $overwrite);
 }
 sub reportAndLogStatus {
 #....................................................................................................................................................#
 #	subroutineCategory: log
-#	dependOnSub: currentTime|214
-#	appearInSub: checkBedtoolsVersion|183, printMatrix|257, readCellBarcodeList|462, readCountRegionInfo|502, runBedToolsIntersect|612
+#	dependOnSub: currentTime|325
+#	appearInSub: checkAllExecutable|203, printMatrix|368, readCellBarcodeList|573, readCountRegionInfo|614, runBedToolsIntersect|731
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 2_defineOutDirPath|113, 3_output|132
+#	secondaryAppearInSection: 2_defineOutDirPath|134, 3_output|153
 #	input: $lineEnd, $message, $numTrailingSpace
 #	output: 
 #	toCall: &reportAndLogStatus($message, $numTrailingSpace, $lineEnd);
-#	calledInLine: 201, 205, 270, 477, 497, 517, 540, 632, 668, 685
+#	calledInLine: 226, 231, 240, 249, 258, 267, 276, 285, 294, 381, 588, 609, 629, 650, 753, 756, 760, 804, 822, 823
 #....................................................................................................................................................#
 	my ($message, $numTrailingSpace, $lineEnd) = @_;
 
 	my $trailingSpaces = '';
 	$trailingSpaces .= " " for (1..$numTrailingSpace);
 	
-	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->214
-	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->214
+	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->325
+	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->325
 	
 	return ();
 }
 sub runBedToolsIntersect {
 #....................................................................................................................................................#
 #	subroutineCategory: range
-#	dependOnSub: reportAndLogStatus|590
+#	dependOnSub: reportAndLogStatus|709
 #	appearInSub: >none
-#	primaryAppearInSection: 3_output|132
+#	primaryAppearInSection: 3_output|153
 #	secondaryAppearInSection: >none
-#	input: $bedtools_bin, $cellBarcode_info_hsh_ref, $countRegion_bed_path, $countRegion_info_hsh_ref, $ctss_bed_path, $result_log_dir, $result_matrix_dir
+#	input: $bedtools_bin, $cellBarcode_info_hsh_ref, $chrom_size_path, $countRegion_bed_path, $countRegion_info_hsh_ref, $ctss_bed_path, $ctss_scope_bed_path, $ctss_scope_slop_bp, $result_log_dir, $result_matrix_dir
 #	output: $tmp_count_path
-#	toCall: my ($tmp_count_path) = &runBedToolsIntersect($countRegion_bed_path, $ctss_bed_path, $countRegion_info_hsh_ref, $cellBarcode_info_hsh_ref, $result_matrix_dir, $result_log_dir, $bedtools_bin);
-#	calledInLine: 137
+#	toCall: my ($tmp_count_path) = &runBedToolsIntersect($countRegion_bed_path, $ctss_bed_path, $countRegion_info_hsh_ref, $cellBarcode_info_hsh_ref, $result_matrix_dir, $ctss_scope_bed_path, $ctss_scope_slop_bp, $chrom_size_path, $result_log_dir, $bedtools_bin);
+#	calledInLine: 159
 #....................................................................................................................................................#
 
-	my ($countRegion_bed_path, $ctss_bed_path, $countRegion_info_hsh_ref, $cellBarcode_info_hsh_ref, $result_matrix_dir, $result_log_dir, $bedtools_bin) = @_;
+	my ($countRegion_bed_path, $ctss_bed_path, $countRegion_info_hsh_ref, $cellBarcode_info_hsh_ref, $result_matrix_dir, $ctss_scope_bed_path, $ctss_scope_slop_bp, $chrom_size_path, $result_log_dir, $bedtools_bin) = @_;
 
 	my $tmp_count_path = "$result_log_dir/tmp.sparse.count.txt";
 	open (COUNT, "| sort -k2,2n -k1,1n >$tmp_count_path");
 
 	my $tmp_count_hsh_ref = {};
 	my $last_countRegion_ID;
-
-	&reportAndLogStatus("Start running bedtools intersect. Be patient.", 10, "\n");#->590
-		
-	if ($countRegion_bed_path =~ m/\.gz$/) {
-		#---[2/18/15 19:54] sometimes will crash on ac2 if read gz directly
-		open BEDTOOLS, "gzip -dc $countRegion_bed_path | cut -f 1-6 | $bedtools_bin intersect -sorted -wo -a stdin -b $ctss_bed_path |";
+	
+	if (defined $ctss_scope_bed_path) {
+		if ($ctss_scope_slop_bp > 0) {
+			&reportAndLogStatus("Start running bedtools intersect with ctss scope and slop distance $ctss_scope_slop_bp. Be patient.", 10, "\n");#->709
+			open BEDTOOLS, "$bedtools_bin slop -b $ctss_scope_slop_bp -g $chrom_size_path -i $ctss_scope_bed_path | cut -f 1-6 | $bedtools_bin intersect -sorted -s -u -a $ctss_bed_path -b stdin | $bedtools_bin intersect -sorted -wo -a $countRegion_bed_path -b stdin |";
+		} else {
+			&reportAndLogStatus("Start running bedtools intersect with ctss scope. Be patient.", 10, "\n");#->709
+			open BEDTOOLS, "$bedtools_bin intersect -sorted -s -u -a $ctss_bed_path -b $ctss_scope_bed_path | $bedtools_bin intersect -sorted -wo -a $countRegion_bed_path -b stdin |";
+		}
 	} else {
-		open BEDTOOLS, "cut -f 1-6 $countRegion_bed_path | $bedtools_bin intersect -sorted -wo -a stdin -b $ctss_bed_path |";
+		&reportAndLogStatus("Start running bedtools intersect without ctss scope. Be patient.", 10, "\n");#->709
+		open BEDTOOLS, "$bedtools_bin intersect -sorted -wo -a $countRegion_bed_path -b $ctss_bed_path |";
 	}
+
 	my $num_proc = 0;
+	my $total_count = 0;
 	while (<BEDTOOLS>) {
 		chomp;
 		#chr1	19485502	19485554	p1@CAPZB	639956	-	chr1	19485525	19485526	TGCGCAGAGGCACATG-1	2	-	1
 
-		my ($chrom, $countRegion_start, $countRegion_end, $curnt_countRegion_ID, undef, $countRegion_strand, undef, undef, undef, $cellBarcode, $umi_num, $CTSS_strand) = split /\t/;
+		#my ($chrom, $countRegion_start, $countRegion_end, $curnt_countRegion_ID, undef, $countRegion_strand, undef, undef, undef, $cellBarcode, $umi_num, $CTSS_strand) = split /\t/;
+		my @splt = split /\t/;
+
+		my $chrom = $splt[0];
+		my $countRegion_start = $splt[1];
+		my $countRegion_end = $splt[2];
+		my $curnt_countRegion_ID = $splt[3];
+		my $countRegion_strand = $splt[5];
+		my $CTSS_strand = $splt[-2];
+		my $umi_num = $splt[-3];
+		my $cellBarcode = $splt[-4];
 		
 		if (($countRegion_strand eq '.' or $countRegion_strand eq $CTSS_strand) and 
 			exists $cellBarcode_info_hsh_ref->{$cellBarcode} and 
@@ -753,13 +835,14 @@ sub runBedToolsIntersect {
 				foreach my $cellBarcode (keys %{$tmp_count_hsh_ref->{$last_countRegion_ID}}) {
 					my $umi_count = $tmp_count_hsh_ref->{$last_countRegion_ID}{$cellBarcode};
 					my $cellBarcode_index = $cellBarcode_info_hsh_ref->{$cellBarcode}{'cellBarcode_index'};
+					$total_count += $umi_count;
 					print COUNT join "", (join " ", ($countRegion_index, $cellBarcode_index, $umi_count)), "\n";
 				}
 				delete $tmp_count_hsh_ref->{$last_countRegion_ID};
 				$last_countRegion_ID = $curnt_countRegion_ID;
 				$num_proc++;
 				if ($num_proc%1000 == 0) {
-					&reportAndLogStatus("$num_proc countRegion counted", 10, "\n");#->590
+					&reportAndLogStatus("$num_proc countRegion counted", 10, "\n");#->709
 				}
 			}
 			
@@ -769,6 +852,7 @@ sub runBedToolsIntersect {
 					foreach my $cellBarcode (sort keys %{$tmp_count_hsh_ref->{$countRegion_ID}}) {
 						my $cellBarcode_index = $cellBarcode_info_hsh_ref->{$cellBarcode}{'cellBarcode_index'};
 						my $umi_count = $tmp_count_hsh_ref->{$countRegion_ID}{$cellBarcode};
+						$total_count += $umi_count;
 						print COUNT join "", (join " ", ($countRegion_index, $cellBarcode_index, $umi_count)), "\n";
 					}
 				}
@@ -776,7 +860,8 @@ sub runBedToolsIntersect {
 		}
 	}
 
-	&reportAndLogStatus("$num_proc countRegion counted", 10, "\n");#->590
+	&reportAndLogStatus("$num_proc countRegion counted", 10, "\n");#->709
+	&reportAndLogStatus("total_count within countRegion = $total_count", 10, "\n");#->709
 
 	close COUNT;
 	close (BEDTOOLS);
@@ -793,7 +878,7 @@ sub timeStamp {
 #	input: none
 #	output: $curntTimeStamp
 #	toCall: my ($curntTimeStamp) = &timeStamp();
-#	calledInLine: 85
+#	calledInLine: 106
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);

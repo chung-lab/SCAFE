@@ -105,6 +105,8 @@ use Cwd 'abs_path';
    samtools
    paraclu
    paraclu-cut.sh
+   tabix
+   bgzip
 
  For demo, cd to SCAFE dir and run,
    scafe.workflow.bk.solo \
@@ -116,7 +118,11 @@ use Cwd 'abs_path';
 
 =head1 VERSION
 
-1.0
+v0.9.0-beta [March 20, 2021]
+	-Initial pre-release
+
+v1.0.0 [June 6, 2022]
+	-No update
 
 =cut
 #<\doc>

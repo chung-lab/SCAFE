@@ -90,7 +90,13 @@ use Cwd 'abs_path';
 
 =head1 VERSION
 
-1.0
+v0.9.0-beta [March 20, 2021]
+	-Initial pre-release
+
+v1.0.0 [June 6, 2022]
+	-will check optimize_tangent.R
+	-will check tabix and bgzip
+	-will not check cicero related function
 
 =cut
 #<\doc>
@@ -120,15 +126,15 @@ use Cwd 'abs_path';
 #
 #<section ID="startTasks" num="0">
 my $check_hsh_ref = {};
-&readParameters();#->400
-my ($scafe_dir, $script_dir, $check_dir) = &prepDir();#->374
-&checkPerlScript($script_dir, $check_hsh_ref);#->147
-&checkDownload($check_dir, $check_hsh_ref);#->114
-&checkThirdParty($scafe_dir, $check_hsh_ref);#->282
-&checkRVersion($check_hsh_ref);#->243
-&checkRPackages($check_hsh_ref);#->188
-&checkRScript($scafe_dir, $check_hsh_ref);#->215
-&summary($check_hsh_ref);#->420
+&readParameters();#->433
+my ($scafe_dir, $script_dir, $check_dir) = &prepDir();#->407
+&checkPerlScript($script_dir, $check_hsh_ref);#->156
+&checkDownload($check_dir, $check_hsh_ref);#->123
+&checkThirdParty($scafe_dir, $check_hsh_ref);#->291
+&checkRVersion($check_hsh_ref);#->252
+&checkRPackages($check_hsh_ref);#->197
+&checkRScript($scafe_dir, $check_hsh_ref);#->224
+&summary($check_hsh_ref);#->453
 #<\section>
 #====================================================================================================================================================#
 
@@ -161,12 +167,12 @@ sub checkDownload {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|73
+#	primaryAppearInSection: 0_startTasks|82
 #	secondaryAppearInSection: >none
 #	input: $check_dir, $check_hsh_ref
 #	output: 
 #	toCall: &checkDownload($check_dir, $check_hsh_ref);
-#	calledInLine: 80
+#	calledInLine: 89
 #....................................................................................................................................................#
 	my ($check_dir, $check_hsh_ref) = @_;
 	
@@ -174,7 +180,7 @@ sub checkDownload {
 	my $check_name = "wget tar data";
 	my $type = "dropbox access";
 	printf ("%-20s %-35s %-10s\r", $type, $check_name, $status);
-	my $check_data_url = "https://www.dropbox.com/s/jc7ayx1d0wgc8wi/demo.tar.gz";
+	my $check_data_url = "https://www.dropbox.com/s/yx1306zuvtc7li3/demo.tar.gz";
 	my $tar_gz_path = "$check_dir/demo.tar.gz";
 	system ("rm -f $tar_gz_path");
 	system ("rm -rf $check_dir/demo/");
@@ -194,12 +200,12 @@ sub checkPerlScript {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|73
+#	primaryAppearInSection: 0_startTasks|82
 #	secondaryAppearInSection: >none
 #	input: $check_hsh_ref, $script_dir
 #	output: 
 #	toCall: &checkPerlScript($script_dir, $check_hsh_ref);
-#	calledInLine: 79
+#	calledInLine: 88
 #....................................................................................................................................................#
 	my ($script_dir, $check_hsh_ref) = @_;
 	print "===============================\n";
@@ -235,17 +241,17 @@ sub checkRPackages {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|73
+#	primaryAppearInSection: 0_startTasks|82
 #	secondaryAppearInSection: >none
 #	input: $check_hsh_ref
 #	output: 
 #	toCall: &checkRPackages($check_hsh_ref);
-#	calledInLine: 83
+#	calledInLine: 92
 #....................................................................................................................................................#
 	my ($check_hsh_ref) = @_;
 		
 	my $type = "R packages";
-	foreach my $package (qw/ROCR PRROC caret e1071 ggplot2 scales reshape2 docopt data.table Matrix R.utils monocle3 cicero/) {
+	foreach my $package (qw/ROCR PRROC caret e1071 ggplot2 scales reshape2 R.utils/) {
 		my $status = "checking";
 		printf ("%-20s %-35s %-10s\r", $type, $package, $status);
 		my $stdOut = `Rscript -e "packageVersion('$package')" 2>&1`;
@@ -262,33 +268,23 @@ sub checkRScript {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|73
+#	primaryAppearInSection: 0_startTasks|82
 #	secondaryAppearInSection: >none
 #	input: $check_hsh_ref, $scafe_dir
 #	output: 
 #	toCall: &checkRScript($scafe_dir, $check_hsh_ref);
-#	calledInLine: 84
+#	calledInLine: 93
 #....................................................................................................................................................#
 	my ($scafe_dir, $check_hsh_ref) = @_;
 	
 	my $type = "R scripts";
 	my $R_dir = "$scafe_dir/resources/R/";
-	foreach my $R_script (qw/benchmark_roc.R build_glm.R predict_prob.R/) {
+	foreach my $R_script (qw/benchmark_roc.R build_glm.R predict_prob.R optimize_tangent.R/) {
 		my $status = "checking";
 		printf ("%-20s %-35s %-10s\r", $type, $R_script, $status);
 		my $stdOut = `Rscript $R_dir/$R_script 2>&1`;
 		$status = "failed";
 		$status = 'successful' if ($stdOut =~ m/Error: $R_script has no input/);
-		printf ("%-20s %-35s %-10s\n", $type, $R_script, $status);
-		$check_hsh_ref->{$status}{$type}{$R_script}++;
-	}
-
-	foreach my $R_script (qw/run_cicero_link.R get_cicero_cds.R/) {
-		my $status = "checking";
-		printf ("%-20s %-35s %-10s\r", $type, $R_script, $status);
-		my $stdOut = `Rscript $R_dir/$R_script --help 2>&1`;
-		$status = "failed";
-		$status = 'successful' if ($stdOut =~ m/Usage: $R_script \[options\]/);
 		printf ("%-20s %-35s %-10s\n", $type, $R_script, $status);
 		$check_hsh_ref->{$status}{$type}{$R_script}++;
 	}
@@ -300,12 +296,12 @@ sub checkRVersion {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|73
+#	primaryAppearInSection: 0_startTasks|82
 #	secondaryAppearInSection: >none
 #	input: $check_hsh_ref
 #	output: 
 #	toCall: &checkRVersion($check_hsh_ref);
-#	calledInLine: 82
+#	calledInLine: 91
 #....................................................................................................................................................#
 	my ($check_hsh_ref) = @_;
 	
@@ -339,12 +335,12 @@ sub checkThirdParty {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|73
+#	primaryAppearInSection: 0_startTasks|82
 #	secondaryAppearInSection: >none
 #	input: $check_hsh_ref, $scafe_dir
 #	output: 
 #	toCall: &checkThirdParty($scafe_dir, $check_hsh_ref);
-#	calledInLine: 81
+#	calledInLine: 90
 #....................................................................................................................................................#
 	
 	my ($scafe_dir, $check_hsh_ref) = @_;
@@ -355,9 +351,33 @@ sub checkThirdParty {
 	my $cut_sh_path = "$scafe_dir/resources/bin/paraclu/paraclu-cut.sh";
 	my $bedGraphToBigWig_bin = "$scafe_dir/resources/bin/bedGraphToBigWig/bedGraphToBigWig";
 	my $bigWigAverageOverBed_bin = "$scafe_dir/resources/bin/bigWigAverageOverBed/bigWigAverageOverBed";
-
+	my $tabix_bin = "$scafe_dir/resources/bin/tabix/tabix";
+	my $bgzip_bin = "$scafe_dir/resources/bin/bgzip/bgzip";
+	
 	my $type = "3rd-party apps";
 	
+	{
+		my $status = "checking";
+		my $check_name = "bgzip";
+		printf ("%-20s %-35s %-10s\r", $type, $check_name, $status);
+		my $stdOut = `$bgzip_bin --version 2>&1`;
+		$status = "failed";
+		$status = 'successful' if ($stdOut =~ m/bgzip \(htslib\) (\S+)/);
+		printf ("%-20s %-35s %-10s\n", $type, $check_name, $status);
+		$check_hsh_ref->{$status}{$type}{$check_name}++;
+	}
+
+	{
+		my $status = "checking";
+		my $check_name = "tabix";
+		printf ("%-20s %-35s %-10s\r", $type, $check_name, $status);
+		my $stdOut = `$tabix_bin --version 2>&1`;
+		$status = "failed";
+		$status = 'successful' if ($stdOut =~ m/tabix \(htslib\) (\S+)/);
+		printf ("%-20s %-35s %-10s\n", $type, $check_name, $status);
+		$check_hsh_ref->{$status}{$type}{$check_name}++;
+	}
+
 	{
 		my $status = "checking";
 		my $check_name = "bedtools";
@@ -431,12 +451,12 @@ sub prepDir {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|73
+#	primaryAppearInSection: 0_startTasks|82
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: $check_dir, $scafe_dir, $script_dir
 #	toCall: my ($scafe_dir, $script_dir, $check_dir) = &prepDir();
-#	calledInLine: 78
+#	calledInLine: 87
 #....................................................................................................................................................#
 
 	my $scriptAbsPath = abs_path($0);
@@ -457,12 +477,12 @@ sub readParameters {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|73
+#	primaryAppearInSection: 0_startTasks|82
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: 
 #	toCall: &readParameters();
-#	calledInLine: 77
+#	calledInLine: 86
 #....................................................................................................................................................#
 	
 	GetOptions 	(
@@ -477,12 +497,12 @@ sub summary {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|73
+#	primaryAppearInSection: 0_startTasks|82
 #	secondaryAppearInSection: >none
 #	input: $check_hsh_ref
 #	output: 
 #	toCall: &summary($check_hsh_ref);
-#	calledInLine: 85
+#	calledInLine: 94
 #....................................................................................................................................................#
 	my ($check_hsh_ref) = @_;
 

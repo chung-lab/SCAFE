@@ -1,4 +1,4 @@
 *.DS_Store
 /download/*
-/docker/pull_test/*
-/docker/*/Dockerfile
+/docker/*/pull_test/*
+/docker/*/*/Dockerfile

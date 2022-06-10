@@ -96,7 +96,11 @@ use Cwd 'abs_path';
 
 =head1 VERSION
 
-1.0
+v0.9.0-beta [March 20, 2021]
+	-Initial pre-release
+
+v1.0.0 [June 6, 2022]
+	-No major update
 
 =cut
 #<\doc>
@@ -126,10 +130,10 @@ use Cwd 'abs_path';
 #
 #<section ID="startTasks" num="0">
 my $genome_url_hsh_ref = {
-	'hg19.gencode_v32lift37' => "https://www.dropbox.com/s/zxfbfsmfcekerrf/hg19.gencode_v32lift37.tar.gz",
-	'hg38.gencode_v32' => "https://www.dropbox.com/s/79zqq95toaxnafh/hg38.gencode_v32.tar.gz",
-	'mm10.gencode_vM25' => "https://www.dropbox.com/s/r7mmc3z2uzqtt7d/mm10.gencode_vM25.tar.gz",
-	'TAIR10.AtRTDv2' => "https://www.dropbox.com/s/nwofsc08i7a2i9b/TAIR10.AtRTDv2.tar.gz",
+	'hg19.gencode_v32lift37' => "https://www.dropbox.com/s/ol23wpn695p06wj/hg19.gencode_v32lift37.tar.gz",
+	'hg38.gencode_v32' => "https://www.dropbox.com/s/q9h4dcz3jhd43wy/hg38.gencode_v32.tar.gz",
+	'mm10.gencode_vM25' => "https://www.dropbox.com/s/a2397vqfm1igpml/mm10.gencode_vM25.tar.gz",
+	'TAIR10.AtRTDv2' => "https://www.dropbox.com/s/kekn3p6e2n5lv88/TAIR10.AtRTDv2.tar.gz",
 };
 my ($genome) = &readParameters();#->171
 my ($scafe_dir, $script_dir, $genome_dir) = &prepDir();#->145

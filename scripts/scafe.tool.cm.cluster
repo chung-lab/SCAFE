@@ -122,7 +122,11 @@ use Cwd 'abs_path';
 
 =head1 VERSION
 
-1.0
+v0.9.0-beta [March 20, 2021]
+	-Initial pre-release
+
+v1.0.0 [June 6, 2022]
+	-parallelized part of the processes
 
 =cut#
 #<\doc>
@@ -142,8 +146,8 @@ use Cwd 'abs_path';
 #<global>
 my $scriptDirPath = dirname(rel2abs($0));
 my $scriptAbsPath = abs_path($0);
-my ($curntTimeStamp) = &timeStamp();#->1061
-my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->276
+my ($curntTimeStamp) = &timeStamp();#->1090
+my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->301
 my $globalReadmeHsh_ref = {};
 our $tmplog_fh;
 #<\global>
@@ -157,7 +161,7 @@ our $tmplog_fh;
 #	section 0_startingTasks
 #
 #<section ID="startingTasks" num="0">
-my ($cluster_ctss_bed_path, $count_ctss_bed_path_list, $count_scope_bed_path, $min_cluster_cpm, $min_cluster_count, $min_pos_count, $min_summit_count, $merge_dist, $min_num_sample_expr_cluster, $min_num_sample_expr_summit, $outputPrefix, $outDir, $overwrite) = &readParameters();#->872
+my ($cluster_ctss_bed_path, $count_ctss_bed_path_list, $count_scope_bed_path, $min_cluster_cpm, $min_cluster_count, $min_pos_count, $min_summit_count, $merge_dist, $min_num_sample_expr_cluster, $min_num_sample_expr_summit, $outputPrefix, $outDir, $overwrite) = &readParameters();#->901
 #<\section>
 #====================================================================================================================================================#
 
@@ -179,8 +183,8 @@ my $resultScriptDir = "$result_dir/script/"; push @mkDirAry, $resultScriptDir;
 foreach my $dir (@mkDirAry) {system ("mkdir -pm 755 $dir");}
 
 open $tmplog_fh, ">", "$result_dir/00_screen_log.$curntTimeStamp.log.txt";
-&printStartOrFinishMessage("startMessage");#->838
-&logCalledCMDAndScript($ARGVStr, $resultScriptDir, $scriptAbsPath);#->445
+&printStartOrFinishMessage("startMessage");#->867
+&logCalledCMDAndScript($ARGVStr, $resultScriptDir, $scriptAbsPath);#->472
 #<\section>
 #====================================================================================================================================================#
 
@@ -188,14 +192,14 @@ open $tmplog_fh, ">", "$result_dir/00_screen_log.$curntTimeStamp.log.txt";
 #	section 2_ReadInfoAndRun
 #
 #<section ID="ReadInfoAndRun" num="2">
-my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();#->196
-my ($count_ctss_bed_hsh_ref) = &getCountCtssPath($count_ctss_bed_path_list, $count_scope_bed_path);#->294
-my ($paraclu_input_path, $min_cluster_count_by_cpm) = &parseParacluInput($cluster_ctss_bed_path, $min_pos_count, $min_cluster_cpm, $resultParacluDir);#->557
-my ($paraclu_bed_path) = &runParaclu($paraclu_input_path, $paraclu_bin, $cut_sh_path, $resultParacluDir, $resultPreMergeBedDir, $min_cluster_count, $min_cluster_count_by_cpm, $paramTag, $force_rerun);#->955
-my ($paraclu_cluster_info_hsh_ref, $summit_bed_path) = &getTssClusterSummit($resultPreMergeBedDir, $paraclu_bed_path, $cluster_ctss_bed_path, $bedtools_bin, $paramTag);#->398
-my ($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref) = &mergeParacluClusters($bedtools_bin, $summit_bed_path, $merge_dist, $cluster_ctss_bed_path, $resultBedDir, $resultLogDir, $paramTag, $paraclu_cluster_info_hsh_ref, $min_summit_count);#->470
-&getNumSampleExpressed($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref, $count_ctss_bed_hsh_ref, $bedtools_bin);#->339
-&printFinalBedAndLog($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref, $resultBedDir, $resultLogDir, $paramTag, $min_num_sample_expr_cluster, $min_num_sample_expr_summit);#->612
+my ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();#->201
+my ($count_ctss_bed_hsh_ref) = &getCountCtssPath($count_ctss_bed_path_list, $count_scope_bed_path);#->319
+my ($paraclu_input_path, $min_cluster_count_by_cpm) = &parseParacluInput($cluster_ctss_bed_path, $min_pos_count, $min_cluster_cpm, $resultParacluDir);#->584
+my ($paraclu_bed_path) = &runParaclu($paraclu_input_path, $paraclu_bin, $cut_sh_path, $resultParacluDir, $resultPreMergeBedDir, $min_cluster_count, $min_cluster_count_by_cpm, $paramTag, $force_rerun);#->984
+my ($paraclu_cluster_info_hsh_ref, $summit_bed_path) = &getTssClusterSummit($resultPreMergeBedDir, $paraclu_bed_path, $cluster_ctss_bed_path, $bedtools_bin, $paramTag);#->423
+my ($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref) = &mergeParacluClusters($bedtools_bin, $summit_bed_path, $merge_dist, $cluster_ctss_bed_path, $resultBedDir, $resultLogDir, $paramTag, $paraclu_cluster_info_hsh_ref, $min_summit_count);#->497
+&getNumSampleExpressed($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref, $count_ctss_bed_hsh_ref, $bedtools_bin);#->364
+&printFinalBedAndLog($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref, $resultBedDir, $resultLogDir, $paramTag, $min_num_sample_expr_cluster, $min_num_sample_expr_summit);#->641
 #<\section>
 #====================================================================================================================================================#
 
@@ -203,8 +207,8 @@ my ($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref) = &mergeParacluClusters(
 #	section 3_finishingTasks
 #
 #<section ID="finishingTasks" num="3">
-&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->723
-&printStartOrFinishMessage("finishMessage");#->838
+&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->752
+&printStartOrFinishMessage("finishMessage");#->867
 #<\section>
 #====================================================================================================================================================#
 
@@ -238,18 +242,20 @@ my ($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref) = &mergeParacluClusters(
 sub checkAllExecutable {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|933
+#	dependOnSub: reportAndLogStatus|962
 #	appearInSub: >none
-#	primaryAppearInSection: 2_ReadInfoAndRun|145
+#	primaryAppearInSection: 2_ReadInfoAndRun|150
 #	secondaryAppearInSection: >none
 #	input: none
-#	output: $bedGraphToBigWig_bin, $bedtools_bin, $bigWigAverageOverBed_bin, $cut_sh_path, $paraclu_bin, $samtools_bin
-#	toCall: my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
-#	calledInLine: 148
+#	output: $bedGraphToBigWig_bin, $bedtools_bin, $bgzip_bin, $bigWigAverageOverBed_bin, $cut_sh_path, $paraclu_bin, $samtools_bin, $tabix_bin
+#	toCall: my ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
+#	calledInLine: 153
 #....................................................................................................................................................#
 	
 	my $dirPath = dirname(rel2abs($0));
 
+	my $tabix_bin = "$dirPath/../resources/bin/tabix/tabix";
+	my $bgzip_bin = "$dirPath/../resources/bin/bgzip/bgzip";
 	my $bedtools_bin = "$dirPath/../resources/bin/bedtools/bedtools";
 	my $samtools_bin = "$dirPath/../resources/bin/samtools/samtools";
 	my $paraclu_bin = "$dirPath/../resources/bin/paraclu/paraclu";
@@ -257,12 +263,30 @@ sub checkAllExecutable {
 	my $bedGraphToBigWig_bin = "$dirPath/../resources/bin/bedGraphToBigWig/bedGraphToBigWig";
 	my $bigWigAverageOverBed_bin = "$dirPath/../resources/bin/bigWigAverageOverBed/bigWigAverageOverBed";
 	
-	&reportAndLogStatus("Checking all SCAFE executables", 10, "\n");#->933
+	&reportAndLogStatus("Checking all SCAFE executables", 10, "\n");#->962
 	
+	{
+		my $stdOut = `$tabix_bin  --version 2>&1`;
+		if ($stdOut =~ m/tabix \(htslib\) (\S+)/) {
+			&reportAndLogStatus("Checking: tabix version: $1", 0, "\n");#->962
+		} else {
+			die "tabix is not installed properly. Quitting.\n";
+		}
+	}
+
+	{
+		my $stdOut = `$bgzip_bin --version 2>&1`;
+		if ($stdOut =~ m/bgzip \(htslib\) (\S+)/) {
+			&reportAndLogStatus("Checking: bgzip version: $1", 0, "\n");#->962
+		} else {
+			die "bgzip is not installed properly. Quitting.\n";
+		}
+	}
+
 	{
 		my $stdOut = `$bedtools_bin --version 2>&1`;
 		if ($stdOut =~ m/bedtools v(\S+)/) {
-			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->933
+			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->962
 		} else {
 			die "bedtools is not installed properly. Quitting.\n";
 		}
@@ -271,7 +295,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$samtools_bin 2>&1`;
 		if ($stdOut =~ m/\s+(Version: \S+)\s+/) {
-			&reportAndLogStatus("Checking: samtools version: $1", 0, "\n");#->933
+			&reportAndLogStatus("Checking: samtools version: $1", 0, "\n");#->962
 		} else {
 			die "samtools is not installed properly. Quitting.\n";
 		}
@@ -280,7 +304,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$paraclu_bin 2>&1`;
 		if ($stdOut =~ m/paraclu: I need a minValue and a fileName/) {
-			&reportAndLogStatus("Checking: paraclu found.", 0, "\n");#->933
+			&reportAndLogStatus("Checking: paraclu found.", 0, "\n");#->962
 		} else {
 			die "paraclu is not installed properly. Quitting.\n";
 		}
@@ -289,7 +313,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$cut_sh_path 55C7128A 2>&1`;
 		if ($stdOut =~ m/awk:/) {
-			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->933
+			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->962
 		} else {
 			die "paraclu-cut is not installed properly. Quitting.\n";
 		}
@@ -298,7 +322,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bedGraphToBigWig_bin 2>&1`;
 		if ($stdOut =~ m/bedGraphToBigWig v (\S+)/) {
-			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->933
+			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->962
 		} else {
 			die "bedGraphToBigWig not installed properly. Quitting.\n";
 		}
@@ -307,25 +331,25 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bigWigAverageOverBed_bin 2>&1`;
 		if ($stdOut =~ m/bigWigAverageOverBed v(\S+)/) {
-			&reportAndLogStatus("Checking: bigWigAverageOverBed version: $1", 0, "\n");#->933
+			&reportAndLogStatus("Checking: bigWigAverageOverBed version: $1", 0, "\n");#->962
 		} else {
 			die "bigWigAverageOverBed is not installed properly. Quitting.\n";
 		}
 	}
 
-	return ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin);
+	return ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin);
 }
 sub currentTime {
 #....................................................................................................................................................#
 #	subroutineCategory: general
 #	dependOnSub: >none
-#	appearInSub: printStartOrFinishMessage|838, reportAndLogStatus|933
+#	appearInSub: printStartOrFinishMessage|867, reportAndLogStatus|962
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 1_defineHardCodedParam|122, 3_finishingTasks|160
+#	secondaryAppearInSection: 1_defineHardCodedParam|127, 3_finishingTasks|165
 #	input: none
 #	output: $runTime
 #	toCall: my ($runTime) = &currentTime();
-#	calledInLine: 103, 854, 858, 863, 867, 949, 950
+#	calledInLine: 108, 883, 887, 892, 896, 978, 979
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
@@ -336,25 +360,25 @@ sub currentTime {
 sub getCountCtssPath {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|933
+#	dependOnSub: reportAndLogStatus|962
 #	appearInSub: >none
-#	primaryAppearInSection: 2_ReadInfoAndRun|145
+#	primaryAppearInSection: 2_ReadInfoAndRun|150
 #	secondaryAppearInSection: >none
 #	input: $count_ctss_bed_path_list, $count_scope_bed_path
 #	output: $count_ctss_bed_hsh_ref
 #	toCall: my ($count_ctss_bed_hsh_ref) = &getCountCtssPath($count_ctss_bed_path_list, $count_scope_bed_path);
-#	calledInLine: 149
+#	calledInLine: 154
 #....................................................................................................................................................#
 	my ($count_ctss_bed_path_list, $count_scope_bed_path) = @_;
 	
-	&reportAndLogStatus("checking count_ctss_bed_path_list", 10, "\n");#->933
+	&reportAndLogStatus("checking count_ctss_bed_path_list", 10, "\n");#->962
 	
 	my $count_ctss_bed_hsh_ref = {};
 	if (defined $count_ctss_bed_path_list) {
 		foreach my $count_ctss_bed_path (split /\,/, $count_ctss_bed_path_list) {
 			if (-s $count_ctss_bed_path) {
 				if (exists $count_ctss_bed_hsh_ref->{$count_ctss_bed_path}) {
-					&reportAndLogStatus("WARNING: $count_ctss_bed_path appeared more than once.", 10, "\n");#->933
+					&reportAndLogStatus("WARNING: $count_ctss_bed_path appeared more than once.", 10, "\n");#->962
 				}
 				$count_ctss_bed_hsh_ref->{'count_ctss_bed_path'}{$count_ctss_bed_path}++;
 			} else {
@@ -363,9 +387,9 @@ sub getCountCtssPath {
 		}
 
 		my $num_ctss_count_bed = keys %{$count_ctss_bed_hsh_ref->{'count_ctss_bed_path'}};
-		&reportAndLogStatus("stored $num_ctss_count_bed ctss bed for counting num sample expressed", 10, "\n");#->933
+		&reportAndLogStatus("stored $num_ctss_count_bed ctss bed for counting num sample expressed", 10, "\n");#->962
 	} else {
-		&reportAndLogStatus("num sample expressed will not be used for filtering", 10, "\n");#->933
+		&reportAndLogStatus("num sample expressed will not be used for filtering", 10, "\n");#->962
 	}
 
 	if (defined $count_scope_bed_path) {
@@ -381,25 +405,25 @@ sub getCountCtssPath {
 sub getNumSampleExpressed {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|933
+#	dependOnSub: reportAndLogStatus|962
 #	appearInSub: >none
-#	primaryAppearInSection: 2_ReadInfoAndRun|145
+#	primaryAppearInSection: 2_ReadInfoAndRun|150
 #	secondaryAppearInSection: >none
 #	input: $bedtools_bin, $count_ctss_bed_hsh_ref, $tmp_merge_bed_file_path, $tssCluster_info_hsh_ref
 #	output: 
 #	toCall: &getNumSampleExpressed($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref, $count_ctss_bed_hsh_ref, $bedtools_bin);
-#	calledInLine: 154
+#	calledInLine: 159
 #....................................................................................................................................................#
 	my ($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref, $count_ctss_bed_hsh_ref, $bedtools_bin) = @_;
 	
 	if (exists $count_ctss_bed_hsh_ref->{'count_ctss_bed_path'}) {
 		foreach my $count_ctss_bed_path (keys %{$count_ctss_bed_hsh_ref->{'count_ctss_bed_path'}}) {
 			my ($fileName, $fileDir, $fileSuffix) = fileparse($count_ctss_bed_path, qr/\.[^.]*/);
-			&reportAndLogStatus("counting num sample expressed in $fileName$fileSuffix", 10, "\n");#->933
+			&reportAndLogStatus("counting num sample expressed in $fileName$fileSuffix", 10, "\n");#->962
 
 			my $bedtools_cmd;
 			if (exists $count_ctss_bed_hsh_ref->{'count_scope_bed_path'}) {
-				&reportAndLogStatus("couting within scope of count_scope_bed_path", 10, "\n");#->933
+				&reportAndLogStatus("couting within scope of count_scope_bed_path", 10, "\n");#->962
 				my $count_scope_bed_path = $count_ctss_bed_hsh_ref->{'count_scope_bed_path'};
 				$bedtools_cmd = "$bedtools_bin intersect -sorted -s -wa -a $count_ctss_bed_path -b $count_scope_bed_path | $bedtools_bin intersect -sorted -s -wo -a $tmp_merge_bed_file_path -b stdin";
 				
@@ -428,7 +452,7 @@ sub getNumSampleExpressed {
 			close BEDTOOLS;
 		}
 	} else {
-		&reportAndLogStatus("No count_ctss_bed_path. Assigning num_sample_expr_cluster -1 to all tssClusters", 10, "\n");#->933
+		&reportAndLogStatus("No count_ctss_bed_path. Assigning num_sample_expr_cluster -1 to all tssClusters", 10, "\n");#->962
 		foreach my $tssClusterID (keys %{$tssCluster_info_hsh_ref}) {
 			$tssCluster_info_hsh_ref->{$tssClusterID}{'num_sample_expr_cluster'} = -1;
 			$tssCluster_info_hsh_ref->{$tssClusterID}{'num_sample_expr_summit'} = -1;
@@ -440,20 +464,20 @@ sub getNumSampleExpressed {
 sub getTssClusterSummit {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|933
+#	dependOnSub: reportAndLogStatus|962
 #	appearInSub: >none
-#	primaryAppearInSection: 2_ReadInfoAndRun|145
+#	primaryAppearInSection: 2_ReadInfoAndRun|150
 #	secondaryAppearInSection: >none
 #	input: $bedtools_bin, $cluster_ctss_bed_path, $paraclu_bed_path, $paramTag, $resultPreMergeBedDir
 #	output: $paraclu_cluster_info_hsh_ref, $summit_bed_path
 #	toCall: my ($paraclu_cluster_info_hsh_ref, $summit_bed_path) = &getTssClusterSummit($resultPreMergeBedDir, $paraclu_bed_path, $cluster_ctss_bed_path, $bedtools_bin, $paramTag);
-#	calledInLine: 152
+#	calledInLine: 157
 #....................................................................................................................................................#
 	my ($resultPreMergeBedDir, $paraclu_bed_path, $cluster_ctss_bed_path, $bedtools_bin, $paramTag) = @_;
 	
 	my $paraclu_cluster_info_hsh_ref = {};
 
-	&reportAndLogStatus("getting summit position", 10, "\n");#->933
+	&reportAndLogStatus("getting summit position", 10, "\n");#->962
 	my $bedtools_cmd = "$bedtools_bin intersect -sorted -a $paraclu_bed_path -b $cluster_ctss_bed_path -s -wao";
 	open BEDTOOLS, "$bedtools_cmd |";
 	while (<BEDTOOLS>) {
@@ -472,7 +496,9 @@ sub getTssClusterSummit {
 	}
 	close BEDTOOLS;
 	my $summit_bed_path = "$resultPreMergeBedDir/$paramTag.pre_merge.tssCluster.summit.bed.gz";
-	&reportAndLogStatus("printing paraclu summit bed", 10, "\n");#->933
+	$globalReadmeHsh_ref->{$summit_bed_path}{'description'} = "bed file of parsed paraclu cluster summit after 'cutting'";
+
+	&reportAndLogStatus("printing paraclu summit bed", 10, "\n");#->962
 	open SUMMIT, "| sort -k1,1 -k2,2n | gzip -c >$summit_bed_path";
 	foreach my $paraclu_clusterID (keys %{$paraclu_cluster_info_hsh_ref}) {
 		my ($chrom, undef, undef, $strand, $num_read, $summit_pos, $summit_read, $stability) = @{$paraclu_cluster_info_hsh_ref->{$paraclu_clusterID}};
@@ -489,12 +515,12 @@ sub logCalledCMDAndScript {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 1_defineHardCodedParam|122
+#	primaryAppearInSection: 1_defineHardCodedParam|127
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $resultScriptDir, $scriptAbsPath
 #	output: 
 #	toCall: &logCalledCMDAndScript($ARGVStr, $resultScriptDir, $scriptAbsPath);
-#	calledInLine: 140
+#	calledInLine: 145
 #....................................................................................................................................................#
 	my ($ARGVStr, $resultScriptDir, $scriptAbsPath) = @_;
 
@@ -512,22 +538,22 @@ sub logCalledCMDAndScript {
 sub mergeParacluClusters {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|933
+#	dependOnSub: reportAndLogStatus|962
 #	appearInSub: >none
-#	primaryAppearInSection: 2_ReadInfoAndRun|145
+#	primaryAppearInSection: 2_ReadInfoAndRun|150
 #	secondaryAppearInSection: >none
 #	input: $bedtools_bin, $cluster_ctss_bed_path, $merge_dist, $min_summit_count, $paraclu_cluster_info_hsh_ref, $paramTag, $resultBedDir, $resultLogDir, $summit_bed_path
 #	output: $tmp_merge_bed_file_path, $tssCluster_info_hsh_ref
 #	toCall: my ($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref) = &mergeParacluClusters($bedtools_bin, $summit_bed_path, $merge_dist, $cluster_ctss_bed_path, $resultBedDir, $resultLogDir, $paramTag, $paraclu_cluster_info_hsh_ref, $min_summit_count);
-#	calledInLine: 153
+#	calledInLine: 158
 #....................................................................................................................................................#
 	my ($bedtools_bin, $summit_bed_path, $merge_dist, $cluster_ctss_bed_path, $resultBedDir, $resultLogDir, $paramTag, $paraclu_cluster_info_hsh_ref, $min_summit_count) = @_;
 
-	&reportAndLogStatus("merging distance = $merge_dist", 10, "\n");#->933
-	&reportAndLogStatus("minimum post-merge summit count = $min_summit_count", 10, "\n");#->933
-	&reportAndLogStatus("start merging clusters", 10, "\n");#->933
+	&reportAndLogStatus("merging distance = $merge_dist", 10, "\n");#->962
+	&reportAndLogStatus("minimum post-merge summit count = $min_summit_count", 10, "\n");#->962
+	&reportAndLogStatus("start merging clusters", 10, "\n");#->962
 
-	&reportAndLogStatus("merging at $merge_dist nt", 10, "\n");#->933
+	&reportAndLogStatus("merging at $merge_dist nt", 10, "\n");#->962
 	my $tmp_merge_dir = "$resultBedDir/tmp_merged/";
 	system ("mkdir -pm 755 $tmp_merge_dir");
 	my $tmp_merge_bed_file_path = "$tmp_merge_dir/$paramTag.tssCluster.tmp_merged.bed.gz";
@@ -599,14 +625,14 @@ sub mergeParacluClusters {
 sub parseParacluInput {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|933
+#	dependOnSub: reportAndLogStatus|962
 #	appearInSub: >none
-#	primaryAppearInSection: 2_ReadInfoAndRun|145
+#	primaryAppearInSection: 2_ReadInfoAndRun|150
 #	secondaryAppearInSection: >none
 #	input: $cluster_ctss_bed_path, $min_cluster_cpm, $min_pos_count, $resultParacluDir
 #	output: $min_cluster_count_by_cpm, $paraclu_input_path
 #	toCall: my ($paraclu_input_path, $min_cluster_count_by_cpm) = &parseParacluInput($cluster_ctss_bed_path, $min_pos_count, $min_cluster_cpm, $resultParacluDir);
-#	calledInLine: 150
+#	calledInLine: 155
 #....................................................................................................................................................#
 	my ($cluster_ctss_bed_path, $min_pos_count, $min_cluster_cpm, $resultParacluDir) = @_;
 	
@@ -614,10 +640,12 @@ sub parseParacluInput {
 	my $threadID = 1;
 	
 	my $paraclu_input_path = "$resultParacluDir/paraclu.input.txt.gz";
+	$globalReadmeHsh_ref->{$paraclu_input_path}{'description'} = "Input for paraclu";
+
 	my $total_count = 0;
 	
-	&reportAndLogStatus("Parsing paraclu input with min_pos_count = $min_pos_count", 10, "\n");#->933
-	&reportAndLogStatus("Position with counts < $min_pos_count will be removed", 10, "\n");#->933
+	&reportAndLogStatus("Parsing paraclu input with min_pos_count = $min_pos_count", 10, "\n");#->962
+	&reportAndLogStatus("Position with counts < $min_pos_count will be removed", 10, "\n");#->962
 
 	open PARACLUINPUT, "| gzip -c >$paraclu_input_path";
 	if ($cluster_ctss_bed_path =~ m/\.gz$/) {
@@ -646,26 +674,26 @@ sub parseParacluInput {
 	my $total_count_millions = sprintf "%.5f", $total_count/1000000;
 	my $min_cluster_count_by_cpm = sprintf "%.0f", $min_cluster_cpm*$total_count_millions;
 
-	&reportAndLogStatus("total_count = $total_count_millions millions", 10, "\n");#->933
-	&reportAndLogStatus("min_cluster_cpm = $min_cluster_cpm", 10, "\n");#->933
+	&reportAndLogStatus("total_count = $total_count_millions millions", 10, "\n");#->962
+	&reportAndLogStatus("min_cluster_cpm = $min_cluster_cpm", 10, "\n");#->962
 
 	return ($paraclu_input_path, $min_cluster_count_by_cpm);
 }
 sub printFinalBedAndLog {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|933
+#	dependOnSub: reportAndLogStatus|962
 #	appearInSub: >none
-#	primaryAppearInSection: 2_ReadInfoAndRun|145
+#	primaryAppearInSection: 2_ReadInfoAndRun|150
 #	secondaryAppearInSection: >none
 #	input: $min_num_sample_expr_cluster, $min_num_sample_expr_summit, $paramTag, $resultBedDir, $resultLogDir, $tmp_merge_bed_file_path, $tssCluster_info_hsh_ref
 #	output: 
 #	toCall: &printFinalBedAndLog($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref, $resultBedDir, $resultLogDir, $paramTag, $min_num_sample_expr_cluster, $min_num_sample_expr_summit);
-#	calledInLine: 155
+#	calledInLine: 160
 #....................................................................................................................................................#
 	my ($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref, $resultBedDir, $resultLogDir, $paramTag, $min_num_sample_expr_cluster, $min_num_sample_expr_summit) = @_;
 
-	&reportAndLogStatus("printing final cluster bed and log", 10, "\n");#->933
+	&reportAndLogStatus("printing final cluster bed and log", 10, "\n");#->962
 	
 	my $read_cut_ary_ref = [(1..15),30,40,50,60,70,80,90,100];
 	my $size_cut_ary_ref = [5,10,15,20,25,35,40,45,50,60,70,80,90,100,125,150,175,200,300,400,500];
@@ -751,12 +779,12 @@ sub printFinalBedAndLog {
 	close OUTBED;
 	close OUTLOG;
 	
-	&reportAndLogStatus("The final set contains $total_num clusters", 10, "\n");#->933
+	&reportAndLogStatus("The final set contains $total_num clusters", 10, "\n");#->962
 	foreach my $param (sort keys %{$count_hsh_ref}) {
 		foreach my $cutoff (sort {$a <=> $b} keys %{$count_hsh_ref->{$param}}) {
 			my $count = $count_hsh_ref->{$param}{$cutoff};
 			my $pct = sprintf "%.2f", 100*$count/$total_num;
-			&reportAndLogStatus("With $param $cutoff n=$count [$pct%]", 10, "\n");#->933
+			&reportAndLogStatus("With $param $cutoff n=$count [$pct%]", 10, "\n");#->962
 		}
 	}
 
@@ -767,12 +795,12 @@ sub printOutputFileListAndReadme {
 #	subroutineCategory: output
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 3_finishingTasks|160
+#	primaryAppearInSection: 3_finishingTasks|165
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $outDir, $paramTag
 #	output: 
 #	toCall: &printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);
-#	calledInLine: 163
+#	calledInLine: 168
 #....................................................................................................................................................#
 	my ($ARGVStr, $paramTag, $outDir) = @_;
 	
@@ -880,34 +908,34 @@ sub printOutputFileListAndReadme {
 sub printStartOrFinishMessage {
 #....................................................................................................................................................#
 #	subroutineCategory: general
-#	dependOnSub: currentTime|276
+#	dependOnSub: currentTime|301
 #	appearInSub: >none
-#	primaryAppearInSection: 1_defineHardCodedParam|122, 3_finishingTasks|160
+#	primaryAppearInSection: 1_defineHardCodedParam|127, 3_finishingTasks|165
 #	secondaryAppearInSection: >none
 #	input: $StartOrFinishMessage
 #	output: none
 #	toCall: &printStartOrFinishMessage($StartOrFinishMessage);
-#	calledInLine: 139, 164
+#	calledInLine: 144, 169
 #....................................................................................................................................................#
 
 	my ($StartOrFinishMessage) = @_;
 	
 	if ($StartOrFinishMessage eq "startMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] starts running ...... \n";#->276
+		print "[".&currentTime()."] starts running ...... \n";#->301
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->276
+		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->301
 		print $tmplog_fh "=========================================================================\n\n";
 
 	} elsif ($StartOrFinishMessage eq "finishMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] finished running .......\n";#->276
+		print "[".&currentTime()."] finished running .......\n";#->301
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->276
+		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->301
 		print $tmplog_fh "=========================================================================\n\n";
 	}
 }
@@ -916,12 +944,12 @@ sub readParameters {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startingTasks|114
+#	primaryAppearInSection: 0_startingTasks|119
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: $cluster_ctss_bed_path, $count_ctss_bed_path_list, $count_scope_bed_path, $merge_dist, $min_cluster_count, $min_cluster_cpm, $min_num_sample_expr_cluster, $min_num_sample_expr_summit, $min_pos_count, $min_summit_count, $outDir, $outputPrefix, $overwrite
 #	toCall: my ($cluster_ctss_bed_path, $count_ctss_bed_path_list, $count_scope_bed_path, $min_cluster_cpm, $min_cluster_count, $min_pos_count, $min_summit_count, $merge_dist, $min_num_sample_expr_cluster, $min_num_sample_expr_summit, $outputPrefix, $outDir, $overwrite) = &readParameters();
-#	calledInLine: 117
+#	calledInLine: 122
 #....................................................................................................................................................#
 	
 	my ($cluster_ctss_bed_path, $count_ctss_bed_path_list, $count_scope_bed_path, $min_cluster_cpm, $min_cluster_count, $min_pos_count, $min_summit_count, $merge_dist, $min_num_sample_expr_cluster, $min_num_sample_expr_summit, $outputPrefix, $outDir, $overwrite);
@@ -975,36 +1003,36 @@ sub readParameters {
 sub reportAndLogStatus {
 #....................................................................................................................................................#
 #	subroutineCategory: log
-#	dependOnSub: currentTime|276
-#	appearInSub: checkAllExecutable|196, getCountCtssPath|294, getNumSampleExpressed|339, getTssClusterSummit|398, mergeParacluClusters|470, parseParacluInput|557, printFinalBedAndLog|612, runParaclu|955
+#	dependOnSub: currentTime|301
+#	appearInSub: checkAllExecutable|201, getCountCtssPath|319, getNumSampleExpressed|364, getTssClusterSummit|423, mergeParacluClusters|497, parseParacluInput|584, printFinalBedAndLog|641, runParaclu|984
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 2_ReadInfoAndRun|145
+#	secondaryAppearInSection: 2_ReadInfoAndRun|150
 #	input: $lineEnd, $message, $numTrailingSpace
 #	output: 
 #	toCall: &reportAndLogStatus($message, $numTrailingSpace, $lineEnd);
-#	calledInLine: 217, 222, 231, 240, 249, 258, 267, 307, 314, 323, 325, 355, 359, 388, 413, 432, 483, 484, 485, 487, 576, 577, 606, 607, 625, 711, 716, 974, 975, 976, 993, 997, 1026
+#	calledInLine: 224, 229, 238, 247, 256, 265, 274, 283, 292, 332, 339, 348, 350, 380, 384, 413, 438, 459, 510, 511, 512, 514, 605, 606, 635, 636, 654, 740, 745, 1003, 1004, 1005, 1022, 1026, 1055
 #....................................................................................................................................................#
 	my ($message, $numTrailingSpace, $lineEnd) = @_;
 
 	my $trailingSpaces = '';
 	$trailingSpaces .= " " for (1..$numTrailingSpace);
 	
-	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->276
-	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->276
+	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->301
+	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->301
 	
 	return ();
 }
 sub runParaclu {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|933
+#	dependOnSub: reportAndLogStatus|962
 #	appearInSub: >none
-#	primaryAppearInSection: 2_ReadInfoAndRun|145
+#	primaryAppearInSection: 2_ReadInfoAndRun|150
 #	secondaryAppearInSection: >none
 #	input: $cut_sh_path, $force_rerun, $min_cluster_count, $min_cluster_count_by_cpm, $paraclu_bin, $paraclu_input_path, $paramTag, $resultParacluDir, $resultPreMergeBedDir
 #	output: $paraclu_bed_path
 #	toCall: my ($paraclu_bed_path) = &runParaclu($paraclu_input_path, $paraclu_bin, $cut_sh_path, $resultParacluDir, $resultPreMergeBedDir, $min_cluster_count, $min_cluster_count_by_cpm, $paramTag, $force_rerun);
-#	calledInLine: 151
+#	calledInLine: 156
 #....................................................................................................................................................#
 	my ($paraclu_input_path, $paraclu_bin, $cut_sh_path, $resultParacluDir, $resultPreMergeBedDir, $min_cluster_count, $min_cluster_count_by_cpm, $paramTag, $force_rerun) = @_;
 	
@@ -1014,9 +1042,9 @@ sub runParaclu {
 	my $min_paraclu_count = $min_cluster_count;
 	$min_paraclu_count = $min_cluster_count_by_cpm if $min_cluster_count_by_cpm > $min_paraclu_count;
 	
-	&reportAndLogStatus("min_cluster_count_by_cpm = $min_cluster_count_by_cpm ", 10, "\n");#->933
-	&reportAndLogStatus("min_cluster_count = $min_cluster_count", 10, "\n");#->933
-	&reportAndLogStatus("min_paraclu_count = $min_paraclu_count", 10, "\n");#->933
+	&reportAndLogStatus("min_cluster_count_by_cpm = $min_cluster_count_by_cpm ", 10, "\n");#->962
+	&reportAndLogStatus("min_cluster_count = $min_cluster_count", 10, "\n");#->962
+	&reportAndLogStatus("min_paraclu_count = $min_paraclu_count", 10, "\n");#->962
 		
 	my $paraclu_sh_path = "$resultParacluDir/run_paraclu.sh";
 	my $paraclu_uncut_path = "$resultParacluDir/paraclu.output.uncut.txt.gz";
@@ -1033,11 +1061,11 @@ sub runParaclu {
 			-s $paraclu_rev_bed_path and 
 			-s $paraclu_fwd_bed_path) {
 			
-		&reportAndLogStatus("Paraclu results found. Skipping running paraclu", 10, "\n");#->933
+		&reportAndLogStatus("Paraclu results found. Skipping running paraclu", 10, "\n");#->962
 			
 	} else {
 
-		&reportAndLogStatus("Running paraclu", 10, "\n");#->933
+		&reportAndLogStatus("Running paraclu", 10, "\n");#->962
 		open PARACLUSH, ">", "$paraclu_sh_path";
 		print PARACLUSH "$paraclu_bin $min_paraclu_count <(gzip -dc $paraclu_input_path) | gzip -c >$paraclu_uncut_path\n";
 		print PARACLUSH "$cut_sh_path <(gzip -dc $paraclu_uncut_path) | gzip -c >$paraclu_cut_path\n";
@@ -1066,7 +1094,7 @@ sub runParaclu {
 		close PARACLUOUTPUT;
 
 
-		&reportAndLogStatus("Parsing paraclu output", 10, "\n");#->933
+		&reportAndLogStatus("Parsing paraclu output", 10, "\n");#->962
 		open PARACLUBED, "| sort -k1,1 -k2,2n | gzip -c >$paraclu_bed_path";
 		open PARACLUREVBED, "| sort -k1,1 -k2,2n | gzip -c >$paraclu_rev_bed_path";
 		open PARACLUFWDBED, "| sort -k1,1 -k2,2n | gzip -c >$paraclu_fwd_bed_path";
@@ -1110,7 +1138,7 @@ sub timeStamp {
 #	input: none
 #	output: $curntTimeStamp
 #	toCall: my ($curntTimeStamp) = &timeStamp();
-#	calledInLine: 102
+#	calledInLine: 107
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);

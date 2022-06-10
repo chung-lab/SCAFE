@@ -3,29 +3,26 @@ This folder contains the following tools and workflows. A tool perform a single 
 
 * [**scafe.workflow.sc.subsample**](#1) ---> workflow, single-cell mode, subsample ctss
 * [**scafe.workflow.sc.solo**](#2) ---> workflow, single-cell mode, process a single sample
-* [**scafe.workflow.sc.pool**](#3) ---> workflow, single-cell mode, pool ctss of multiple samples
+* [**scafe.workflow.cm.aggregate**](#3) ---> 
 * [**scafe.workflow.bk.subsample**](#4) ---> workflow, bulk mode, subsample ctss
 * [**scafe.workflow.bk.solo**](#5) ---> workflow, bulk mode, process a single sample
-* [**scafe.workflow.bk.pool**](#6) ---> workflow, bulk mode, process a single sample
-* [**scafe.tool.sc.subsample\_ctss**](#7) ---> tool, single-cell mode, subsample ctss
-* [**scafe.tool.sc.pool**](#8) ---> tool, single-cell mode, pool ctss of multiple samples
-* [**scafe.tool.sc.link**](#9) ---> tool, single-cell mode, linking tCRE by coactivity
-* [**scafe.tool.sc.count**](#10) ---> tool, single-cell mode, count of UMI within tCRE
-* [**scafe.tool.sc.bam\_to\_ctss**](#11) ---> tool, single-cell mode, convert bam to ctss
-* [**scafe.tool.cm.remove\_strand\_invader**](#12) ---> tool, common mode, remove strand invader artefact
-* [**scafe.tool.cm.prep\_genome**](#13) ---> tool, common mode, prepare custom reference genome
-* [**scafe.tool.cm.filter**](#14) ---> tool, common mode, filter for genuine TSS clusters
-* [**scafe.tool.cm.ctss\_to\_bigwig**](#15) ---> tool, common mode, convert ctss to bigwig
-* [**scafe.tool.cm.cluster**](#16) ---> tool, common mode, cluster ctss
-* [**scafe.tool.cm.annotate**](#17) ---> tool, common mode, define and annotate tCRE
-* [**scafe.tool.bk.subsample\_ctss**](#18) ---> tool, bulk mode, subsample ctss
-* [**scafe.tool.bk.pool**](#19) ---> tool, bulk mode, pool ctss of multiple samples
-* [**scafe.tool.bk.count**](#20) ---> tool, bulk mode, count ctss within tCREs
-* [**scafe.tool.bk.bam\_to\_ctss**](#21) ---> tool, bulk mode, convert bam to ctss bed
-* [**scafe.download.resources.genome**](#22) ---> download, reference genome to resources dir
-* [**scafe.download.demo.input**](#23) ---> download, demo input data for testing
-* [**scafe.demo.test.run**](#24) ---> demo, run demo data for testing
-* [**scafe.check.dependencies**](#25) ---> check dependencies
+* [**scafe.tool.sc.subsample\_ctss**](#6) ---> tool, single-cell mode, subsample ctss
+* [**scafe.tool.sc.count**](#7) ---> tool, single-cell mode, count of UMI within tCRE
+* [**scafe.tool.sc.bam\_to\_ctss**](#8) ---> tool, single-cell mode, convert bam to ctss
+* [**scafe.tool.cm.remove\_strand\_invader**](#9) ---> tool, common mode, remove strand invader artefact
+* [**scafe.tool.cm.prep\_genome**](#10) ---> tool, common mode, prepare custom reference genome
+* [**scafe.tool.cm.filter**](#11) ---> tool, common mode, filter for genuine TSS clusters
+* [**scafe.tool.cm.ctss\_to\_bigwig**](#12) ---> tool, common mode, convert ctss to bigwig
+* [**scafe.tool.cm.cluster**](#13) ---> tool, common mode, cluster ctss
+* [**scafe.tool.cm.annotate**](#14) ---> tool, common mode, define and annotate tCRE
+* [**scafe.tool.cm.aggregate**](#15) ---> tool, common mode, aggregate ctss of multiple samples
+* [**scafe.tool.bk.subsample\_ctss**](#16) ---> tool, bulk mode, subsample ctss
+* [**scafe.tool.bk.count**](#17) ---> tool, bulk mode, count ctss within tCREs
+* [**scafe.tool.bk.bam\_to\_ctss**](#18) ---> tool, bulk mode, convert bam to ctss bed
+* [**scafe.download.resources.genome**](#19) ---> download, reference genome to resources dir
+* [**scafe.download.demo.input**](#20) ---> download, demo input data for testing
+* [**scafe.demo.test.run**](#21) ---> demo, run demo data for testing
+* [**scafe.check.dependencies**](#22) ---> check dependencies
 
 
 ### scafe.workflow.sc.subsample [[top]](#0)<a name="1"></a>
@@ -66,6 +63,8 @@ This folder contains the following tools and workflows. A tool perform a single 
    samtools
    paraclu
    paraclu-cut.sh
+   tabix
+   bgzip
 
  To demo run, cd to SCAFE dir and run:
    scafe.workflow.sc.subsample \
@@ -85,27 +84,38 @@ This folder contains the following tools and workflows. A tool perform a single 
  Usage:
    scafe.workflow.sc.solo [options] --run_bam_path --run_cellbarcode_path --genome --run_tag --run_outDir
    
-   --run_bam_path         <required> [string]  bam file from cellranger, can be read 1 only or pair-end
-   --run_cellbarcode_path <required> [string]  tsv file contains a list of cell barcodes,
-                                               barcodes.tsv.gz from cellranger
-   --genome               <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
-   --run_tag              <required> [string]  prefix for the output files
-   --run_outDir           <required> [string]  directory for the output files
-   --training_signal_path (optional) [string]  quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
-                                               regions (e.g. annotated CRE, in bed format) used for training of logical 
-                                               regression model If null, $usr_glm_model_path must be supplied for 
-                                               pre-built logical regression model. It overrides usr_glm_model_path 
-                                               (default=null)
-   --testing_signal_path  (optional) [string]  quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
-                                               regions (e.g. annotated CRE, in bed format) used for testing the performance 
-                                               of the logical regression model. If null, annotated TSS from $genome will be 
-                                               used as binary genomic regions. (default=null)
-   --usr_glm_model_path   (optional) [string]  pre-built logical regression model from the Caret package in R. Used only if 
-                                               training_signal_path is not supplied. Models were pre-built for each genome
-                                               and used as default.
-   --max_thread           (optional) [integer] maximum number of parallel threads, capped at 10 to 
-                                               avoid memory overflow (default=5)
-   --overwrite            (optional) [yes/no]  erase run_outDir before running (default=no)
+   --run_bam_path                  <required> [string] bam file from cellranger, can be read 1 only or pair-end
+   --run_cellbarcode_path          <required> [string] tsv file contains a list of cell barcodes,
+                                                       barcodes.tsv.gz from cellranger
+   --genome                        <required> [string] name of genome reference, e.g. hg19.gencode_v32lift37
+   --run_tag                       <required> [string] prefix for the output files
+   --run_outDir                    <required> [string] directory for the output files
+   --training_signal_path          (optional) [string] quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
+                                                       regions (e.g. annotated CRE, in bed format) used for training of logical 
+                                                       regression model If null, $usr_glm_model_path must be supplied for 
+                                                       pre-built logical regression model. It overrides usr_glm_model_path 
+                                                       (default=null)
+   --testing_signal_path           (optional) [string] quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
+                                                       regions (e.g. annotated CRE, in bed format) used for testing the performance 
+                                                       of the logical regression model. If null, annotated TSS from $genome will be 
+                                                       used as binary genomic regions. (default=null)
+   --detect_TS_oligo (optional) [match|trim|skip|auto] in bam_to_ctss step, the modes of detecting TS oligo. 1. match: search for 
+                                                       TS oligo sequence on the read, identify the TSO/cDNA junction as 5'end of 
+                                                       the read. This works only when the error rate of the TS oligo region on 
+                                                       the read is low, otherwise a considerable number of read will be invalid. 
+                                                       2. trim: assuming the 1st N bases of the reads are TS oligo, without 
+                                                       checking the actual sequence. N is determined by the length of TS oligo. 
+                                                       3. skip: assuming the TS oligo was not sequenced, the 1st base of the read
+                                                       will be treated as the 1st base after the TS oligo. 4. auto: automatically 
+                                                       determines the best mode, best of the observed error rate of the TS oligo
+                                                       and the frequency of 5'end softclipped bases by the aligner. If softcliped 
+                                                       bases is close to the length of TS oligo, mode 1 or 2 will be chosen, 
+                                                       depending on the observed error rate of the TS oligo (error rate <= 0.1, 
+                                                       mode 1 will be chosen or mode 2 otherwise). If softcliped base os close to 
+                                                       zero, mode 3 will be chosen. (default=auto).
+   --max_thread                   (optional) [integer] maximum number of parallel threads, capped at 10 to 
+                                                       avoid memory overflow (default=5)
+   --overwrite                     (optional) [yes/no] erase run_outDir before running (default=no)
 
  Dependencies:
    R packages: 'ROCR','PRROC', 'caret', 'e1071', 'ggplot2', 'scales', 'reshape2'
@@ -115,6 +125,8 @@ This folder contains the following tools and workflows. A tool perform a single 
    samtools
    paraclu
    paraclu-cut.sh
+   tabix
+   bgzip
 
  To demo run, cd to SCAFE dir and run:
    scafe.workflow.sc.solo \
@@ -126,19 +138,20 @@ This folder contains the following tools and workflows. A tool perform a single 
    --run_outDir=./demo/output/sc.solo/
 ```
 
-### scafe.workflow.sc.pool [[top]](#0)<a name="3"></a>
-   This workflow pool multiple samples for defining tCRE, starting from ctss files to tCRE UMI/cellbarcode count matrix
+### scafe.workflow.cm.aggregate [[top]](#0)<a name="3"></a>
+   This workflow process a multiple samples from scafe.workflow.sc.solo to define CRE using aggregated signal
 
 ```
  Usage:
    scafe.workflow.sc.pool [options] --lib_list_path --genome --run_tag --run_outDir
    
    --lib_list_path        <required> [string] a list of libraries, in formation of 
-                                              <lib_ID><\t><suffix><\t><UMI_CB_ctss_bed><\t><cellbarcode><\t><CB_ctss_bed>
-                                              lib_ID = Unique ID of the cellbarcode
-                                              suffix = an unique integer to be used as for suffix of cellbarcode
-                                              UMI_CB_ctss_bed = *UMI_CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
-                                              CB_ctss_bed = *CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
+                                              <lib_ID><\t><collapse_ctss><\t><unencoded_G_collapse_ctss>
+                                              lib_ID = Unique ID of the lib
+                                              collapse_ctss = *.collapse.ctss.bed.gz from scafe.tool.bk.bam_to_ctss or scafe.tool.bk.bam_to_ctss
+                                                              or *.pass.ctss.bed.gz from scafe.tool.cm.remove_strand_invader
+                                              unencoded_G_collapse_ctss = *unencoded_G.collapse.ctss.bed.gz from 
+                                                                          scafe.tool.sc.bam_to_ctss or scafe.tool.bk.bam_to_ctss
    --genome               <required> [string] name of genome reference, e.g. hg19.gencode_v32lift37
    --run_tag              <required> [string] prefix for the output files
    --run_outDir           <required> [string] directory for the output files
@@ -151,9 +164,6 @@ This folder contains the following tools and workflows. A tool perform a single 
                                               regions (e.g. annotated CRE, in bed format) used for testing the performance 
                                               of the logical regression model. If null, annotated TSS from $genome will be 
                                               used as binary genomic regions. (default=null)
-   --usr_glm_model_path  (optional) [string]  pre-built logical regression model from the Caret package in R. Used only if 
-                                              training_signal_path is not supplied. Models were pre-built for each genome
-                                              and used as default.
    --max_thread          (optional) [integer] maximum number of parallel threads, capped at 10 to 
                                               avoid memory overflow (default=5)
    --overwrite           (optional) [yes/no]  erase run_outDir before running (default=no)
@@ -166,14 +176,16 @@ This folder contains the following tools and workflows. A tool perform a single 
    samtools
    paraclu
    paraclu-cut.sh
+   tabix
+   bgzip
 
  To demo run, cd to SCAFE dir and run:
-   scafe.workflow.sc.pool \
+   scafe.workflow.sc.aggregate \
    --overwrite=yes \
-   --lib_list_path=./demo/input/sc.pool/lib_list_path.txt \
+   --lib_list_path=./demo/input/sc.arggregate/lib_list_path.txt \
    --genome=hg19.gencode_v32lift37 \
    --run_tag=demo \
-   --run_outDir=./demo/output/sc.pool/
+   --run_outDir=./demo/output/sc.arggregate/
 ```
 
 ### scafe.workflow.bk.subsample [[top]](#0)<a name="4"></a>
@@ -254,6 +266,8 @@ This folder contains the following tools and workflows. A tool perform a single 
    samtools
    paraclu
    paraclu-cut.sh
+   tabix
+   bgzip
 
  To demo run, cd to SCAFE dir and run:
    scafe.workflow.bk.solo \
@@ -264,53 +278,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --run_outDir=./demo/output/bk.solo/
 ```
 
-### scafe.workflow.bk.pool [[top]](#0)<a name="6"></a>
-   This workflow pool multiple samples for defining tCRE, starting from ctss files to read count per tCRE per sample
-
-```
- Usage:
-   scafe.workflow.bk.pool [options] --lib_list_path --genome --run_tag --run_outDir
-   
-   --lib_list_path         <required> [string] a list of libraries, in formation of 
-                                               <lib_ID><\t><long_ctss_bed><\t><collapse_ctss_bed>
-                                               lib_ID = Unique ID of the cellbarcode
-                                               long_ctss_bed = *long.ctss.bed.gz from scafe.tool.bk.bam_to_ctss.pl, 
-                                               collapse_ctss_bed = *collapse.ctss.bed.gz from scafe.tool.bk.bam_to_ctss.pl, 
-   --genome                <required> [string] name of genome reference, e.g. hg19.gencode_v32lift37
-   --run_tag               <required> [string] prefix for the output files
-   --run_outDir            <required> [string] directory for the output files
-   --training_signal_path  (optional) [string] quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
-                                               regions (e.g. annotated CRE, in bed format) used for training of logical 
-                                               regression model If null, $usr_glm_model_path must be supplied for 
-                                               pre-built logical regression model. It overrides usr_glm_model_path 
-                                               (default=null)
-   --testing_signal_path  (optional) [string]  quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
-                                               regions (e.g. annotated CRE, in bed format) used for testing the performance 
-                                               of the logical regression model. If null, annotated TSS from $genome will be 
-                                               used as binary genomic regions. (default=null)
-   --max_thread           (optional) [integer] maximum number of parallel threads, capped at 10 to 
-                                               avoid memory overflow (default=5)
-   --overwrite            (optional) [yes/no]  erase run_outDir before running (default=no)
-
- Dependencies:
-   R packages: 'ROCR','PRROC', 'caret', 'e1071', 'ggplot2', 'scales', 'reshape2'
-   bigWigAverageOverBed
-   bedGraphToBigWig
-   bedtools
-   samtools
-   paraclu
-   paraclu-cut.sh
-
- To demo run, cd to SCAFE dir and run:
-   scafe.workflow.bk.pool \
-   --overwrite=yes \
-   --lib_list_path=./demo/input/bk.pool/lib_list_path.txt \
-   --genome=hg19.gencode_v32lift37 \
-   --run_tag=demo \
-   --run_outDir=./demo/output/bk.pool/
-```
-
-### scafe.tool.sc.subsample\_ctss [[top]](#0)<a name="7"></a>
+### scafe.tool.sc.subsample\_ctss [[top]](#0)<a name="6"></a>
    This tool subsample a ctss bed file and maintains the cellbarcode and UMI information
 
 ```
@@ -318,7 +286,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    scafe.tool.sc.subsample_ctss [options] --UMI_CB_ctss_bed_path --subsample_num --outputPrefix --outDir
    
    --UMI_CB_ctss_bed_path <required> [string]  ctss file for subsampling, one line one cellbarcode-UMI combination,
-                                               *UMI_CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
+                                               *UMI_CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss, 
                                                4th column cellbarcode-UMI and 5th column is number of unencoded-G
    --subsample_num        <required> [integer] number of UMI to be subsampled
    --outputPrefix         <required> [string]  prefix for the output files
@@ -327,6 +295,8 @@ This folder contains the following tools and workflows. A tool perform a single 
 
  Dependencies:
    bedtools
+   tabix
+   bgzip
 
  To demo run, cd to SCAFE dir and run:
    scafe.tool.sc.subsample_ctss \
@@ -337,81 +307,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.subsample/subsample_ctss/
 ```
 
-### scafe.tool.sc.pool [[top]](#0)<a name="8"></a>
-   This tool pool multiple ctss bed file and maintains the unique (suffixed) cellbarcode and UMI information
-
-```
- Usage:
-   scafe.tool.sc.pool [options] --lib_list_path --genome --outputPrefix --outDir
-   
-   --lib_list_path <required> [string]  a list of libraries, in formation of 
-                                        <lib_ID><\t><suffix><\t><UMI_CB_ctss_bed><\t><cellbarcode><\t><CB_ctss_bed>
-                                        lib_ID = Unique ID of the cellbarcode
-                                        suffix = an unique integer to be used as for suffix of cellbarcode
-                                        UMI_CB_ctss_bed = *UMI_CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
-                                        CB_ctss_bed = *CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
-   --genome        <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
-   --outputPrefix  <required> [string]  prefix for the output files
-   --outDir        <required> [string]  directory for the output files
-   --max_thread    (optional) [integer] maximum number of parallel threads, capped at 10 to 
-                                        avoid memory overflow (default=5)
-   --overwrite     (optional) [yes/no]  erase outDir/outputPrefix before running (default=no)
-
- Dependencies:
-   bedtools
-
- To demo run, cd to SCAFE dir and run:
-   scafe.tool.sc.pool \
-   --overwrite=yes \
-   --lib_list_path=./demo/input/sc.pool/lib_list_path.txt \
-   --genome=hg19.gencode_v32lift37 \
-   --outputPrefix=demo \
-   --outDir=./demo/output/sc.pool/pool/
-```
-
-### scafe.tool.sc.link [[top]](#0)<a name="9"></a>
-   This tool links tCREs by their coactivity among single cells using cicero
-
-```
- Usage:
-   scafe.tool.sc.link [options] --count --run_chr --genome --CRE_bed_path --CRE_info_path --outputPrefix --outDir
-   
-   --CRE_bed_path     <required> [string]  bed file contains the regions of CRE,
-                                      *.CRE.coord.bed.gz from scafe.tool.cm.annotate.pl
-   --CRE_info_path    <required> [string]  tsv file contains the annoations of CREs, 
-                                      *..CRE.info.tsv.gz from scafe.tool.cm.annotate.pl
-   --count_dir        <required> [string]  a dir contains the UMI count of the CRE
-   --genome           <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
-   --outputPrefix     <required> [string]  prefix for the output files
-   --outDir           <required> [string]  directory for the output files
-   --network_cutoff   (optional) [0-1]     minimum coactivity to define cis-coactivity network (default = 0.05)
-   --link_cutoff   (optional) [integer] minimum coactivity to output as link(default = 0.2)
-   --binarize_CRE_exp (optional) [yes/no]  binarize_CRE_exp CRE expression signal or not (default = no)
-   --min_cell         (optional) [integer] minimum number of cells the CRE to be expressed (default = 5)
-   --Rscript_bin      (optional) [string]  path to the Rscript bin, aim to allow users to supply an R version other the 
-                                           system wide R version. Package Caret must be installed. (default = Rscript)
-   --max_thread       (optional) [integer] maximum number of parallel threads, capped at 10 to 
-                                           avoid memory overflow (default=5)
-   --run_chr          (optional) [string]  comma delimited list of chromosome name to run,
-                                           use 'all' to run all chromosome (default=all)
-   --overwrite        (optional) [yes/no]  erase outDir/outputPrefix before running (default=no)
-
- Dependencies:
-   R packages: 'docopt','monocle3', 'cicero', 'Matrix', 'data.table', 'scales'
-
- To demo run, cd to SCAFE dir and run:
-   scafe.tool.sc.link \
-   --overwrite=yes \
-   --max_thread=10 \
-   --CRE_bed_path=./demo/input/sc.link/demo.CRE.coord.bed.gz \
-   --CRE_info_path=./demo/input/sc.link/demo.CRE.info.tsv.gz \
-   --count_dir=./demo/input/sc.link/matrix/ \
-   --genome=hg19.gencode_v32lift37 \
-   --outputPrefix=demo \
-   --outDir=./demo/output/sc.link/
-```
-
-### scafe.tool.sc.count [[top]](#0)<a name="10"></a>
+### scafe.tool.sc.count [[top]](#0)<a name="7"></a>
    This tool counts the UMI within a set of user-defined regions, e.g. tCRE, and returns a UMI/cellbarcode matrix
 
 ```
@@ -425,9 +321,21 @@ This folder contains the following tools and workflows. A tool perform a single 
    --ctss_bed_path          <required> [string] ctss file for counting,
                                                 *CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
                                                 4th column cellbarcode and 5th column is number UMI
+   --genome                 <required> [string] name of genome reference, e.g. hg19.gencode_v32lift37
+   --ctss_scope_bed_path    <optional> [string] bed file contains the regions for filtering CTSS, e.g. tssCluster ranges, 
+                                                so only the ctss within these ranges (i.e. scope) will be count. This is to 
+                                                prevent over permissive counting to ctss in the CRE range by stricting only 
+                                                ctss within valid tssClusters to be counted. 
+                                                *.tssCluster.default.filtered.bed.gz from scafe.tool.cm.filter.
+                                                It will skip filtering if not file was provide (default=null).
+   --ctss_scope_slop_bp    <optional> [integer] the length of the boundary extension (in bp) for filter region provided in
+                                                option ctss_scope_bed_path. All regions in ctss_scope_bed_path will be 
+                                                extended both side by ctss_scope_slop_bp, for controlling the permissiveness
+                                                of the counting. A large value of ctss_scope_slop_bp (e.g. 400) will be 
+                                                equivalent to no filtering (default=0).
    --outputPrefix           <required> [string] prefix for the output files
    --outDir                 <required> [string] directory for the output files
-   --overwrite              (optional) [yes/no]  erase outDir/outputPrefix before running (default=no)
+   --overwrite              (optional) [yes/no] erase outDir/outputPrefix before running (default=no)
 
  Dependencies:
    bedtools
@@ -442,7 +350,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/count/
 ```
 
-### scafe.tool.sc.bam\_to\_ctss [[top]](#0)<a name="11"></a>
+### scafe.tool.sc.bam\_to\_ctss [[top]](#0)<a name="8"></a>
    This tool converts a bam file to a ctss bed file, identifies read 5'end (capped TSS, i.e. ctss),
    extracts the unencoded G information, pileup ctss, and deduplicate the UMI
 
@@ -450,25 +358,42 @@ This folder contains the following tools and workflows. A tool perform a single 
  Usage:
    scafe.tool.sc.bam_to_ctss [options] --bamPath --genome --outputPrefix --outDir
    
-   --bamPath      <required> [string]  bam file from cellranger, can be read 1 only or pair-end
-   --genome       <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
-   --outputPrefix <required> [string]  prefix for the output files
-   --outDir       <required> [string]  directory for the output files
-   --include_flag (optional) [string]  samflag to be included, comma delimited 
-                                       e.g. '64' to include read1, (default=null)
-   --exclude_flag (optional) [string]  samflag to be excluded, comma delimited, 
-                                       e.g. '128,256,4' to exclude read2, secondary alignment 
-                                       and unaligned reads (default=128,256,4)
-   --min_MAPQ     (optional) [integer] minimum MAPQ to include (default=0)
-   --max_thread   (optional) [integer] maximum number of parallel threads, capped at 10 to 
-                                       avoid memory overflow (default=5)
-   --TS_oligo_seq (optional) [string]  Template switching oligo sequence for identification of 
-                                       5'end (default=TTTCTTATATGGG) 
-   --overwrite    (optional) [yes/no]  erase outDir/outputPrefix before running (default=no)
+   --bamPath                       <required> [string] bam file from cellranger, can be read 1 only or pair-end
+   --genome                        <required> [string] name of genome reference, e.g. hg19.gencode_v32lift37
+   --outputPrefix                  <required> [string] prefix for the output files
+   --outDir                        <required> [string] directory for the output files
+   --include_flag                  (optional) [string] samflag to be included, comma delimited 
+                                                       e.g. '64' to include read1, (default=null)
+   --exclude_flag                  (optional) [string] samflag to be excluded, comma delimited, 
+                                                       e.g. '128,256,4' to exclude read2, secondary alignment 
+                                                       and unaligned reads (default=128,256,4)
+   --min_MAPQ                     (optional) [integer] minimum MAPQ to include (default=0)
+   --max_thread                   (optional) [integer] maximum number of parallel threads, capped at 10 to 
+                                                       avoid memory overflow (default=5)
+   --TS_oligo_seq                  (optional) [string] Template switching oligo sequence for identification of 
+                                                       5'end (default=TTTCTTATATGGG) 
+   --detect_TS_oligo (optional) [match/trim/skip/auto] in bam_to_ctss step, the modes of detecting TS oligo. 1. match: search for 
+                                                       TS oligo sequence on the read, identify the TSO/cDNA junction as 5'end of 
+                                                       the read. This works only when the error rate of the TS oligo region on 
+                                                       the read is low, otherwise a considerable number of read will be invalid. 
+                                                       2. trim: assuming the 1st N bases of the reads are TS oligo, without 
+                                                       checking the actual sequence. N is determined by the length of TS oligo. 
+                                                       3. skip: assuming the TS oligo was not sequenced, the 1st base of the read
+                                                       will be treated as the 1st base after the TS oligo. 4. auto: automatically 
+                                                       determines the best mode, best of the observed error rate of the TS oligo
+                                                       and the frequency of 5'end softclipped bases by the aligner. If softcliped 
+                                                       bases is close to the length of TS oligo, mode 1 or 2 will be chosen, 
+                                                       depending on the observed error rate of the TS oligo (error rate <= 0.1, 
+                                                       mode 1 will be chosen or mode 2 otherwise). If softcliped base os close to 
+                                                       zero, mode 3 will be chosen. (default=auto).
+   --overwrite                    (optional) [yes/no]  erase outDir/outputPrefix before running (default=no)
 
  Dependencies:
    bedtools
    samtools
+   tabix
+   bgzip
+   
 
  To demo run, cd to SCAFE dir and run:
    scafe.tool.sc.bam_to_ctss \
@@ -479,7 +404,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/bam_to_ctss/
 ```
 
-### scafe.tool.cm.remove\_strand\_invader [[top]](#0)<a name="12"></a>
+### scafe.tool.cm.remove\_strand\_invader [[top]](#0)<a name="9"></a>
    This tool identify and remove strand invader artefact from a ctss bed file, 
    by aligning the sequence immediate upstream of a ctss to TS oligo sequence
 
@@ -506,6 +431,8 @@ This folder contains the following tools and workflows. A tool perform a single 
 
  Dependencies:
    bedtools
+   tabix
+   bgzip
 
  To demo run, cd to SCAFE dir and run:
    scafe.tool.cm.remove_strand_invader \
@@ -516,7 +443,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/remove_strand_invader/
 ```
 
-### scafe.tool.cm.prep\_genome [[top]](#0)<a name="13"></a>
+### scafe.tool.cm.prep\_genome [[top]](#0)<a name="10"></a>
    This tool prepares a reference genome assembly and its gene models for others tools in scafe.
 
 ```
@@ -554,7 +481,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/genome/
 ```
 
-### scafe.tool.cm.filter [[top]](#0)<a name="14"></a>
+### scafe.tool.cm.filter [[top]](#0)<a name="11"></a>
 
 ```
  Usage:
@@ -617,7 +544,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/filter/
 ```
 
-### scafe.tool.cm.ctss\_to\_bigwig [[top]](#0)<a name="15"></a>
+### scafe.tool.cm.ctss\_to\_bigwig [[top]](#0)<a name="12"></a>
    This tool converts a ctss bed file into two bigwig file, one for each strand, for visualization purpose 
 
 ```
@@ -641,7 +568,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/ctss_to_bigwig/
 ```
 
-### scafe.tool.cm.cluster [[top]](#0)<a name="16"></a>
+### scafe.tool.cm.cluster [[top]](#0)<a name="13"></a>
    This tool generate TSS cluster from a ctss bed file, using an external tool paraclu with user-defined cutoffs
 
 ```
@@ -685,63 +612,85 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/cluster/
 ```
 
-### scafe.tool.cm.annotate [[top]](#0)<a name="17"></a>
+### scafe.tool.cm.annotate [[top]](#0)<a name="14"></a>
    This tool defines tCRE from TSS clusters and annotates them based their overlap with gene models.
 
 ```
  Usage:
    scafe.tool.cm.annotate [options] --tssCluster_bed_path --tssCluster_info_path --genome --outputPrefix --outDir
    
-   --tssCluster_bed_path     <required> [string]  bed file contains the ranges of filtered TSS clusters,
-                                                  *.tssCluster.*.filtered.bed.gz from scafe.tool.cm.filter.pl
-   --tssCluster_info_path    <required> [string]  tsv file contains the information of all TSS clusters,
-                                                  *.tssCluster.log.tsv from scafe.tool.cm.filter.pl
-   --genome                  <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
-   --outputPrefix            <required> [string]  prefix for the output files
-   --outDir                  <required> [string]  directory for the output files
-   --up_end5Rng              (optional) [integer] TSS clusters will be classified as gene TSS, exonic, intron 
-                                                  and intergenic. $up_end5Rng determines the range upstream of 
-                                                  annotated gene TSS to be used for gene TSS assignment 
-                                                  (default = 500)
-   --dn_end5Rng              (optional) [integer] TSS clusters will be classified as gene TSS, exonic, intron 
-                                                  and intergenic. $dn_end5Rng determines the range downstream of 
-                                                  annotated gene TSS to be used for gene TSS assignment 
-                                                  (default = 500)
-   --exon_slop_rng           (optional) [integer] TSS clusters will be classified as gene TSS, exonic, intron 
-                                                  and intergenic. $exon_slop_rng determines the range to be extended
-                                                  (i.e. slopped) from exon for assignment of exonic class. 
-                                                  Used -1 to NOT to extend (default = -1)
-   --merge_dist              (optional) [integer] TSS clusters outside annotated gene promoters are grouped
-                                                  as "dummy genes" (for operational uniformity) by merging closely 
-                                                  located TSS clusters.  $merge_dist determines the maximum distances 
-                                                  between TSS clusters to be merged (default = 500)
-   --addon_length            (optional) [integer] see $merge_dist. add-on "dummy transcrips" will assigned to TSS cluster of 
-                                                  "dummy genes" (for operational uniformity).$addon_length determines 
-                                                  the length of these add-on "dummy transcrips" (default = 500).
-   --proximity_slop_rng      (optional) [integer] TSS clusters will be assigned to annotated gene TSS are "proximal"
-                                                  TSS clusters. $proximity_slop_rng determines the range to be extended
-                                                  (i.e. slopped) from gene TSS for assignment of proximal TSS clusters. 
-                                                  (default = 500)
-   --merge_strandness        (optional) [string]  see $merge_dist. $merge_strandness decides the merge to be 
-                                                  strand-aware ("stranded") or strand-agnostic "strandless".
-                                                  (default = strandless)
-   --proximal_strandness     (optional) [string]  closely located proximal TSS clusters are merged  
-                                                  tCREs. $proximal_strandness decides the merge to be 
-                                                  strand-aware ("stranded") or strand-agnostic "strandless".
-                                                  (default = stranded)
-   --CRE_extend_size         (optional) [integer] tCREs were defined by merging the extended ranges of TSS clusters.
-                                                  $CRE_extend_size determine the size of this range (both sides of 
-                                                  summit) (default = 500)
-   --CRE_extend_upstrm_ratio (optional) [float]   see $CRE_extend_size. $CRE_extend_upstrm_ratio determines the ratio 
-                                                  (X:1) of flanking sizes on the upstream and downstream of summit. 
-                                                  e.g. $CRE_extend_upstrm_ratio=4, upstream and downstream size will be 
-                                                  taken as 4:1 ratio. $CRE_extend_size=500 and $CRE_extend_upstrm_ratio=4,
-                                                  upstream and downstream will be 400 and 100 respectively 
-                                                  (default = 4)
-   --overwrite               (optional) [yes/no]  erase outDir/outputPrefix before running (default=no)
+   --tssCluster_bed_path       <required> [string]   bed file contains the ranges of filtered TSS clusters,
+                                                     *.tssCluster.*.filtered.bed.gz from scafe.tool.cm.filter.pl
+   --tssCluster_info_path      <required> [string]   tsv file contains the information of all TSS clusters,
+                                                     *.tssCluster.log.tsv from scafe.tool.cm.filter.pl
+   --genome                    <required> [string]   name of genome reference, e.g. hg19.gencode_v32lift37
+   --outputPrefix              <required> [string]   prefix for the output files
+   --outDir                    <required> [string]   directory for the output files
+   --up_end5Rng                (optional) [integer]  TSS clusters will be classified as gene TSS, exonic, intron 
+                                                     and intergenic. $up_end5Rng determines the range upstream of 
+                                                     annotated gene TSS to be used for gene TSS assignment 
+                                                     (default = 500)
+   --dn_end5Rng                (optional) [integer]  TSS clusters will be classified as gene TSS, exonic, intron 
+                                                     and intergenic. $dn_end5Rng determines the range downstream of 
+                                                     annotated gene TSS to be used for gene TSS assignment 
+                                                     (default = 500)
+   --exon_slop_rng             (optional) [integer]  TSS clusters will be classified as gene TSS, exonic, intron 
+                                                     and intergenic. $exon_slop_rng determines the range to be extended
+                                                     (i.e. slopped) from exon for assignment of exonic class. 
+                                                     Used -1 to NOT to extend (default = -1)
+   --merge_dist                (optional) [integer]  TSS clusters outside annotated gene promoters are grouped
+                                                     as "dummy genes" (for operational uniformity) by merging closely 
+                                                     located TSS clusters.  $merge_dist determines the maximum distances 
+                                                     between TSS clusters to be merged (default = 500)
+   --addon_length              (optional) [integer]  see $merge_dist. add-on "dummy transcrips" will assigned to TSS cluster of 
+                                                     "dummy genes" (for operational uniformity).$addon_length determines 
+                                                     the length of these add-on "dummy transcrips" (default = 500).
+   --proximity_slop_rng        (optional) [integer]  TSS clusters will be assigned to annotated gene TSS are "proximal"
+                                                     TSS clusters. $proximity_slop_rng determines the range to be extended
+                                                     (i.e. slopped) from gene TSS for assignment of proximal TSS clusters. 
+                                                     (default = 500)
+   --merge_strandness          (optional) [string]   see $merge_dist. $merge_strandness decides the merge to be 
+                                                     strand-aware ("stranded") or strand-agnostic "strandless".
+                                                     (default = strandless)
+   --proximal_strandness       (optional) [string]   closely located proximal TSS clusters are merged  
+                                                     tCREs. $proximal_strandness decides the merge to be 
+                                                     strand-aware ("stranded") or strand-agnostic "strandless".
+                                                     (default = stranded)
+   --CRE_extend_size           (optional) [integer]  tCREs were defined by merging the extended ranges of TSS clusters.
+                                                     $CRE_extend_size determine the size of this range (both sides of 
+                                                     summit) (default = 500)
+   --CRE_extend_upstrm_ratio   (optional) [float]    see $CRE_extend_size. $CRE_extend_upstrm_ratio determines the ratio 
+                                                     (X:1) of flanking sizes on the upstream and downstream of summit. 
+                                                     e.g. $CRE_extend_upstrm_ratio=4, upstream and downstream size will be 
+                                                     taken as 4:1 ratio. $CRE_extend_size=500 and $CRE_extend_upstrm_ratio=4,
+                                                     upstream and downstream will be 400 and 100 respectively 
+                                                     (default = 4)
+   --stitch_distance           (optional) [integer]  distance (nt) for stitching distal tCRE for defining hyperactive distal loci.
+                                                     aka superenhancer candidates. If undefined, an optimized value will be 
+                                                     determined based on the tangent to rank-distance plot. As a note, the original 
+                                                     distance for stitching enhancer in 
+                                                     ROSE (http://younglab.wi.mit.edu/super_enhancer_code.html) is 12,500.
+                                                     (default = undefined)
+   --min_total_exp_frac        (optional) [fraction] minimum fraction of the expression amount (read/UMI) within a gene for an annotated 
+                                                     tCRE to be regarded as an unannotated promoter of the gene. The total expression amount 
+                                                     of a gene is defined as the total number of UMI/read of all its annotated promoters.
+                                                     (default = 0.1)
+   --min_gene_strand_read_frac (optional) [fraction] minimum fraction of the expression amount (read/UMI) on the gene strand (in total number 
+                                                     of UMI/read both strand) of a tCRE to be regarded as an unannotated promoter of the gene.
+                                                     (default = 0.8)
+   --min_spreadness            (optional) [fraction] minimum spreadness of the distal CRE to be considered as hyperactive distal loci.
+                                                     Spreadness is defined as "num-of-CRE/top-fraction". Top-fraction is defined as the expression 
+                                                     amount (read/UMI) on the highest expressed distal CRE in the expression amount of all distal CRE 
+                                                     within the locus. Num-of-CRE refers to the number of CRE within the distal CRE locus 
+                                                     (default = 4, equivalent to Num-of-CRE=3 and Top-fraction = 0.75, i.e. 3/0.75 = 4)
+   --Rscript_bin               (optional) [string]   path to the Rscript bin, aim to allow users to supply an R version other the 
+                                                     system wide R version. Package Caret must be installed. (default = Rscript)
+   --overwrite                 (optional) [yes/no]   erase outDir/outputPrefix before running (default=no)
+ 
 
  Dependencies:
-   bedtools
+   bedtools,
+   R packages: 'ggplot2'
 
  To demo run, cd to SCAFE dir and run:
    scafe.tool.cm.annotate \
@@ -753,7 +702,43 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/sc.solo/annotate/
 ```
 
-### scafe.tool.bk.subsample\_ctss [[top]](#0)<a name="18"></a>
+### scafe.tool.cm.aggregate [[top]](#0)<a name="15"></a>
+   This tool aggregate multiple ctss bed files, regardless of single cell or bulk
+
+```
+ Usage:
+   scafe.tool.sc.pool [options] --lib_list_path --genome --outputPrefix --outDir
+   
+   --lib_list_path  <required> [string] a list of libraries, in formation of 
+                                        <lib_ID><\t><collapse_ctss><\t><unencoded_G_collapse_ctss>
+                                        lib_ID = Unique ID of the lib
+                                        collapse_ctss = *.collapse.ctss.bed.gz from scafe.tool.bk.bam_to_ctss or scafe.tool.bk.bam_to_ctss
+                                                        or *.pass.ctss.bed.gz from scafe.tool.cm.remove_strand_invader
+                                        unencoded_G_collapse_ctss = *unencoded_G.collapse.ctss.bed.gz from 
+                                                                    scafe.tool.sc.bam_to_ctss or scafe.tool.bk.bam_to_ctss
+   --genome        <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
+   --outputPrefix  <required> [string]  prefix for the output files
+   --outDir        <required> [string]  directory for the output files
+   --max_thread    (optional) [integer] maximum number of parallel threads, capped at 10 to 
+                                        avoid memory overflow (default=5)
+   --overwrite     (optional) [yes/no]  erase outDir/outputPrefix before running (default=no)
+
+ Dependencies:
+   bedtools
+   tabix
+   bgzip
+   
+
+ To demo run, cd to SCAFE dir and run:
+   scafe.tool.cm.aggregate \
+   --overwrite=yes \
+   --lib_list_path=./demo/input/cm.aggregate/lib_list_path.txt \
+   --genome=hg19.gencode_v32lift37 \
+   --outputPrefix=demo \
+   --outDir=./demo/output/cm.aggregate/aggregate/
+```
+
+### scafe.tool.bk.subsample\_ctss [[top]](#0)<a name="16"></a>
    This tool subsample a ctss bed file from bulk CAGE ctss
 
 ```
@@ -769,6 +754,8 @@ This folder contains the following tools and workflows. A tool perform a single 
 
  Dependencies:
    bedtools
+   tabix
+   bgzip
 
  To demo run, cd to SCAFE dir and run:
    scafe.tool.bk.subsample_ctss \
@@ -779,38 +766,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/bk.subsample/subsample_ctss/
 ```
 
-### scafe.tool.bk.pool [[top]](#0)<a name="19"></a>
-   This tool pools multiple bulk CAGE ctss bed file
-
-```
- Usage:
-   scafe.tool.bk.pool [options] --lib_list_path --genome --outputPrefix --outDir
-   
-   --lib_list_path <required> [string]  a list of libraries, in formation of 
-                                        <lib_ID><\t><long_ctss_bed><\t><collapse_ctss_bed>
-                                        lib_ID = Unique ID of the cellbarcode
-                                        long_ctss_bed = *long.ctss.bed.gz from scafe.tool.bk.bam_to_ctss.pl, 
-                                        collapse_ctss_bed = *collapse.ctss.bed.gz from scafe.tool.bk.bam_to_ctss.pl, 
-   --genome        <required> [string]  name of genome reference, e.g. hg19.gencode_v32lift37
-   --outputPrefix  <required> [string]  prefix for the output files
-   --outDir        <required> [string]  directory for the output files
-   --max_thread    (optional) [integer] maximum number of parallel threads, capped at 10 to 
-                                        avoid memory overflow (default=5)
-   --overwrite     (optional) [yes/no]  erase outDir/outputPrefix before running (default=no)
-
- Dependencies:
-   bedtools
-
- To demo run, cd to SCAFE dir and run:
-   scafe.tool.bk.pool \
-   --overwrite=yes \
-   --lib_list_path=./demo/input/bk.pool/lib_list_path.txt \
-   --genome=hg19.gencode_v32lift37 \
-   --outputPrefix=demo \
-   --outDir=./demo/output/bk.pool/pool/
-```
-
-### scafe.tool.bk.count [[top]](#0)<a name="20"></a>
+### scafe.tool.bk.count [[top]](#0)<a name="17"></a>
    This tool counts the CAGE reads within a set of user-defined regions, e.g. tCRE, and 
    returns the reads per regions
 
@@ -819,13 +775,13 @@ This folder contains the following tools and workflows. A tool perform a single 
    scafe.tool.bk.count [options] --countRegion_bed_path --ctss_bed_path --outputPrefix --outDir
    
    --countRegion_bed_path   <required> [string] bed file contains the regions for counting CTSS, e.g. tCRE ranges, 
-                                                *.CRE.coord.bed.gz from scafe.tool.cm.annotate.pl
+                                                *.CRE.coord.bed.gz from scafe.tool.cm.annotate
    --ctss_bed_path          <required> [string] ctss file for counting,
-                                                *CB.ctss.bed.gz from scafe.tool.sc.bam_to_ctss.pl, 
-                                                4th column cellbarcode and 5th column is number UMI
+                                                *collapse.ctss.bed.gz from scafe.tool.bk.bam_to_ctss, 
+                                                5th column is number of read
    --outputPrefix           <required> [string] prefix for the output files
    --outDir                 <required> [string] directory for the output files
-   --overwrite              (optional) [yes/no]  erase outDir/outputPrefix before running (default=no)
+   --overwrite              (optional) [yes/no] erase outDir/outputPrefix before running (default=no)
 
  Dependencies:
    bedtools
@@ -839,7 +795,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/bk.solo/count/
 ```
 
-### scafe.tool.bk.bam\_to\_ctss [[top]](#0)<a name="21"></a>
+### scafe.tool.bk.bam\_to\_ctss [[top]](#0)<a name="18"></a>
    This tool converts a bulk CAGE bam file to a ctss bed file, identifies read 5'end 
    (capped TSS, i.e. ctss), extracts the unencoded G information, pileup ctss, 
    and deduplicate the UMI
@@ -865,6 +821,8 @@ This folder contains the following tools and workflows. A tool perform a single 
  Dependencies:
    bedtools
    samtools
+   tabix
+   bgzip
 
  To demo run, cd to SCAFE dir and run:
    scafe.tool.bk.bam_to_ctss \
@@ -875,7 +833,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --outDir=./demo/output/bk.solo/bam_to_ctss/
 ```
 
-### scafe.download.resources.genome [[top]](#0)<a name="22"></a>
+### scafe.download.resources.genome [[top]](#0)<a name="19"></a>
    This script download reference genome data and save in ./resources/genome.
 
 ```
@@ -897,7 +855,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --genome=hg19.gencode_v32lift37
 ```
 
-### scafe.download.demo.input [[top]](#0)<a name="23"></a>
+### scafe.download.demo.input [[top]](#0)<a name="20"></a>
    This scripts download demo data and save in ./demo/input dir.
 
 ```
@@ -912,7 +870,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    scafe.download.demo.input
 ```
 
-### scafe.demo.test.run [[top]](#0)<a name="24"></a>
+### scafe.demo.test.run [[top]](#0)<a name="21"></a>
    This scripts test run for demo data in the ./demo/input dir. It runs user-selected workflows.
    Demo input data must be downloaded from using ./script/download.demo.input
    Genome reference hg19.gencode_v32lift37 must be downloaded using ./scripts/download.resources.genome
@@ -927,10 +885,9 @@ This folder contains the following tools and workflows. A tool perform a single 
                                                Available workflows includes,
                                                scafe.workflow.sc.subsample ---> workflow, single-cell mode, subsample ctss
                                                scafe.workflow.sc.solo ---> workflow, single-cell mode, process a single sample
-                                               scafe.workflow.sc.pool ---> workflow, single-cell mode, pool ctss of multiple samples
+                                               scafe.workflow.cm.aggregate ---> workflow, common mode, aggregate ctss of multiple samples
                                                scafe.workflow.bk.subsample ---> workflow, bulk mode, subsample ctss
                                                scafe.workflow.bk.solo ---> workflow, bulk mode, process a single sample
-                                               scafe.workflow.bk.pool ---> workflow, bulk mode, process a single sample
                                                (default=all)
    --overwrite            (optional) [yes/no]  erase run_outDir before running (default=no)
 
@@ -949,7 +906,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --run_outDir=./demo/output/
 ```
 
-### scafe.check.dependencies [[top]](#0)<a name="25"></a>
+### scafe.check.dependencies [[top]](#0)<a name="22"></a>
    This scripts check the integrity of tools and workflow scripts, 3rd executable dependencies and R packages.
 
 ```
