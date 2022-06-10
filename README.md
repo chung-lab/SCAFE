@@ -30,7 +30,18 @@
 Jonathan Moody and Tsukasa Kouno *et al*. Profiling of transcribed cis-regulatory elements in single cells. [bioRxiv 2021.04.04.438388](https://www.biorxiv.org/content/10.1101/2021.04.04.438388v1)
 
 ## Versions<a name="2"></a>
-*SCAFE* is currently in the beta phase of its development, which means there are likely bugs and performance issues. We are currently testing *SCAFE* under various user-scenerios to make sure it runs for most users. A stable release will be made public at the time when its companion manuscript is published in a scientific journal.
+### [v1.0.0]() (Lastest) [June 6, 2022] 	
+* auto detects mode for TSO identification and trimming (in ***scafe.tool.sc.bam\_to\_ctss***)
+* use tabix/bgzip for fast indexing of ctss bed
+* annotate hyperactive distal locus, analogous to super-enhancer (in ***scafe.tool.cm.annotate***)
+* annotate potential alternative promoters beyond reference transcript 5'ends (in ***scafe.tool.cm.annotate***)
+* aggregate multiple ctss without considering UMI/Cellbarcode, for scalability, replacing 'pool' tools and workflows (in ***scafe.tool.cm.aggregate*** and ***scafe.workflow.cm.aggregate***)
+* ***scafe.tool.sc.link*** is now obsolete and thus monocle3 and cicero are not needed.
+* calculate the directionality of tCREs (in ***scafe.tool.cm.directionality***)
+
+### [v0.9.0-beta](https://github.com/chung-lab/SCAFE/releases/tag/v0.9.0-beta) [March 20, 2021] 	
+* Initial pre-release
+* beta phase, likely buggy and has performance issues. 
 
 ## What does *SCAFE* do?<a name="3"></a>
 <div style="text-align:center"><img src=".github/images/tCRE_definition.png?" width="860"></div>
