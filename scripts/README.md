@@ -707,7 +707,7 @@ This folder contains the following tools and workflows. A tool perform a single 
 
 ```
  Usage:
-   scafe.tool.sc.pool [options] --lib_list_path --genome --outputPrefix --outDir
+   scafe.tool.cm.aggregate [options] --lib_list_path --genome --outputPrefix --outDir
    
    --lib_list_path  <required> [string] a list of libraries, in formation of 
                                         <lib_ID><\t><collapse_ctss><\t><unencoded_G_collapse_ctss>
