@@ -53,7 +53,7 @@ Profiling of cis-regulatory elements (CREs, mostly promoters and enhancers) in s
 <div style="text-align:center"><img src=".github/images/flowchart.png?" width="860"></div>
 
 ### *SCAFE* Core Tools and Workflows
-*SCAFE* consists of [a set of perl programs](scripts/) for processing of sc-end5-seq data. Major tools are listed in **Figure (a)**. *SCAFE* accepts read alignment in *\*.bam* format from 10xGenomics Chromimum® software *cellranger*. Tool ***bam\_to\_ctss*** extracts the 5’ position of reads, taking the 5’ unencoded-Gs into account. Tool ***remove\_strand\_invader*** removes read 5’ends that are strand invasion artifacts by aligning the TS oligo sequence to the immediate upstream sequence of the read 5’end. Tool *cluster* performs clustering of read 5’ends using 3rd-party tool *Paraclu*. Tool ***filter*** extracts the properties of TSS clusters and performs multiple logistic regression to distinguish genuine TSS clusters from artifacts. Tool ***annotate*** define tCREs by merging closely located TSS clusters and annotate tCREs based on their proximity to known genes. Tool ***count*** counts the number of UMI within each tCRE in single cells and generates a tCRE-Cell UMI count matrix. SCAFE tools were also implemented workflows for processing of individual samples or pooling of multiple samples.
+*SCAFE* consists of [a set of perl programs](scripts/) for processing of sc-end5-seq data. Major tools are listed in **Figure (a)**. *SCAFE* accepts read alignment in *\*.bam* format from 10xGenomics Chromimum® software *cellranger*. Tool ***bam\_to\_ctss*** extracts the 5’ position of reads, taking the 5’ unencoded-Gs into account. Tool ***remove\_strand\_invader*** removes read 5’ends that are strand invasion artifacts by aligning the TS oligo sequence to the immediate upstream sequence of the read 5’end. Tool *cluster* performs clustering of read 5’ends using 3rd-party tool *Paraclu*. Tool ***filter*** extracts the properties of TSS clusters and performs multiple logistic regression to distinguish genuine TSS clusters from artifacts. Tool ***annotate*** define tCREs by merging closely located TSS clusters and annotate tCREs based on their proximity to known genes. Tool ***count*** counts the number of UMI within each tCRE in single cells and generates a tCRE-Cell UMI count matrix. SCAFE tools were also implemented workflows for processing of individual samples or aggregateing of multiple samples.
 
 *P.S.* *SCAFE* also accepts bulk 5'end RNA-Seq data (e.g. bulk CAGE). See [scripts](scripts/) for details.
 
@@ -302,12 +302,12 @@ scafe.demo.test.run \
 
 ### Run *SCAFE* workflows on single cell data with default options
 
-We recommend most users to run *SCAFE* using workflows with default options. There are 3 types of workflow: **(1)** "***solo***" for processing of a single library, **(2)** "***pool***" for pooling of multiple libraries and **(3)** "***subsample***" for down-sampling a single library (for assessment of sequencing depth). "***solo***" accepts *\*.bam* while "***pool***"/"***subsample***" accepts *\*.ctss.bed* files (generated from *tool.sc.bam\_to\_ctss*). For multiple libraries, we recommend users to first run either *workflow.sc.solo* or *tool.sc.bam\_to\_ctss* on indiviudal libraries, and then take the *\*.ctss.bed* file from all libraries to run *workflow.sc.pool*. Pooling of libraries for defining tCRE is recommended because **(1)** it generally increases the sensitivity of tCRE detection and **(2)** it produces a common set of tCREs for all libraries so the IDs are portable between libraries. Please check the help messages for details of running the workflows: 
+We recommend most users to run *SCAFE* using workflows with default options. There are 3 types of workflow: **(1)** "***solo***" for processing of a single library, **(2)** "***aggregate***" for aggregating of multiple libraries and **(3)** "***subsample***" for down-sampling a single library (for assessment of sequencing depth). "***solo***" accepts *\*.bam* while "***aggregate***"/"***subsample***" accepts *\*.ctss.bed* files (generated from *tool.sc.bam\_to\_ctss*). For multiple libraries, we recommend users to first run either *workflow.sc.solo* or *tool.sc.bam\_to\_ctss* on indiviudal libraries, and then take the *\*.ctss.bed* file from all libraries to run *workflow.cm.aggregate*. Aggregating of libraries for defining tCRE is recommended because **(1)** it generally increases the sensitivity of tCRE detection and **(2)** it produces a common set of tCREs for all libraries so the IDs are portable between libraries. Please check the help messages for details of running the workflows: 
 
 ```shell
 #--- check out the help message of the three single cell workflows
 scafe.workflow.sc.solo --help
-scafe.workflow.sc.pool --help
+scafe.workflow.cm.aggregate --help
 scafe.workflow.sc.subsample --help
 
 ```
@@ -423,7 +423,7 @@ scafe.tool.cm.prep_genome \
 ```shell
 #--- check out the help message of the three single cell workflows
 scafe.workflow.bk.solo --help
-scafe.workflow.bk.pool --help
+scafe.workflow.cm.aggregate --help
 scafe.workflow.bk.subsample --help
 ```
 
