@@ -149,7 +149,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --lib_list_path        <required> [string] a list of libraries, in formation of 
                                               <lib_ID><\t><collapse_ctss><\t><unencoded_G_collapse_ctss>
                                               lib_ID = Unique ID of the lib
-                                              collapse_ctss = *.collapse.ctss.bed.gz from scafe.tool.bk.bam_to_ctss or scafe.tool.bk.bam_to_ctss
+                                              collapse_ctss = *.collapse.ctss.bed.gz from scafe.tool.sc.bam_to_ctss or scafe.tool.bk.bam_to_ctss
                                                               or *.pass.ctss.bed.gz from scafe.tool.cm.remove_strand_invader
                                               unencoded_G_collapse_ctss = *unencoded_G.collapse.ctss.bed.gz from 
                                                                           scafe.tool.sc.bam_to_ctss or scafe.tool.bk.bam_to_ctss
@@ -750,7 +750,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --lib_list_path  <required> [string] a list of libraries, in formation of 
                                         <lib_ID><\t><collapse_ctss><\t><unencoded_G_collapse_ctss>
                                         lib_ID = Unique ID of the lib
-                                        collapse_ctss = *.collapse.ctss.bed.gz from scafe.tool.bk.bam_to_ctss or scafe.tool.bk.bam_to_ctss
+                                        collapse_ctss = *.collapse.ctss.bed.gz from scafe.tool.sc.bam_to_ctss or scafe.tool.bk.bam_to_ctss
                                                         or *.pass.ctss.bed.gz from scafe.tool.cm.remove_strand_invader
                                         unencoded_G_collapse_ctss = *unencoded_G.collapse.ctss.bed.gz from 
                                                                     scafe.tool.sc.bam_to_ctss or scafe.tool.bk.bam_to_ctss

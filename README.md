@@ -279,7 +279,7 @@ ls -alh ./demo/output/sc.solo/count/demo/matrix
 ```
 
 ### Test run all workflows on bulk and single cell data
-We recommended a test run for all 6 available workflows on the demo data. It will take around ~20 minutes on a regular system running at 5 threads (default).
+We recommended a test run for all 5 available workflows on the demo data. It will take around ~20 minutes on a regular system running at 5 threads (default).
 
 ```shell
 #--- check out the help message of demo.test.run
