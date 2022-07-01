@@ -162,7 +162,7 @@ scafe.download.resources.genome --genome=hg19.gencode_v32lift37
 ```
 
 ### Test run a single cell solo workflow for demo data
-Now, let's test *SCAFE* with a workflow (*workflow.sc.solo*) that processes one library of single cell 5'end RNA-seq data. First we check out the help message of *workflow.sc.solo*. Remember you can always check the help message for all scripts of *SCAFE* using the *--help* flag. 
+Now, let's test *SCAFE* with a workflow (*workflow.sc.solo*) that processes one library of single-cell 5'end RNA-seq data. First we check out the help message of *workflow.sc.solo*. Remember you can always check the help message for all scripts of *SCAFE* using the *--help* flag. 
 
 ```shell
 #--- check out the help message of workflow.sc.solo
