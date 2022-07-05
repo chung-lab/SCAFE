@@ -30,7 +30,8 @@
 Jonathan Moody and Tsukasa Kouno *et al*. Profiling of transcribed cis-regulatory elements in single cells. [bioRxiv 2021.04.04.438388](https://www.biorxiv.org/content/10.1101/2021.04.04.438388v1)
 
 ## Versions<a name="2"></a>
-### [v1.0.0]() (Lastest) [June 6, 2022] 	
+### [See here for developmental releases](https://github.com/chung-lab/SCAFE/tree/dev)
+### [v1.0.0]() (Lastest Stable release) [June 6, 2022] 	
 * auto detects mode for TSO identification and trimming (in ***scafe.tool.sc.bam\_to\_ctss***)
 * use tabix/bgzip for fast indexing of ctss bed
 * annotate hyperactive distal locus, analogous to super-enhancer (in ***scafe.tool.cm.annotate***)
