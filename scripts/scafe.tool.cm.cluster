@@ -85,28 +85,21 @@ use Cwd 'abs_path';
    scafe.tool.cm.cluster [options] --cluster_ctss_bed_path --outputPrefix --outDir
    
    --cluster_ctss_bed_path       <required> [string]  ctss file used for clustering,
-                                                      "collapse" ctss file from scafe.tool.sc.bam_to_ctss.pl, 
-                                                      4th column is number of cells and 5th column is number UMI
+                                                      for single cell, *.pass.ctss.bed.gz ctss file from 
+                                                      scafe.tool.cm.remove_strand_invader; for bulk,
+                                                      *collapse.ctss.bed.gz from scafe.tool.bk.bam_to_ctss;
+                                                      for aggregate, *collapse.ctss.bed.gz from scafe.tool.cm.aggregate
+   --count_ctss_bed_path         <required> [string]  ctss file used for counting, 
+                                                      using for filtering of clusters, on min_summit_count and min_cluster_count
+                                                      for stringent filter, can consider using *.unencoded_G.collapse.ctss.bed.gz
+                                                      for permissive filter, use the same as cluster_ctss_bed_path, e.g. *collapse.ctss.bed.gz
    --outputPrefix                <required> [string]  prefix for the output files
    --outDir                      <required> [string]  directory for the output files
-   --count_ctss_bed_path_list    (optional) [string]  comma delimited list of ctss bed file, 
-                                                      using for filtering of clusters based signal 
-                                                      (default=$cluster_ctss_bed_path) 
-   --count_scope_bed_path        (optional) [string]  a bed file specify the scope for counting in $count_ctss_bed_path_list, 
-                                                      using for filtering of clusters based signal
-                                                      (default=$cluster_ctss_bed_path) 
-   --min_pos_count               (optional) [integer] minimum counts per position, used for filtering the raw signal 
-                                                      in $cluster_ctss_bed_path before clustering (default = 1)
-   --min_cluster_cpm             (optional) [float]   minimum counts per million (cpm) for a cluster (default = 1e-5)
-   --min_summit_count            (optional) [integer] minimum counts at the summit of a cluster (default = 3)
-   --min_cluster_count           (optional) [integer] minimum counts within a cluster (default = 5)
-   --min_num_sample_expr_cluster (optional) [integer] minimum number of samples (or cells) detected at the 
-                                                      summit of a cluster (default = 3)
-   --min_num_sample_expr_summit  (optional) [integer] minimum number of samples (or cells) detected within 
-                                                      of a cluster (default = 5)
-   --merge_dist                  (optional) [integer] maximum distance for merging closely located clusters, 
-                                                      -1 to turn off merging (default = -1)
-   --overwrite                   (optional) [yes/no]  erase outDir/outputPrefix before running (default=no)
+   --min_summit_count            (optional) [integer] minimum counts at the summit of a cluster, based on count_ctss_bed_path (default = 0)
+   --min_cluster_count           (optional) [integer] minimum counts within a cluster, based on count_ctss_bed_path (default = 2)
+   --min_paraclu_count           (optional) [integer] minimum number of read in a cluster to be retained in paraclu (as paraclu input parameter) 
+                                                      based on cluster_ctss_bed_path (default = 3)
+   --overwrite                    (optional) [yes/no] erase outDir/outputPrefix before running (default=no)
 
  Dependencies:
    paraclu
@@ -128,6 +121,14 @@ v0.9.0-beta [March 20, 2021]
 v1.0.0 [June 6, 2022]
 	-parallelized part of the processes
 
+v1.0.1 [June 26, 2022]
+	-min_num_sample_expr_cluster and min_num_sample_expr_summit are deprecated
+	-count_ctss_bed_path change to count_ctss_bed_path
+	-count_scope_bed_path is deprecated
+	-min_pos_count deprecated
+	-merge_dist deprecated
+	-added min_paraclu_count option
+	
 =cut#
 #<\doc>
 #====================================================================================================================================================#
@@ -146,8 +147,8 @@ v1.0.0 [June 6, 2022]
 #<global>
 my $scriptDirPath = dirname(rel2abs($0));
 my $scriptAbsPath = abs_path($0);
-my ($curntTimeStamp) = &timeStamp();#->1090
-my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->301
+my ($curntTimeStamp) = &timeStamp();#->831
+my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->298
 my $globalReadmeHsh_ref = {};
 our $tmplog_fh;
 #<\global>
@@ -161,7 +162,7 @@ our $tmplog_fh;
 #	section 0_startingTasks
 #
 #<section ID="startingTasks" num="0">
-my ($cluster_ctss_bed_path, $count_ctss_bed_path_list, $count_scope_bed_path, $min_cluster_cpm, $min_cluster_count, $min_pos_count, $min_summit_count, $merge_dist, $min_num_sample_expr_cluster, $min_num_sample_expr_summit, $outputPrefix, $outDir, $overwrite) = &readParameters();#->901
+my ($cluster_ctss_bed_path, $count_ctss_bed_path, $min_cluster_count, $min_summit_count, $min_paraclu_count, $outputPrefix, $outDir, $overwrite) = &readParameters();#->689
 #<\section>
 #====================================================================================================================================================#
 
@@ -170,21 +171,20 @@ my ($cluster_ctss_bed_path, $count_ctss_bed_path_list, $count_scope_bed_path, $m
 #
 #<section ID="defineHardCodedParam" num="1">
 my $paramTag = "$outputPrefix";
-my $force_rerun = 'yes'; #---[2020/04/21 0:18] force to rerun paraclu even results exists
 
 my @mkDirAry;
 my $result_dir = "$outDir/$paramTag/"; push @mkDirAry, $result_dir;
 system "rm -rf $result_dir" if ($overwrite eq 'yes');
 my $resultParacluDir = "$result_dir/paraclu/"; push @mkDirAry, $resultParacluDir;
 my $resultBedDir = "$result_dir/bed/"; push @mkDirAry, $resultBedDir;
-my $resultPreMergeBedDir = "$result_dir/bed/pre_merge/"; push @mkDirAry, $resultPreMergeBedDir;
 my $resultLogDir = "$result_dir/log/"; push @mkDirAry, $resultLogDir;
 my $resultScriptDir = "$result_dir/script/"; push @mkDirAry, $resultScriptDir;
 foreach my $dir (@mkDirAry) {system ("mkdir -pm 755 $dir");}
 
 open $tmplog_fh, ">", "$result_dir/00_screen_log.$curntTimeStamp.log.txt";
-&printStartOrFinishMessage("startMessage");#->867
-&logCalledCMDAndScript($ARGVStr, $resultScriptDir, $scriptAbsPath);#->472
+&printStartOrFinishMessage("startMessage");#->655
+&logCalledCMDAndScript($ARGVStr, $resultScriptDir, $scriptAbsPath);#->413
+
 #<\section>
 #====================================================================================================================================================#
 
@@ -192,14 +192,12 @@ open $tmplog_fh, ">", "$result_dir/00_screen_log.$curntTimeStamp.log.txt";
 #	section 2_ReadInfoAndRun
 #
 #<section ID="ReadInfoAndRun" num="2">
-my ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();#->201
-my ($count_ctss_bed_hsh_ref) = &getCountCtssPath($count_ctss_bed_path_list, $count_scope_bed_path);#->319
-my ($paraclu_input_path, $min_cluster_count_by_cpm) = &parseParacluInput($cluster_ctss_bed_path, $min_pos_count, $min_cluster_cpm, $resultParacluDir);#->584
-my ($paraclu_bed_path) = &runParaclu($paraclu_input_path, $paraclu_bin, $cut_sh_path, $resultParacluDir, $resultPreMergeBedDir, $min_cluster_count, $min_cluster_count_by_cpm, $paramTag, $force_rerun);#->984
-my ($paraclu_cluster_info_hsh_ref, $summit_bed_path) = &getTssClusterSummit($resultPreMergeBedDir, $paraclu_bed_path, $cluster_ctss_bed_path, $bedtools_bin, $paramTag);#->423
-my ($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref) = &mergeParacluClusters($bedtools_bin, $summit_bed_path, $merge_dist, $cluster_ctss_bed_path, $resultBedDir, $resultLogDir, $paramTag, $paraclu_cluster_info_hsh_ref, $min_summit_count);#->497
-&getNumSampleExpressed($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref, $count_ctss_bed_hsh_ref, $bedtools_bin);#->364
-&printFinalBedAndLog($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref, $resultBedDir, $resultLogDir, $paramTag, $min_num_sample_expr_cluster, $min_num_sample_expr_summit);#->641
+my ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();#->198
+my ($paraclu_input_path) = &parseParacluInput($cluster_ctss_bed_path, $resultParacluDir);#->438
+my ($paraclu_cluster_bed_path) = &runParaclu($paraclu_input_path, $paraclu_bin, $cut_sh_path, $resultParacluDir, $min_paraclu_count);#->761
+my ($tssCluster_info_hsh_ref, $paraclu_summit_bed_path) = &generateTssClusterInfoHsh($resultParacluDir, $paraclu_cluster_bed_path, $cluster_ctss_bed_path, $bedtools_bin);#->316
+&getTssClusterCount($tssCluster_info_hsh_ref, $count_ctss_bed_path, $paraclu_summit_bed_path, $paraclu_cluster_bed_path, $bedtools_bin);#->381
+&printFinalBedAndLog($tssCluster_info_hsh_ref, $resultBedDir, $resultLogDir, $min_cluster_count, $min_summit_count, $paramTag);#->486
 #<\section>
 #====================================================================================================================================================#
 
@@ -207,8 +205,8 @@ my ($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref) = &mergeParacluClusters(
 #	section 3_finishingTasks
 #
 #<section ID="finishingTasks" num="3">
-&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->752
-&printStartOrFinishMessage("finishMessage");#->867
+&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->540
+&printStartOrFinishMessage("finishMessage");#->655
 #<\section>
 #====================================================================================================================================================#
 
@@ -232,17 +230,16 @@ my ($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref) = &mergeParacluClusters(
 #	time [n=1]:
 #		timeStamp
 #
-#	unassigned [n=8]:
-#		checkAllExecutable, getCountCtssPath, getNumSampleExpressed
-#		getTssClusterSummit, mergeParacluClusters, parseParacluInput
-#		printFinalBedAndLog, runParaclu
+#	unassigned [n=6]:
+#		checkAllExecutable, generateTssClusterInfoHsh, getTssClusterCount
+#		parseParacluInput, printFinalBedAndLog, runParaclu
 #
 #====================================================================================================================================================#
 
 sub checkAllExecutable {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|962
+#	dependOnSub: reportAndLogStatus|739
 #	appearInSub: >none
 #	primaryAppearInSection: 2_ReadInfoAndRun|150
 #	secondaryAppearInSection: >none
@@ -263,12 +260,12 @@ sub checkAllExecutable {
 	my $bedGraphToBigWig_bin = "$dirPath/../resources/bin/bedGraphToBigWig/bedGraphToBigWig";
 	my $bigWigAverageOverBed_bin = "$dirPath/../resources/bin/bigWigAverageOverBed/bigWigAverageOverBed";
 	
-	&reportAndLogStatus("Checking all SCAFE executables", 10, "\n");#->962
+	&reportAndLogStatus("Checking all SCAFE executables", 10, "\n");#->739
 	
 	{
 		my $stdOut = `$tabix_bin  --version 2>&1`;
 		if ($stdOut =~ m/tabix \(htslib\) (\S+)/) {
-			&reportAndLogStatus("Checking: tabix version: $1", 0, "\n");#->962
+			&reportAndLogStatus("Checking: tabix version: $1", 0, "\n");#->739
 		} else {
 			die "tabix is not installed properly. Quitting.\n";
 		}
@@ -277,7 +274,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bgzip_bin --version 2>&1`;
 		if ($stdOut =~ m/bgzip \(htslib\) (\S+)/) {
-			&reportAndLogStatus("Checking: bgzip version: $1", 0, "\n");#->962
+			&reportAndLogStatus("Checking: bgzip version: $1", 0, "\n");#->739
 		} else {
 			die "bgzip is not installed properly. Quitting.\n";
 		}
@@ -286,7 +283,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bedtools_bin --version 2>&1`;
 		if ($stdOut =~ m/bedtools v(\S+)/) {
-			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->962
+			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->739
 		} else {
 			die "bedtools is not installed properly. Quitting.\n";
 		}
@@ -295,7 +292,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$samtools_bin 2>&1`;
 		if ($stdOut =~ m/\s+(Version: \S+)\s+/) {
-			&reportAndLogStatus("Checking: samtools version: $1", 0, "\n");#->962
+			&reportAndLogStatus("Checking: samtools version: $1", 0, "\n");#->739
 		} else {
 			die "samtools is not installed properly. Quitting.\n";
 		}
@@ -304,7 +301,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$paraclu_bin 2>&1`;
 		if ($stdOut =~ m/paraclu: I need a minValue and a fileName/) {
-			&reportAndLogStatus("Checking: paraclu found.", 0, "\n");#->962
+			&reportAndLogStatus("Checking: paraclu found.", 0, "\n");#->739
 		} else {
 			die "paraclu is not installed properly. Quitting.\n";
 		}
@@ -313,7 +310,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$cut_sh_path 55C7128A 2>&1`;
 		if ($stdOut =~ m/awk:/) {
-			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->962
+			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->739
 		} else {
 			die "paraclu-cut is not installed properly. Quitting.\n";
 		}
@@ -322,7 +319,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bedGraphToBigWig_bin 2>&1`;
 		if ($stdOut =~ m/bedGraphToBigWig v (\S+)/) {
-			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->962
+			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->739
 		} else {
 			die "bedGraphToBigWig not installed properly. Quitting.\n";
 		}
@@ -331,7 +328,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bigWigAverageOverBed_bin 2>&1`;
 		if ($stdOut =~ m/bigWigAverageOverBed v(\S+)/) {
-			&reportAndLogStatus("Checking: bigWigAverageOverBed version: $1", 0, "\n");#->962
+			&reportAndLogStatus("Checking: bigWigAverageOverBed version: $1", 0, "\n");#->739
 		} else {
 			die "bigWigAverageOverBed is not installed properly. Quitting.\n";
 		}
@@ -343,13 +340,13 @@ sub currentTime {
 #....................................................................................................................................................#
 #	subroutineCategory: general
 #	dependOnSub: >none
-#	appearInSub: printStartOrFinishMessage|867, reportAndLogStatus|962
+#	appearInSub: printStartOrFinishMessage|655, reportAndLogStatus|739
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 1_defineHardCodedParam|127, 3_finishingTasks|165
+#	secondaryAppearInSection: 1_defineHardCodedParam|126, 3_finishingTasks|163
 #	input: none
 #	output: $runTime
 #	toCall: my ($runTime) = &currentTime();
-#	calledInLine: 108, 883, 887, 892, 896, 978, 979
+#	calledInLine: 107, 671, 675, 680, 684, 755, 756
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
@@ -357,170 +354,114 @@ sub currentTime {
 	
 	return $runTime;
 }
-sub getCountCtssPath {
+sub generateTssClusterInfoHsh {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|962
+#	dependOnSub: reportAndLogStatus|739
 #	appearInSub: >none
 #	primaryAppearInSection: 2_ReadInfoAndRun|150
 #	secondaryAppearInSection: >none
-#	input: $count_ctss_bed_path_list, $count_scope_bed_path
-#	output: $count_ctss_bed_hsh_ref
-#	toCall: my ($count_ctss_bed_hsh_ref) = &getCountCtssPath($count_ctss_bed_path_list, $count_scope_bed_path);
-#	calledInLine: 154
+#	input: $bedtools_bin, $cluster_ctss_bed_path, $paraclu_cluster_bed_path, $resultParacluDir
+#	output: $paraclu_summit_bed_path, $tssCluster_info_hsh_ref
+#	toCall: my ($tssCluster_info_hsh_ref, $paraclu_summit_bed_path) = &generateTssClusterInfoHsh($resultParacluDir, $paraclu_cluster_bed_path, $cluster_ctss_bed_path, $bedtools_bin);
+#	calledInLine: 156
 #....................................................................................................................................................#
-	my ($count_ctss_bed_path_list, $count_scope_bed_path) = @_;
+	my ($resultParacluDir, $paraclu_cluster_bed_path, $cluster_ctss_bed_path, $bedtools_bin) = @_;
 	
-	&reportAndLogStatus("checking count_ctss_bed_path_list", 10, "\n");#->962
-	
-	my $count_ctss_bed_hsh_ref = {};
-	if (defined $count_ctss_bed_path_list) {
-		foreach my $count_ctss_bed_path (split /\,/, $count_ctss_bed_path_list) {
-			if (-s $count_ctss_bed_path) {
-				if (exists $count_ctss_bed_hsh_ref->{$count_ctss_bed_path}) {
-					&reportAndLogStatus("WARNING: $count_ctss_bed_path appeared more than once.", 10, "\n");#->962
-				}
-				$count_ctss_bed_hsh_ref->{'count_ctss_bed_path'}{$count_ctss_bed_path}++;
-			} else {
-				die "count_ctss_bed_path: $count_ctss_bed_path does not exist\n";
-			}
-		}
+	my $tssCluster_info_hsh_ref = {};
+	my $paraclu_info_hsh_ref = {};
 
-		my $num_ctss_count_bed = keys %{$count_ctss_bed_hsh_ref->{'count_ctss_bed_path'}};
-		&reportAndLogStatus("stored $num_ctss_count_bed ctss bed for counting num sample expressed", 10, "\n");#->962
-	} else {
-		&reportAndLogStatus("num sample expressed will not be used for filtering", 10, "\n");#->962
-	}
-
-	if (defined $count_scope_bed_path) {
-		if (-s $count_scope_bed_path) {
-			$count_ctss_bed_hsh_ref->{'count_scope_bed_path'} = $count_scope_bed_path;
-		} else {
-			die "count_scope_bed_path: $count_scope_bed_path does not exist\n";
-		}
-	}
-	
-	return ($count_ctss_bed_hsh_ref);
-}
-sub getNumSampleExpressed {
-#....................................................................................................................................................#
-#	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|962
-#	appearInSub: >none
-#	primaryAppearInSection: 2_ReadInfoAndRun|150
-#	secondaryAppearInSection: >none
-#	input: $bedtools_bin, $count_ctss_bed_hsh_ref, $tmp_merge_bed_file_path, $tssCluster_info_hsh_ref
-#	output: 
-#	toCall: &getNumSampleExpressed($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref, $count_ctss_bed_hsh_ref, $bedtools_bin);
-#	calledInLine: 159
-#....................................................................................................................................................#
-	my ($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref, $count_ctss_bed_hsh_ref, $bedtools_bin) = @_;
-	
-	if (exists $count_ctss_bed_hsh_ref->{'count_ctss_bed_path'}) {
-		foreach my $count_ctss_bed_path (keys %{$count_ctss_bed_hsh_ref->{'count_ctss_bed_path'}}) {
-			my ($fileName, $fileDir, $fileSuffix) = fileparse($count_ctss_bed_path, qr/\.[^.]*/);
-			&reportAndLogStatus("counting num sample expressed in $fileName$fileSuffix", 10, "\n");#->962
-
-			my $bedtools_cmd;
-			if (exists $count_ctss_bed_hsh_ref->{'count_scope_bed_path'}) {
-				&reportAndLogStatus("couting within scope of count_scope_bed_path", 10, "\n");#->962
-				my $count_scope_bed_path = $count_ctss_bed_hsh_ref->{'count_scope_bed_path'};
-				$bedtools_cmd = "$bedtools_bin intersect -sorted -s -wa -a $count_ctss_bed_path -b $count_scope_bed_path | $bedtools_bin intersect -sorted -s -wo -a $tmp_merge_bed_file_path -b stdin";
-				
-			} else {
-				$bedtools_cmd = "$bedtools_bin intersect -sorted -s -wo -a $tmp_merge_bed_file_path -b $count_ctss_bed_path";
-
-			}
-			#print "$bedtools_cmd\n";
-			open BEDTOOLS, "$bedtools_cmd | cut -f 4,8,15,16,17 |";
-			while (<BEDTOOLS>) {
-				#print $_;	
-				chomp;
-				#chr1	7973224	7973330	chr1_7973224_7973330_-	1727	-	7973316	7973317	31,120,180	1	106	0	chr1	7973279	7973280	11	11	-	1
-				#chr1	7973224	7973330	chr1_7973224_7973330_-	1727	-	7973316	7973317	31,120,180	1	106	0	chr1	7973280	7973281	1	1	-	1
-				#chr1	7973224	7973330	chr1_7973224_7973330_-	1727	-	7973316	7973317	31,120,180	1	106	0	chr1	7973281	7973282	137	168	-	1
-				my ($tssClusterID, $summit_pos, $ctss_pos, $num_sample_expr) = split /\t/;
-				if (exists $tssCluster_info_hsh_ref->{$tssClusterID}) {
-					$tssCluster_info_hsh_ref->{$tssClusterID}{'num_sample_expr_cluster'} += $num_sample_expr;
-					if ($summit_pos == $ctss_pos) {
-						$tssCluster_info_hsh_ref->{$tssClusterID}{'num_sample_expr_summit'} += $num_sample_expr;
-					}
-				} else {
-					die "tssClusterID $tssClusterID does not exists in $tssCluster_info_hsh_ref\n";
-				}
-			}
-			close BEDTOOLS;
-		}
-	} else {
-		&reportAndLogStatus("No count_ctss_bed_path. Assigning num_sample_expr_cluster -1 to all tssClusters", 10, "\n");#->962
-		foreach my $tssClusterID (keys %{$tssCluster_info_hsh_ref}) {
-			$tssCluster_info_hsh_ref->{$tssClusterID}{'num_sample_expr_cluster'} = -1;
-			$tssCluster_info_hsh_ref->{$tssClusterID}{'num_sample_expr_summit'} = -1;
-		}
-	}
-
-	return ();
-}
-sub getTssClusterSummit {
-#....................................................................................................................................................#
-#	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|962
-#	appearInSub: >none
-#	primaryAppearInSection: 2_ReadInfoAndRun|150
-#	secondaryAppearInSection: >none
-#	input: $bedtools_bin, $cluster_ctss_bed_path, $paraclu_bed_path, $paramTag, $resultPreMergeBedDir
-#	output: $paraclu_cluster_info_hsh_ref, $summit_bed_path
-#	toCall: my ($paraclu_cluster_info_hsh_ref, $summit_bed_path) = &getTssClusterSummit($resultPreMergeBedDir, $paraclu_bed_path, $cluster_ctss_bed_path, $bedtools_bin, $paramTag);
-#	calledInLine: 157
-#....................................................................................................................................................#
-	my ($resultPreMergeBedDir, $paraclu_bed_path, $cluster_ctss_bed_path, $bedtools_bin, $paramTag) = @_;
-	
-	my $paraclu_cluster_info_hsh_ref = {};
-
-	&reportAndLogStatus("getting summit position", 10, "\n");#->962
-	my $bedtools_cmd = "$bedtools_bin intersect -sorted -a $paraclu_bed_path -b $cluster_ctss_bed_path -s -wao";
+	&reportAndLogStatus("getting summit position", 10, "\n");#->739
+	my $bedtools_cmd = "$bedtools_bin intersect -sorted -a $paraclu_cluster_bed_path -b $cluster_ctss_bed_path -s -wao";
 	open BEDTOOLS, "$bedtools_cmd |";
 	while (<BEDTOOLS>) {
 		chomp;
-		my ($chrom, $chromStart, $chromEnd, $paraclu_clusterID, $stability, $strand, undef, undef, $ctss_pos, undef, $ctss_read) = split /\t/;
-		if (not exists $paraclu_cluster_info_hsh_ref->{$paraclu_clusterID}) {
-			$paraclu_cluster_info_hsh_ref->{$paraclu_clusterID} = [$chrom, $chromStart, $chromEnd, $strand, $ctss_read, $ctss_pos, $ctss_read, $stability];
+		my ($chrom, $chromStart, $chromEnd, $tssClusterID, $stability, $strand, undef, undef, $ctss_pos, undef, $ctss_read) = split /\t/;
+		if (not exists $paraclu_info_hsh_ref->{$tssClusterID}) {
+			$paraclu_info_hsh_ref->{$tssClusterID} = [$chrom, $chromStart, $chromEnd, $strand, $ctss_read, $ctss_pos, $ctss_read, $stability];
 		} else {
-			$paraclu_cluster_info_hsh_ref->{$paraclu_clusterID}[-4] += $ctss_read;
-
-			if ($ctss_read > $paraclu_cluster_info_hsh_ref->{$paraclu_clusterID}[-2]) {
-				$paraclu_cluster_info_hsh_ref->{$paraclu_clusterID}[-2] = $ctss_read;
-				$paraclu_cluster_info_hsh_ref->{$paraclu_clusterID}[-3] = $ctss_pos;
+			$paraclu_info_hsh_ref->{$tssClusterID}[-4] += $ctss_read;
+			if ($ctss_read > $paraclu_info_hsh_ref->{$tssClusterID}[-2]) {
+				$paraclu_info_hsh_ref->{$tssClusterID}[-2] = $ctss_read;
+				$paraclu_info_hsh_ref->{$tssClusterID}[-3] = $ctss_pos;
 			}
 		}
 	}
 	close BEDTOOLS;
-	my $summit_bed_path = "$resultPreMergeBedDir/$paramTag.pre_merge.tssCluster.summit.bed.gz";
-	$globalReadmeHsh_ref->{$summit_bed_path}{'description'} = "bed file of parsed paraclu cluster summit after 'cutting'";
-
-	&reportAndLogStatus("printing paraclu summit bed", 10, "\n");#->962
-	open SUMMIT, "| sort -k1,1 -k2,2n | gzip -c >$summit_bed_path";
-	foreach my $paraclu_clusterID (keys %{$paraclu_cluster_info_hsh_ref}) {
-		my ($chrom, undef, undef, $strand, $num_read, $summit_pos, $summit_read, $stability) = @{$paraclu_cluster_info_hsh_ref->{$paraclu_clusterID}};
-		my $chromStart = $summit_pos-1;
-		my $chromEnd = $summit_pos;
-		print SUMMIT join "", (join "\t", ($chrom, $chromStart, $chromEnd, $paraclu_clusterID, $summit_read, $strand)), "\n";
-	}
-	close SUMMIT;
 	
-	return ($paraclu_cluster_info_hsh_ref, $summit_bed_path);
+	my $paraclu_summit_bed_path = "$resultParacluDir/paraclu.summit.bed.gz";
+	open PARACLUSUMMITBED, "| sort -k1,1 -k2,2n | gzip -c >$paraclu_summit_bed_path";
+
+	foreach my $tssClusterID (keys %{$paraclu_info_hsh_ref}) {
+		my ($chrom, $chromStart, $chromEnd, $strand, $paraclu_input_cluster_count, $summit_pos, $paraclu_input_summit_count, $stability) = @{$paraclu_info_hsh_ref->{$tssClusterID}};
+		my $size = $chromEnd - $chromStart;
+		my $thickStart = $summit_pos - 1;
+		my $thickEnd = $summit_pos;
+		my $itemRgb = "227,26,28";
+		$itemRgb = "31,120,180" if $strand eq '-';
+		my $blockCount = 1;
+		my $blockSizes = $size;
+		my $blockStarts = 0;
+		$tssCluster_info_hsh_ref->{$tssClusterID}{'chrom'} = $chrom;
+		$tssCluster_info_hsh_ref->{$tssClusterID}{'chromStart'} = $chromStart;
+		$tssCluster_info_hsh_ref->{$tssClusterID}{'chromEnd'} = $chromEnd;
+		$tssCluster_info_hsh_ref->{$tssClusterID}{'size'} = $size;
+		$tssCluster_info_hsh_ref->{$tssClusterID}{'stability'} = $stability;
+		$tssCluster_info_hsh_ref->{$tssClusterID}{'summit_pos'} = $summit_pos;
+		$tssCluster_info_hsh_ref->{$tssClusterID}{'paraclu_input_cluster_count'} = $paraclu_input_cluster_count;
+		$tssCluster_info_hsh_ref->{$tssClusterID}{'paraclu_input_summit_count'} = $paraclu_input_summit_count;
+		$tssCluster_info_hsh_ref->{$tssClusterID}{'cluster_count'} = 0;
+		$tssCluster_info_hsh_ref->{$tssClusterID}{'summit_count'} = 0;
+		$tssCluster_info_hsh_ref->{$tssClusterID}{'bedLine'} = [$chrom, $chromStart, $chromEnd, $tssClusterID, $paraclu_input_cluster_count, $strand, $thickStart, $thickEnd, $itemRgb, $blockCount, $blockSizes, $blockStarts];
+		print PARACLUSUMMITBED join "", (join "\t", ($chrom, $thickStart, $thickEnd, $tssClusterID, $stability, $strand)), "\n";
+	}
+	close PARACLUSUMMITBED;
+	
+	return ($tssCluster_info_hsh_ref, $paraclu_summit_bed_path);
+}
+sub getTssClusterCount {
+#....................................................................................................................................................#
+#	subroutineCategory: unassigned
+#	dependOnSub: >none
+#	appearInSub: >none
+#	primaryAppearInSection: 2_ReadInfoAndRun|150
+#	secondaryAppearInSection: >none
+#	input: $bedtools_bin, $count_ctss_bed_path, $paraclu_cluster_bed_path, $paraclu_summit_bed_path, $tssCluster_info_hsh_ref
+#	output: 
+#	toCall: &getTssClusterCount($tssCluster_info_hsh_ref, $count_ctss_bed_path, $paraclu_summit_bed_path, $paraclu_cluster_bed_path, $bedtools_bin);
+#	calledInLine: 157
+#....................................................................................................................................................#
+	my ($tssCluster_info_hsh_ref, $count_ctss_bed_path, $paraclu_summit_bed_path, $paraclu_cluster_bed_path, $bedtools_bin) = @_;
+	
+	my $count_bed_hsh_ref = {
+		'summit_count' => $paraclu_summit_bed_path,
+		'cluster_count' => $paraclu_cluster_bed_path,
+	};
+	
+	foreach my $count_type (keys %{$count_bed_hsh_ref}) {
+		my $count_range_bed_path = $count_bed_hsh_ref->{$count_type};
+		open BEDTOOLS, "$bedtools_bin intersect -sorted -s -wo -a $count_range_bed_path -b $count_ctss_bed_path | cut -f 4,11 |";
+		while (<BEDTOOLS>) {
+			chomp;
+			my ($tssClusterID, $count) = split /\t/;
+			$tssCluster_info_hsh_ref->{$tssClusterID}{$count_type} += $count;
+		}
+		close BEDTOOLS;
+	}
+
+	return ();
 }
 sub logCalledCMDAndScript {
 #....................................................................................................................................................#
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 1_defineHardCodedParam|127
+#	primaryAppearInSection: 1_defineHardCodedParam|126
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $resultScriptDir, $scriptAbsPath
 #	output: 
 #	toCall: &logCalledCMDAndScript($ARGVStr, $resultScriptDir, $scriptAbsPath);
-#	calledInLine: 145
+#	calledInLine: 142
 #....................................................................................................................................................#
 	my ($ARGVStr, $resultScriptDir, $scriptAbsPath) = @_;
 
@@ -535,118 +476,29 @@ sub logCalledCMDAndScript {
 	
 	return ();
 }
-sub mergeParacluClusters {
-#....................................................................................................................................................#
-#	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|962
-#	appearInSub: >none
-#	primaryAppearInSection: 2_ReadInfoAndRun|150
-#	secondaryAppearInSection: >none
-#	input: $bedtools_bin, $cluster_ctss_bed_path, $merge_dist, $min_summit_count, $paraclu_cluster_info_hsh_ref, $paramTag, $resultBedDir, $resultLogDir, $summit_bed_path
-#	output: $tmp_merge_bed_file_path, $tssCluster_info_hsh_ref
-#	toCall: my ($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref) = &mergeParacluClusters($bedtools_bin, $summit_bed_path, $merge_dist, $cluster_ctss_bed_path, $resultBedDir, $resultLogDir, $paramTag, $paraclu_cluster_info_hsh_ref, $min_summit_count);
-#	calledInLine: 158
-#....................................................................................................................................................#
-	my ($bedtools_bin, $summit_bed_path, $merge_dist, $cluster_ctss_bed_path, $resultBedDir, $resultLogDir, $paramTag, $paraclu_cluster_info_hsh_ref, $min_summit_count) = @_;
-
-	&reportAndLogStatus("merging distance = $merge_dist", 10, "\n");#->962
-	&reportAndLogStatus("minimum post-merge summit count = $min_summit_count", 10, "\n");#->962
-	&reportAndLogStatus("start merging clusters", 10, "\n");#->962
-
-	&reportAndLogStatus("merging at $merge_dist nt", 10, "\n");#->962
-	my $tmp_merge_dir = "$resultBedDir/tmp_merged/";
-	system ("mkdir -pm 755 $tmp_merge_dir");
-	my $tmp_merge_bed_file_path = "$tmp_merge_dir/$paramTag.tssCluster.tmp_merged.bed.gz";
-	open OUTBED, "| sort -k1,1 -k2,2n | gzip -c >$tmp_merge_bed_file_path";
-
-	$globalReadmeHsh_ref->{$tmp_merge_bed_file_path}{'description'} = "bed file of the final tssCluster (post merging and filtering by summit count). Score column refers to number of read";
-
-	my $tssCluster_info_hsh_ref = {};
-	
-	open BEDTOOLS, "$bedtools_bin merge -i $summit_bed_path -s -d $merge_dist -c 4 -o distinct | cut -f 4 |";
-	while (<BEDTOOLS>) {
-		chomp;
-		my ($paraclu_clusterID_str) = $_;
-		my $merged_cluster_info_hsh_ref = {};
-		my $num_read = 0;
-		foreach my $paraclu_clusterID (split /,/) {
-			die "paraclu_clusterID $paraclu_clusterID does not exists\n" if not exists $paraclu_cluster_info_hsh_ref->{$paraclu_clusterID};
-			my ($indiv_chrom, $indiv_chromStart, $indiv_chromEnd, $indiv_strand, $indiv_num_read, $indiv_summit_pos, $indiv_summit_read, $indiv_stability) = @{$paraclu_cluster_info_hsh_ref->{$paraclu_clusterID}};
-			push @{$merged_cluster_info_hsh_ref->{'bound'}}, ($indiv_chromStart, $indiv_chromEnd);
-			push @{$merged_cluster_info_hsh_ref->{'stability'}}, $indiv_stability;
-			$merged_cluster_info_hsh_ref->{'chrom'} = $indiv_chrom;
-			$merged_cluster_info_hsh_ref->{'strand'} = $indiv_strand;
-			$merged_cluster_info_hsh_ref->{'summit'}{$indiv_summit_read} = $indiv_summit_pos;
-			$num_read += $indiv_num_read;
-		}
-
-		@{$merged_cluster_info_hsh_ref->{'bound'}} = sort {$a<=>$b} @{$merged_cluster_info_hsh_ref->{'bound'}};
-		my $stability = sum(@{$merged_cluster_info_hsh_ref->{'stability'}})/@{$merged_cluster_info_hsh_ref->{'stability'}};
-		$stability = sprintf "%.5f", $stability;
-		my @summit_read_ary = sort {$a<=>$b} (keys %{$merged_cluster_info_hsh_ref->{'summit'}});
-		my $summit_read = $summit_read_ary[-1];
-		my $summit_pos = $merged_cluster_info_hsh_ref->{'summit'}{$summit_read};
-		
-		if ($summit_read >= $min_summit_count) {
-							
-			my $num_paraclu_cluster = keys %{$merged_cluster_info_hsh_ref->{'summit'}};
-			my $chrom = $merged_cluster_info_hsh_ref->{'chrom'};
-			my $chromStart = $merged_cluster_info_hsh_ref->{'bound'}[0];
-			my $chromEnd = $merged_cluster_info_hsh_ref->{'bound'}[-1];
-			my $strand = $merged_cluster_info_hsh_ref->{'strand'};
-		
-			my $tssClusterID = join "_", ($chrom, $chromStart, $chromEnd, $strand);
-			my $size = $chromEnd - $chromStart;
-			
-			my $thickStart = $summit_pos - 1;
-			my $thickEnd = $summit_pos;
-			my $itemRgb = "227,26,28";
-			$itemRgb = "31,120,180" if $strand eq '-';
-			my $blockCount = 1;
-			my $blockSizes = $size;
-			my $blockStarts = 0;
-			$tssCluster_info_hsh_ref->{$tssClusterID}{'chrom'} = $chrom;
-			$tssCluster_info_hsh_ref->{$tssClusterID}{'num_paraclu_cluster'} = $num_paraclu_cluster;
-			$tssCluster_info_hsh_ref->{$tssClusterID}{'size'} = $size;
-			$tssCluster_info_hsh_ref->{$tssClusterID}{'stability'} = $stability;
-			$tssCluster_info_hsh_ref->{$tssClusterID}{'num_read'} = $num_read;
-			$tssCluster_info_hsh_ref->{$tssClusterID}{'summit_pos'} = $summit_pos;
-			$tssCluster_info_hsh_ref->{$tssClusterID}{'summit_read'} = $summit_read;
-			$tssCluster_info_hsh_ref->{$tssClusterID}{'num_sample_expr_cluster'} = 0;
-			$tssCluster_info_hsh_ref->{$tssClusterID}{'num_sample_expr_summit'} = 0;
-			print OUTBED join "", (join "\t", ($chrom, $chromStart, $chromEnd, $tssClusterID, $num_read, $strand, $thickStart, $thickEnd, $itemRgb, $blockCount, $blockSizes, $blockStarts)), "\n";
-		}
-	}
-	close BEDTOOLS;
-	close OUTBED;
-
-	return ($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref);
-}
 sub parseParacluInput {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|962
+#	dependOnSub: reportAndLogStatus|739
 #	appearInSub: >none
 #	primaryAppearInSection: 2_ReadInfoAndRun|150
 #	secondaryAppearInSection: >none
-#	input: $cluster_ctss_bed_path, $min_cluster_cpm, $min_pos_count, $resultParacluDir
-#	output: $min_cluster_count_by_cpm, $paraclu_input_path
-#	toCall: my ($paraclu_input_path, $min_cluster_count_by_cpm) = &parseParacluInput($cluster_ctss_bed_path, $min_pos_count, $min_cluster_cpm, $resultParacluDir);
-#	calledInLine: 155
+#	input: $cluster_ctss_bed_path, $resultParacluDir
+#	output: $paraclu_input_path
+#	toCall: my ($paraclu_input_path) = &parseParacluInput($cluster_ctss_bed_path, $resultParacluDir);
+#	calledInLine: 154
 #....................................................................................................................................................#
-	my ($cluster_ctss_bed_path, $min_pos_count, $min_cluster_cpm, $resultParacluDir) = @_;
+	my ($cluster_ctss_bed_path, $resultParacluDir) = @_;
 	
 	my %itemForThrHsh = ();
 	my $threadID = 1;
 	
+	&reportAndLogStatus("Parsing paraclu input", 10, "\n");#->739
+	
 	my $paraclu_input_path = "$resultParacluDir/paraclu.input.txt.gz";
 	$globalReadmeHsh_ref->{$paraclu_input_path}{'description'} = "Input for paraclu";
 
-	my $total_count = 0;
-	
-	&reportAndLogStatus("Parsing paraclu input with min_pos_count = $min_pos_count", 10, "\n");#->962
-	&reportAndLogStatus("Position with counts < $min_pos_count will be removed", 10, "\n");#->962
-
+	my $cluster_count = 0;
 	open PARACLUINPUT, "| gzip -c >$paraclu_input_path";
 	if ($cluster_ctss_bed_path =~ m/\.gz$/) {
 		open (FILEIN, " gzip -dc $cluster_ctss_bed_path|");
@@ -655,139 +507,75 @@ sub parseParacluInput {
 	}
 
 	while (<FILEIN>) {
-		next if $_ =~ m/^#/;
 		chomp;
 		my @bedAry = split /\t/;
 		my $chrom = $bedAry[0];
 		my $pos = $bedAry[2];
 		my $score = $bedAry[4];
 		my $strand = $bedAry[5];
-		
-		$total_count += $score;
-		if ($score >= $min_pos_count) {
-			print PARACLUINPUT join "", (join "\t", ($chrom, $strand, $pos, $score)), "\n";
-		}
+		$cluster_count += $score;
+		print PARACLUINPUT join "", (join "\t", ($chrom, $strand, $pos, $score)), "\n";
 	}
 	close FILEIN;
 	close PARACLUINPUT;
 
-	my $total_count_millions = sprintf "%.5f", $total_count/1000000;
-	my $min_cluster_count_by_cpm = sprintf "%.0f", $min_cluster_cpm*$total_count_millions;
+	my $cluster_count_millions = sprintf "%.5f", $cluster_count/1000000;
+	&reportAndLogStatus("cluster_count = $cluster_count_millions millions", 10, "\n");#->739
 
-	&reportAndLogStatus("total_count = $total_count_millions millions", 10, "\n");#->962
-	&reportAndLogStatus("min_cluster_cpm = $min_cluster_cpm", 10, "\n");#->962
-
-	return ($paraclu_input_path, $min_cluster_count_by_cpm);
+	return ($paraclu_input_path);
 }
 sub printFinalBedAndLog {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|962
+#	dependOnSub: reportAndLogStatus|739
 #	appearInSub: >none
 #	primaryAppearInSection: 2_ReadInfoAndRun|150
 #	secondaryAppearInSection: >none
-#	input: $min_num_sample_expr_cluster, $min_num_sample_expr_summit, $paramTag, $resultBedDir, $resultLogDir, $tmp_merge_bed_file_path, $tssCluster_info_hsh_ref
+#	input: $min_cluster_count, $min_summit_count, $paramTag, $resultBedDir, $resultLogDir, $tssCluster_info_hsh_ref
 #	output: 
-#	toCall: &printFinalBedAndLog($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref, $resultBedDir, $resultLogDir, $paramTag, $min_num_sample_expr_cluster, $min_num_sample_expr_summit);
-#	calledInLine: 160
+#	toCall: &printFinalBedAndLog($tssCluster_info_hsh_ref, $resultBedDir, $resultLogDir, $min_cluster_count, $min_summit_count, $paramTag);
+#	calledInLine: 158
 #....................................................................................................................................................#
-	my ($tmp_merge_bed_file_path, $tssCluster_info_hsh_ref, $resultBedDir, $resultLogDir, $paramTag, $min_num_sample_expr_cluster, $min_num_sample_expr_summit) = @_;
+	my ($tssCluster_info_hsh_ref, $resultBedDir, $resultLogDir, $min_cluster_count, $min_summit_count, $paramTag) = @_;
 
-	&reportAndLogStatus("printing final cluster bed and log", 10, "\n");#->962
-	
-	my $read_cut_ary_ref = [(1..15),30,40,50,60,70,80,90,100];
-	my $size_cut_ary_ref = [5,10,15,20,25,35,40,45,50,60,70,80,90,100,125,150,175,200,300,400,500];
-	
-	my $interval_hsh_ref = {
-		'cluster_read_less_than' => $read_cut_ary_ref,
-		'summit_read_less_than' => $read_cut_ary_ref,
-		'num_sample_expr_cluster_less_than' => $read_cut_ary_ref,
-		'num_sample_expr_summit_less_than' => $read_cut_ary_ref,
-		'size_greater_than' => $size_cut_ary_ref,
-	},
-	
-	my $count_hsh_ref = {};
-	foreach my $param (keys %{$interval_hsh_ref}) {
-		foreach my $cutoff (@{$interval_hsh_ref->{$param}}) {
-			$count_hsh_ref->{$param}{$cutoff} = 0;
-		}
-	};
+	&reportAndLogStatus("printing final cluster bed and log", 10, "\n");#->739
 	
 	my $out_bed_file_path = "$resultBedDir/$paramTag.tssCluster.bed.gz";
 	my $out_log_file_path = "$resultLogDir/$paramTag.tssCluster.log.tsv.gz";
-	open OUTBED, "| gzip -c >$out_bed_file_path";
+	open OUTBED, "| sort -k1,1 -k2,2n -k6,6 | gzip -c >$out_bed_file_path";
 	open OUTLOG, "| gzip -c >$out_log_file_path";
 
-	print OUTLOG join "", (join "\t", ('tssClusterID', 'chrom', 'num_paraclu_cluster', 'size', 'num_read', 'summit_pos', 'summit_read', 'num_sample_expr_cluster', 'num_sample_expr_summit', 'stability')), "\n";
+	print OUTLOG join "", (join "\t", ('tssClusterID', 'chrom', 'chromStart', 'chromEnd', 'size', 'summit_pos',  'stability', 'paraclu_input_cluster_count', 'cluster_count', 'paraclu_input_summit_count', 'summit_count')), "\n";
 
-	$globalReadmeHsh_ref->{$out_log_file_path}{'description'} = "information of the final tssCluster (post merging and filtering by summit count)";
-	$globalReadmeHsh_ref->{$out_bed_file_path}{'description'} = "bed file of the final tssCluster (post merging and filtering by summit count and num sample expressed). Score column refers to number of read";
-	
-	if ($tmp_merge_bed_file_path =~ m/\.gz$/) {
-		open (FILEIN, " gzip -dc $tmp_merge_bed_file_path|");
-	} else {
-		open (FILEIN, "<", $tmp_merge_bed_file_path);
-	}
-	
-	my $total_num = 0;
-	
-	while (<FILEIN>) {
-		chomp;
-		my @splt = split /\t/;
-		my $tssClusterID = $splt[3];
-		
-		die "tssClusterID $tssClusterID does not exists\n" if not exists $tssCluster_info_hsh_ref->{$tssClusterID};
+	$globalReadmeHsh_ref->{$out_log_file_path}{'description'} = "information of the final tssCluster (filtering by min_cluster_count and min_summit_count)";
+	$globalReadmeHsh_ref->{$out_bed_file_path}{'description'} = "bed file of the final tssCluster (filtering by min_cluster_count and min_summit_count). Score column refers to number of read in the paraclu input signal";
 
-		my $num_sample_expr_cluster = $tssCluster_info_hsh_ref->{$tssClusterID}{'num_sample_expr_cluster'};
-		my $num_sample_expr_summit = $tssCluster_info_hsh_ref->{$tssClusterID}{'num_sample_expr_summit'};
-		
-		next if ($num_sample_expr_cluster != -1 and $num_sample_expr_cluster < $min_num_sample_expr_cluster);
-		next if ($num_sample_expr_summit != -1 and $num_sample_expr_summit < $min_num_sample_expr_summit);
-
-		$total_num++;
+	my $num_discard = 0;
+	my $num_retained = 0;
+	foreach my $tssClusterID (sort keys %{$tssCluster_info_hsh_ref}) {
 		my $chrom = $tssCluster_info_hsh_ref->{$tssClusterID}{'chrom'};
-		my $num_paraclu_cluster = $tssCluster_info_hsh_ref->{$tssClusterID}{'num_paraclu_cluster'};
+		my $chromStart = $tssCluster_info_hsh_ref->{$tssClusterID}{'chromStart'};
+		my $chromEnd = $tssCluster_info_hsh_ref->{$tssClusterID}{'chromEnd'};
 		my $size = $tssCluster_info_hsh_ref->{$tssClusterID}{'size'};
-		my $num_read = $tssCluster_info_hsh_ref->{$tssClusterID}{'num_read'};
-		my $summit_pos = $tssCluster_info_hsh_ref->{$tssClusterID}{'summit_pos'};
-		my $summit_read = $tssCluster_info_hsh_ref->{$tssClusterID}{'summit_read'};
 		my $stability = $tssCluster_info_hsh_ref->{$tssClusterID}{'stability'};
+		my $summit_pos = $tssCluster_info_hsh_ref->{$tssClusterID}{'summit_pos'};
+		my $paraclu_input_cluster_count = $tssCluster_info_hsh_ref->{$tssClusterID}{'paraclu_input_cluster_count'};
+		my $paraclu_input_summit_count = $tssCluster_info_hsh_ref->{$tssClusterID}{'paraclu_input_summit_count'};
+		my $cluster_count = $tssCluster_info_hsh_ref->{$tssClusterID}{'cluster_count'};
+		my $summit_count = $tssCluster_info_hsh_ref->{$tssClusterID}{'summit_count'};
 		
-		foreach my $param (keys %{$count_hsh_ref}) {
-			foreach my $cutoff (keys %{$count_hsh_ref->{$param}}) {
-				if ($param eq 'cluster_read_less_than') {
-					$count_hsh_ref->{$param}{$cutoff}++ if $num_read < $cutoff;
-				} elsif ($param eq 'summit_read_less_than') {
-					$count_hsh_ref->{$param}{$cutoff}++ if $summit_read < $cutoff;
-				} elsif ($param eq 'num_sample_expr_summit_less_than') {
-					$count_hsh_ref->{$param}{$cutoff}++ if $num_sample_expr_summit < $cutoff;
-				} elsif ($param eq 'num_sample_expr_cluster_less_than') {
-					$count_hsh_ref->{$param}{$cutoff}++ if $num_sample_expr_cluster < $cutoff;
-				} elsif ($param eq 'size_greater_than') {
-					$count_hsh_ref->{$param}{$cutoff}++ if $size > $cutoff;
-				} else {
-					die;
-				}
-			
-			}
+		if ($cluster_count >= $min_cluster_count and $summit_count >= $min_summit_count) {
+			$num_retained++;
+			print OUTLOG join "", (join "\t", ($tssClusterID, $chrom, $chromStart, $chromEnd, $size, $summit_pos,  $stability, $paraclu_input_cluster_count, $cluster_count, $paraclu_input_summit_count, $summit_count)), "\n";
+			print OUTBED join "", (join "\t", (@{$tssCluster_info_hsh_ref->{$tssClusterID}{'bedLine'}})), "\n";
+		} else {
+			$num_discard++;
 		}
-		
-		print OUTLOG join "", (join "\t", ($tssClusterID, $chrom, $num_paraclu_cluster, $size, $num_read, $summit_pos, $summit_read, $num_sample_expr_cluster, $num_sample_expr_summit, $stability)), "\n";
-		print OUTBED $_."\n";
 	}
-	close FILEIN;
-	close OUTBED;
-	close OUTLOG;
 	
-	&reportAndLogStatus("The final set contains $total_num clusters", 10, "\n");#->962
-	foreach my $param (sort keys %{$count_hsh_ref}) {
-		foreach my $cutoff (sort {$a <=> $b} keys %{$count_hsh_ref->{$param}}) {
-			my $count = $count_hsh_ref->{$param}{$cutoff};
-			my $pct = sprintf "%.2f", 100*$count/$total_num;
-			&reportAndLogStatus("With $param $cutoff n=$count [$pct%]", 10, "\n");#->962
-		}
-	}
-
+	&reportAndLogStatus("$num_retained tssClusters retained", 10, "\n");#->739
+	&reportAndLogStatus("$num_discard tssClusters discarded", 10, "\n");#->739
+	
 	return ();
 }
 sub printOutputFileListAndReadme {
@@ -795,12 +583,12 @@ sub printOutputFileListAndReadme {
 #	subroutineCategory: output
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 3_finishingTasks|165
+#	primaryAppearInSection: 3_finishingTasks|163
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $outDir, $paramTag
 #	output: 
 #	toCall: &printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);
-#	calledInLine: 168
+#	calledInLine: 166
 #....................................................................................................................................................#
 	my ($ARGVStr, $paramTag, $outDir) = @_;
 	
@@ -908,34 +696,34 @@ sub printOutputFileListAndReadme {
 sub printStartOrFinishMessage {
 #....................................................................................................................................................#
 #	subroutineCategory: general
-#	dependOnSub: currentTime|301
+#	dependOnSub: currentTime|298
 #	appearInSub: >none
-#	primaryAppearInSection: 1_defineHardCodedParam|127, 3_finishingTasks|165
+#	primaryAppearInSection: 1_defineHardCodedParam|126, 3_finishingTasks|163
 #	secondaryAppearInSection: >none
 #	input: $StartOrFinishMessage
 #	output: none
 #	toCall: &printStartOrFinishMessage($StartOrFinishMessage);
-#	calledInLine: 144, 169
+#	calledInLine: 141, 167
 #....................................................................................................................................................#
 
 	my ($StartOrFinishMessage) = @_;
 	
 	if ($StartOrFinishMessage eq "startMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] starts running ...... \n";#->301
+		print "[".&currentTime()."] starts running ...... \n";#->298
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->301
+		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->298
 		print $tmplog_fh "=========================================================================\n\n";
 
 	} elsif ($StartOrFinishMessage eq "finishMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] finished running .......\n";#->301
+		print "[".&currentTime()."] finished running .......\n";#->298
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->301
+		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->298
 		print $tmplog_fh "=========================================================================\n\n";
 	}
 }
@@ -944,36 +732,27 @@ sub readParameters {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startingTasks|119
+#	primaryAppearInSection: 0_startingTasks|118
 #	secondaryAppearInSection: >none
 #	input: none
-#	output: $cluster_ctss_bed_path, $count_ctss_bed_path_list, $count_scope_bed_path, $merge_dist, $min_cluster_count, $min_cluster_cpm, $min_num_sample_expr_cluster, $min_num_sample_expr_summit, $min_pos_count, $min_summit_count, $outDir, $outputPrefix, $overwrite
-#	toCall: my ($cluster_ctss_bed_path, $count_ctss_bed_path_list, $count_scope_bed_path, $min_cluster_cpm, $min_cluster_count, $min_pos_count, $min_summit_count, $merge_dist, $min_num_sample_expr_cluster, $min_num_sample_expr_summit, $outputPrefix, $outDir, $overwrite) = &readParameters();
-#	calledInLine: 122
+#	output: $cluster_ctss_bed_path, $count_ctss_bed_path, $min_cluster_count, $min_paraclu_count, $min_summit_count, $outDir, $outputPrefix, $overwrite
+#	toCall: my ($cluster_ctss_bed_path, $count_ctss_bed_path, $min_cluster_count, $min_summit_count, $min_paraclu_count, $outputPrefix, $outDir, $overwrite) = &readParameters();
+#	calledInLine: 121
 #....................................................................................................................................................#
 	
-	my ($cluster_ctss_bed_path, $count_ctss_bed_path_list, $count_scope_bed_path, $min_cluster_cpm, $min_cluster_count, $min_pos_count, $min_summit_count, $merge_dist, $min_num_sample_expr_cluster, $min_num_sample_expr_summit, $outputPrefix, $outDir, $overwrite);
+	my ($cluster_ctss_bed_path, $count_ctss_bed_path, $min_cluster_count, $min_summit_count, $min_paraclu_count, $outputPrefix, $outDir, $overwrite);
 
-	$min_cluster_cpm = 1e-5;
-	$min_pos_count = 1;
-	$min_summit_count = 3;
-	$min_num_sample_expr_cluster = 5;
-	$min_num_sample_expr_summit = 3;
-	$min_cluster_count = 5;
-	$merge_dist = -1;
+	$min_summit_count = 0;
+	$min_cluster_count = 2;
+	$min_paraclu_count = 3;
 	$overwrite= 'no';
 
 	GetOptions 	(
 		"cluster_ctss_bed_path=s"			=>	\$cluster_ctss_bed_path,
-		"count_ctss_bed_path_list:s"		=>	\$count_ctss_bed_path_list,
-		"count_scope_bed_path:s"			=>	\$count_scope_bed_path,
-		"min_pos_count=i"						=>	\$min_pos_count,
-		"min_cluster_cpm=f"					=>	\$min_cluster_cpm,
-		"min_summit_count=s"					=>	\$min_summit_count,
-		"min_cluster_count=s"				=>	\$min_cluster_count,
-		"min_num_sample_expr_cluster=i"	=>	\$min_num_sample_expr_cluster,
-		"min_num_sample_expr_summit=i"	=>	\$min_num_sample_expr_summit,
-		"merge_dist=i"							=>	\$merge_dist,
+		"count_ctss_bed_path:s"				=>	\$count_ctss_bed_path,
+		"min_summit_count:i"					=>	\$min_summit_count,
+		"min_cluster_count:i"				=>	\$min_cluster_count,
+		"min_paraclu_count:i"				=>	\$min_paraclu_count,
 		"outputPrefix=s"						=>	\$outputPrefix,
 		"outDir=s"								=>	\$outDir,
 		"overwrite=s"							=>	\$overwrite,
@@ -985,148 +764,110 @@ sub readParameters {
 	#---check file
 	my $file_check_hsh_ref = {
 		'cluster_ctss_bed_path' => $cluster_ctss_bed_path,
+		'count_ctss_bed_path' => $count_ctss_bed_path,
 	};
 	
 	foreach my $option_name (keys %{$file_check_hsh_ref}) {
 		my $file_path = $file_check_hsh_ref->{$option_name};
 		die "Quitting: File $option_name does not exists at $file_path" if not -s $file_path;
 	}
-	
-	$count_ctss_bed_path_list = $cluster_ctss_bed_path if not defined $count_ctss_bed_path_list;
-	$count_scope_bed_path = $cluster_ctss_bed_path if not defined $count_scope_bed_path;
-	
+		
 	chop $outDir if ($outDir =~ m/\/$/); #---remove the last slash
 	system "mkdir -p -m 755 $outDir/";
 		
-	return($cluster_ctss_bed_path, $count_ctss_bed_path_list, $count_scope_bed_path, $min_cluster_cpm, $min_cluster_count, $min_pos_count, $min_summit_count, $merge_dist, $min_num_sample_expr_cluster, $min_num_sample_expr_summit, $outputPrefix, $outDir, $overwrite);
+	return($cluster_ctss_bed_path, $count_ctss_bed_path, $min_cluster_count, $min_summit_count, $min_paraclu_count, $outputPrefix, $outDir, $overwrite);
 }
 sub reportAndLogStatus {
 #....................................................................................................................................................#
 #	subroutineCategory: log
-#	dependOnSub: currentTime|301
-#	appearInSub: checkAllExecutable|201, getCountCtssPath|319, getNumSampleExpressed|364, getTssClusterSummit|423, mergeParacluClusters|497, parseParacluInput|584, printFinalBedAndLog|641, runParaclu|984
+#	dependOnSub: currentTime|298
+#	appearInSub: checkAllExecutable|198, generateTssClusterInfoHsh|316, parseParacluInput|438, printFinalBedAndLog|486, runParaclu|761
 #	primaryAppearInSection: >none
 #	secondaryAppearInSection: 2_ReadInfoAndRun|150
 #	input: $lineEnd, $message, $numTrailingSpace
 #	output: 
 #	toCall: &reportAndLogStatus($message, $numTrailingSpace, $lineEnd);
-#	calledInLine: 224, 229, 238, 247, 256, 265, 274, 283, 292, 332, 339, 348, 350, 380, 384, 413, 438, 459, 510, 511, 512, 514, 605, 606, 635, 636, 654, 740, 745, 1003, 1004, 1005, 1022, 1026, 1055
+#	calledInLine: 221, 226, 235, 244, 253, 262, 271, 280, 289, 332, 454, 481, 499, 534, 535, 782, 808
 #....................................................................................................................................................#
 	my ($message, $numTrailingSpace, $lineEnd) = @_;
 
 	my $trailingSpaces = '';
 	$trailingSpaces .= " " for (1..$numTrailingSpace);
 	
-	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->301
-	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->301
+	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->298
+	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->298
 	
 	return ();
 }
 sub runParaclu {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|962
+#	dependOnSub: reportAndLogStatus|739
 #	appearInSub: >none
 #	primaryAppearInSection: 2_ReadInfoAndRun|150
 #	secondaryAppearInSection: >none
-#	input: $cut_sh_path, $force_rerun, $min_cluster_count, $min_cluster_count_by_cpm, $paraclu_bin, $paraclu_input_path, $paramTag, $resultParacluDir, $resultPreMergeBedDir
-#	output: $paraclu_bed_path
-#	toCall: my ($paraclu_bed_path) = &runParaclu($paraclu_input_path, $paraclu_bin, $cut_sh_path, $resultParacluDir, $resultPreMergeBedDir, $min_cluster_count, $min_cluster_count_by_cpm, $paramTag, $force_rerun);
-#	calledInLine: 156
+#	input: $cut_sh_path, $min_paraclu_count, $paraclu_bin, $paraclu_input_path, $resultParacluDir
+#	output: $paraclu_cluster_bed_path
+#	toCall: my ($paraclu_cluster_bed_path) = &runParaclu($paraclu_input_path, $paraclu_bin, $cut_sh_path, $resultParacluDir, $min_paraclu_count);
+#	calledInLine: 155
 #....................................................................................................................................................#
-	my ($paraclu_input_path, $paraclu_bin, $cut_sh_path, $resultParacluDir, $resultPreMergeBedDir, $min_cluster_count, $min_cluster_count_by_cpm, $paramTag, $force_rerun) = @_;
+	my ($paraclu_input_path, $paraclu_bin, $cut_sh_path, $resultParacluDir, $min_paraclu_count) = @_;
 	
 	my %itemForThrHsh = ();
 	my $threadID = 1;
-	
-	my $min_paraclu_count = $min_cluster_count;
-	$min_paraclu_count = $min_cluster_count_by_cpm if $min_cluster_count_by_cpm > $min_paraclu_count;
-	
-	&reportAndLogStatus("min_cluster_count_by_cpm = $min_cluster_count_by_cpm ", 10, "\n");#->962
-	&reportAndLogStatus("min_cluster_count = $min_cluster_count", 10, "\n");#->962
-	&reportAndLogStatus("min_paraclu_count = $min_paraclu_count", 10, "\n");#->962
 		
 	my $paraclu_sh_path = "$resultParacluDir/run_paraclu.sh";
 	my $paraclu_uncut_path = "$resultParacluDir/paraclu.output.uncut.txt.gz";
 	my $paraclu_cut_path = "$resultParacluDir/paraclu.output.cut.txt.gz";
-	my $paraclu_bed_path = "$resultPreMergeBedDir/$paramTag.pre_merge.tssCluster.bed.gz";
-	my $paraclu_rev_bed_path = "$resultPreMergeBedDir/$paramTag.pre_merge.tssCluster.rev.bed.gz";
-	my $paraclu_fwd_bed_path = "$resultPreMergeBedDir/$paramTag.pre_merge.tssCluster.fwd.bed.gz";
+	my $paraclu_cluster_bed_path = "$resultParacluDir/paraclu.cluster.bed.gz";
 
-	if	(	$force_rerun eq 'no' and 
-			-s $paraclu_sh_path and 
-			-s $paraclu_uncut_path and 
-			-s $paraclu_cut_path and 
-			-s $paraclu_bed_path and 
-			-s $paraclu_rev_bed_path and 
-			-s $paraclu_fwd_bed_path) {
-			
-		&reportAndLogStatus("Paraclu results found. Skipping running paraclu", 10, "\n");#->962
-			
-	} else {
+	&reportAndLogStatus("Running paraclu", 10, "\n");#->739
+	open PARACLUSH, ">", "$paraclu_sh_path";
+	print PARACLUSH "$paraclu_bin $min_paraclu_count <(gzip -dc $paraclu_input_path) | gzip -c >$paraclu_uncut_path\n";
+	print PARACLUSH "$cut_sh_path <(gzip -dc $paraclu_uncut_path) | gzip -c >$paraclu_cut_path\n";
+	close PARACLUSH;
+	system "bash $paraclu_sh_path";
 
-		&reportAndLogStatus("Running paraclu", 10, "\n");#->962
-		open PARACLUSH, ">", "$paraclu_sh_path";
-		print PARACLUSH "$paraclu_bin $min_paraclu_count <(gzip -dc $paraclu_input_path) | gzip -c >$paraclu_uncut_path\n";
-		print PARACLUSH "$cut_sh_path <(gzip -dc $paraclu_uncut_path) | gzip -c >$paraclu_cut_path\n";
-		close PARACLUSH;
-		system "bash $paraclu_sh_path";
-
-		$globalReadmeHsh_ref->{$paraclu_sh_path}{'description'} = "bash script to run paraclu. Please refer to http://cbrc3.cbrc.jp/~martin/paraclu/";
-		$globalReadmeHsh_ref->{$paraclu_uncut_path}{'description'} = "raw paraclu output file, before 'cutting'. Please refer to http://cbrc3.cbrc.jp/~martin/paraclu/";
-		$globalReadmeHsh_ref->{$paraclu_cut_path}{'description'} = "paraclu output file, after 'cutting'. Please refer to http://cbrc3.cbrc.jp/~martin/paraclu/";
-		$globalReadmeHsh_ref->{$paraclu_bed_path}{'description'} = "bed file (both strand) parsed paraclu output after 'cutting'";
-		$globalReadmeHsh_ref->{$paraclu_rev_bed_path}{'description'} = "bed file (only forward strand) parsed paraclu output after 'cutting'";
-		$globalReadmeHsh_ref->{$paraclu_fwd_bed_path}{'description'} = "bed file (only reverse strand) parsed paraclu output after 'cutting'";
+	$globalReadmeHsh_ref->{$paraclu_sh_path}{'description'} = "bash script to run paraclu. Please refer to http://cbrc3.cbrc.jp/~martin/paraclu/";
+	$globalReadmeHsh_ref->{$paraclu_uncut_path}{'description'} = "raw paraclu output file, before 'cutting'. Please refer to http://cbrc3.cbrc.jp/~martin/paraclu/";
+	$globalReadmeHsh_ref->{$paraclu_cut_path}{'description'} = "paraclu output file, after 'cutting'. Please refer to http://cbrc3.cbrc.jp/~martin/paraclu/";
+	$globalReadmeHsh_ref->{$paraclu_cluster_bed_path}{'description'} = "bed file parsed paraclu output after 'cutting'";
 	
-		my $min_non_zero_d = 10000000;
-		open PARACLUOUTPUT, "gzip -dc $paraclu_cut_path |";
-		while (<PARACLUOUTPUT>) {
-			next if $_ =~ m/^#/;
-			chomp;
-			# sequence, strand, start, end, sites, sum of values, min d, max d
-			#chr1	+	24423	248946143	90912	487284	-1e+100	1.49e-05
-			my ($chrom, $strand, $start, $end, $sites, $score, $min_d, $max_d) = split /\t/;
-			if ($min_non_zero_d > $min_d and $min_d > 0) {
-				$min_non_zero_d = $min_d;
-			}
+	my $min_non_zero_d = 10000000;
+	open PARACLUOUTPUT, "gzip -dc $paraclu_cut_path |";
+	while (<PARACLUOUTPUT>) {
+		next if $_ =~ m/^#/;
+		chomp;
+		# sequence, strand, start, end, sites, sum of values, min d, max d
+		#chr1	+	24423	248946143	90912	487284	-1e+100	1.49e-05
+		my ($chrom, $strand, $start, $end, $sites, $score, $min_d, $max_d) = split /\t/;
+		if ($min_non_zero_d > $min_d and $min_d > 0) {
+			$min_non_zero_d = $min_d;
 		}
-		close PARACLUOUTPUT;
-
-
-		&reportAndLogStatus("Parsing paraclu output", 10, "\n");#->962
-		open PARACLUBED, "| sort -k1,1 -k2,2n | gzip -c >$paraclu_bed_path";
-		open PARACLUREVBED, "| sort -k1,1 -k2,2n | gzip -c >$paraclu_rev_bed_path";
-		open PARACLUFWDBED, "| sort -k1,1 -k2,2n | gzip -c >$paraclu_fwd_bed_path";
-		open PARACLUOUTPUT, "gzip -dc $paraclu_cut_path |";
-		while (<PARACLUOUTPUT>) {
-			next if $_ =~ m/^#/;
-			chomp;
-			# sequence, strand, start, end, sites, sum of values, min d, max d
-			#chr1	+	24423	248946143	90912	487284	-1e+100	1.49e-05
-			my ($chrom, $strand, $start, $end, $sites, $score, $min_d, $max_d) = split /\t/;
-			my $chromStart = $start - 1;
-			my $chromEnd = $end;
-			$min_d = $min_non_zero_d if $min_d < $min_non_zero_d;
-			my $stability = log($max_d/$min_d)/log(2);
-			
-			my $ID = join "_", ($chrom, $chromStart, $chromEnd, $strand);
-			print PARACLUBED join "", (join "\t", ($chrom, $chromStart, $chromEnd, $ID, $stability, $strand)), "\n";
-			if ($strand eq '+') {
-				print PARACLUFWDBED join "", (join "\t", ($chrom, $chromStart, $chromEnd, $ID, $stability, $strand)), "\n";
-			} elsif ($strand eq '-') {
-				print PARACLUREVBED join "", (join "\t", ($chrom, $chromStart, $chromEnd, $ID, $stability, $strand)), "\n";
-			} else {
-				die "wrong strand\n";
-			}
-		}
-		close PARACLUOUTPUT;
-		close PARACLUREVBED;
-		close PARACLUFWDBED;
-		close PARACLUBED;
 	}
+	close PARACLUOUTPUT;
 
-	return ($paraclu_bed_path);
+	&reportAndLogStatus("Parsing paraclu output", 10, "\n");#->739
+	open PARACLUBED, "| sort -k1,1 -k2,2n | gzip -c >$paraclu_cluster_bed_path";
+	open PARACLUOUTPUT, "gzip -dc $paraclu_cut_path |";
+	while (<PARACLUOUTPUT>) {
+		next if $_ =~ m/^#/;
+		chomp;
+		# sequence, strand, start, end, sites, sum of values, min d, max d
+		#chr1	+	24423	248946143	90912	487284	-1e+100	1.49e-05
+		my ($chrom, $strand, $start, $end, $sites, $score, $min_d, $max_d) = split /\t/;
+		my $chromStart = $start - 1;
+		my $chromEnd = $end;
+		$min_d = $min_non_zero_d if $min_d < $min_non_zero_d;
+		my $stability = log($max_d/$min_d)/log(2);
+		
+		my $tssClusterID = join "_", ($chrom, $chromStart, $chromEnd, $strand);
+		print PARACLUBED join "", (join "\t", ($chrom, $chromStart, $chromEnd, $tssClusterID, $stability, $strand)), "\n";
+	}
+	close PARACLUOUTPUT;
+	close PARACLUBED;
+
+	return ($paraclu_cluster_bed_path);
 }
 sub timeStamp {
 #....................................................................................................................................................#
@@ -1138,7 +879,7 @@ sub timeStamp {
 #	input: none
 #	output: $curntTimeStamp
 #	toCall: my ($curntTimeStamp) = &timeStamp();
-#	calledInLine: 107
+#	calledInLine: 106
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);

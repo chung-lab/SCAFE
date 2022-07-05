@@ -142,6 +142,9 @@ v1.0.0 [June 6, 2022]
 	-added 4 modes of detect_TS_oligo with new version of scafe.tool.sc.bam_to_ctss
 	-added directionality
 
+v1.0.1 [June 26, 2022]
+	-In cluster step, will use unencoded G ctss for hard filtering (--count_ctss_bed_path= option) 
+
 =cut
 #<\doc>
 #====================================================================================================================================================#
@@ -170,10 +173,10 @@ v1.0.0 [June 6, 2022]
 #
 #<section ID="startTasks" num="0">
 my $ARGV_ary_ref = [@ARGV];
-my ($run_bam_path, $run_cellbarcode_path, $genome, $training_signal_path, $testing_signal_path, $detect_TS_oligo, $max_thread, $run_tag, $run_outDir, $overwrite) = &readParameters();#->432
+my ($run_bam_path, $run_cellbarcode_path, $genome, $training_signal_path, $testing_signal_path, $detect_TS_oligo, $max_thread, $run_tag, $run_outDir, $overwrite) = &readParameters();#->435
 $max_thread = 10 if $max_thread > 10;
-my ($scafe_dir, $script_dir, $result_script_dir, $ARGVStr, $scriptAbsPath) = &prepDir($run_outDir, $ARGV_ary_ref);#->404
-&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->379
+my ($scafe_dir, $script_dir, $result_script_dir, $ARGVStr, $scriptAbsPath) = &prepDir($run_outDir, $ARGV_ary_ref);#->407
+&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->382
 #<\section>
 #====================================================================================================================================================#
 
@@ -181,9 +184,9 @@ my ($scafe_dir, $script_dir, $result_script_dir, $ARGVStr, $scriptAbsPath) = &pr
 #	section 1_run
 #
 #<section ID="run" num="1">
-my ($path_hsh_ref) = &define_path($run_outDir, $run_tag, $run_bam_path, $run_cellbarcode_path, $training_signal_path, $testing_signal_path, $script_dir);#->182
-my ($task_info_hsh_ref) = &define_task($genome, $path_hsh_ref, $detect_TS_oligo, $max_thread, $run_tag, $run_outDir);#->231
-&run_task($task_info_hsh_ref, $path_hsh_ref, $result_script_dir);#->490
+my ($path_hsh_ref) = &define_path($run_outDir, $run_tag, $run_bam_path, $run_cellbarcode_path, $training_signal_path, $testing_signal_path, $script_dir);#->186
+my ($task_info_hsh_ref) = &define_task($genome, $path_hsh_ref, $detect_TS_oligo, $max_thread, $run_tag, $run_outDir);#->235
+&run_task($task_info_hsh_ref, $path_hsh_ref, $result_script_dir);#->493
 #<\section>
 #====================================================================================================================================================#
 
@@ -207,13 +210,13 @@ sub currentTime {
 #....................................................................................................................................................#
 #	subroutineCategory: general
 #	dependOnSub: >none
-#	appearInSub: prepDir|404, run_task|490
+#	appearInSub: prepDir|407, run_task|493
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 0_startTasks|126, 1_run|138
+#	secondaryAppearInSection: 0_startTasks|130, 1_run|142
 #	input: none
 #	output: $runTime
 #	toCall: my ($runTime) = &currentTime();
-#	calledInLine: 418, 505, 520, 544, 546, 547, 566
+#	calledInLine: 421, 508, 523, 547, 549, 550, 569
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
@@ -226,12 +229,12 @@ sub define_path {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 1_run|138
+#	primaryAppearInSection: 1_run|142
 #	secondaryAppearInSection: >none
 #	input: $run_bam_path, $run_cellbarcode_path, $run_outDir, $run_tag, $script_dir, $testing_signal_path, $training_signal_path
 #	output: $path_hsh_ref
 #	toCall: my ($path_hsh_ref) = &define_path($run_outDir, $run_tag, $run_bam_path, $run_cellbarcode_path, $training_signal_path, $testing_signal_path, $script_dir);
-#	calledInLine: 141
+#	calledInLine: 145
 #....................................................................................................................................................#
 
 	my ($run_outDir, $run_tag, $run_bam_path, $run_cellbarcode_path, $training_signal_path, $testing_signal_path, $script_dir) = @_;
@@ -275,12 +278,12 @@ sub define_task {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 1_run|138
+#	primaryAppearInSection: 1_run|142
 #	secondaryAppearInSection: >none
 #	input: $detect_TS_oligo, $genome, $max_thread, $path_hsh_ref, $run_outDir, $run_tag
 #	output: $task_info_hsh_ref
 #	toCall: my ($task_info_hsh_ref) = &define_task($genome, $path_hsh_ref, $detect_TS_oligo, $max_thread, $run_tag, $run_outDir);
-#	calledInLine: 142
+#	calledInLine: 146
 #....................................................................................................................................................#
 
 	my ($genome, $path_hsh_ref, $detect_TS_oligo, $max_thread, $run_tag, $run_outDir) = @_;
@@ -322,8 +325,7 @@ sub define_task {
 			'script_name' => 'scafe.tool.cm.cluster',
 			'param' => [
 				['cluster_ctss_bed_path', $path_hsh_ref->{'filtered_ctss_bed_path'}],
-				['count_ctss_bed_path_list', $path_hsh_ref->{'filtered_ctss_bed_path'}],
-				['count_scope_bed_path', $path_hsh_ref->{'filtered_ctss_bed_path'}],
+				['count_ctss_bed_path', $path_hsh_ref->{'ung_ctss_bed_path'}],
 				['outputPrefix', $run_tag],
 				['outDir', $run_outDir."/cluster"],
 			],
@@ -423,12 +425,12 @@ sub logCalledCMDAndScript {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|126
+#	primaryAppearInSection: 0_startTasks|130
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $result_script_dir, $scriptAbsPath
 #	output: 
 #	toCall: &logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);
-#	calledInLine: 133
+#	calledInLine: 137
 #....................................................................................................................................................#
 	my ($ARGVStr, $result_script_dir, $scriptAbsPath) = @_;
 
@@ -446,19 +448,19 @@ sub logCalledCMDAndScript {
 sub prepDir {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: currentTime|164
+#	dependOnSub: currentTime|168
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|126
+#	primaryAppearInSection: 0_startTasks|130
 #	secondaryAppearInSection: >none
 #	input: $ARGV_ary_ref, $run_outDir
 #	output: $ARGVStr, $result_script_dir, $scafe_dir, $scriptAbsPath, $script_dir
 #	toCall: my ($scafe_dir, $script_dir, $result_script_dir, $ARGVStr, $scriptAbsPath) = &prepDir($run_outDir, $ARGV_ary_ref);
-#	calledInLine: 132
+#	calledInLine: 136
 #....................................................................................................................................................#
 	my ($run_outDir, $ARGV_ary_ref) = @_;
 
 	my $scriptAbsPath = abs_path($0);
-	my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @{$ARGV_ary_ref});#->164
+	my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @{$ARGV_ary_ref});#->168
 	my @path_split = split /\//, $scriptAbsPath;
 	my $scafe_dir_index = $#path_split-2;
 	my $script_dir_index = $#path_split-1;
@@ -476,12 +478,12 @@ sub readParameters {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|126
+#	primaryAppearInSection: 0_startTasks|130
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: $detect_TS_oligo, $genome, $max_thread, $overwrite, $run_bam_path, $run_cellbarcode_path, $run_outDir, $run_tag, $testing_signal_path, $training_signal_path
 #	toCall: my ($run_bam_path, $run_cellbarcode_path, $genome, $training_signal_path, $testing_signal_path, $detect_TS_oligo, $max_thread, $run_tag, $run_outDir, $overwrite) = &readParameters();
-#	calledInLine: 130
+#	calledInLine: 134
 #....................................................................................................................................................#
 	
 	my ($run_bam_path, $run_cellbarcode_path, $genome, $training_signal_path, $testing_signal_path, $detect_TS_oligo, $max_thread, $run_tag, $run_outDir, $overwrite);
@@ -532,20 +534,20 @@ sub readParameters {
 sub run_task {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: currentTime|164
+#	dependOnSub: currentTime|168
 #	appearInSub: >none
-#	primaryAppearInSection: 1_run|138
+#	primaryAppearInSection: 1_run|142
 #	secondaryAppearInSection: >none
 #	input: $path_hsh_ref, $result_script_dir, $task_info_hsh_ref
 #	output: none
 #	toCall: &run_task($task_info_hsh_ref, $path_hsh_ref, $result_script_dir);
-#	calledInLine: 143
+#	calledInLine: 147
 #....................................................................................................................................................#
 	
 	my ($task_info_hsh_ref, $path_hsh_ref, $result_script_dir) = @_;
 	
 	open TASKLOG, ">", "$result_script_dir/task.log.txt";
-	print TASKLOG join "", (join "\t", ('0', 'workflow', 'manager', 'started', &currentTime())), "\n";#->164
+	print TASKLOG join "", (join "\t", ('0', 'workflow', 'manager', 'started', &currentTime())), "\n";#->168
 	foreach my $task_num (sort {$a <=> $b} keys %{$task_info_hsh_ref}) {
 		my $task_name = $task_info_hsh_ref->{$task_num}{'task_name'};
 		my $script_name = $task_info_hsh_ref->{$task_num}{'script_name'};
@@ -560,7 +562,7 @@ sub run_task {
 			print "#===========================#\n";
 			print "Start running $task_name\n";
 			print "#===========================#\n";
-			print TASKLOG join "", (join "\t", ($task_num, $task_name, $script_name, 'started', &currentTime())), "\n";#->164
+			print TASKLOG join "", (join "\t", ($task_num, $task_name, $script_name, 'started', &currentTime())), "\n";#->168
 
 			my $script_path = $path_hsh_ref->{'script_dir'}.'/'.$script_name;
 			die "script of $task_name does not exist at $script_path\n" if not -s $script_path;
@@ -584,10 +586,10 @@ sub run_task {
 				print "#============================================#\n";
 				print "Results of $task_name found. Run successfully.\n";
 				print "#============================================#\n";
-				print TASKLOG join "", (join "\t", ($task_num, $task_name, $script_name, 'successful', &currentTime())), "\n";#->164
+				print TASKLOG join "", (join "\t", ($task_num, $task_name, $script_name, 'successful', &currentTime())), "\n";#->168
 			} else {
-				print TASKLOG join "", (join "\t", ($task_num, $task_name, $script_name, 'failed', &currentTime())), "\n";#->164
-				print TASKLOG join "", (join "\t", ('0', 'workflow', 'workflow', 'failed', &currentTime())), "\n";#->164
+				print TASKLOG join "", (join "\t", ($task_num, $task_name, $script_name, 'failed', &currentTime())), "\n";#->168
+				print TASKLOG join "", (join "\t", ('0', 'workflow', 'workflow', 'failed', &currentTime())), "\n";#->168
 				print "\n";
 				print "#========================================#\n";
 				print "Results of $task_name not found. Quitting.\n";
@@ -606,7 +608,7 @@ sub run_task {
 	print "#=====================================================#\n";
 	print "Results of all tasks found. All tasks run successfully.\n";
 	print "#=====================================================#\n";
-	print TASKLOG join "", (join "\t", ('0', 'workflow', 'manager', 'successful', &currentTime())), "\n";#->164
+	print TASKLOG join "", (join "\t", ('0', 'workflow', 'manager', 'successful', &currentTime())), "\n";#->168
 	close TASKLOG;
 }
 

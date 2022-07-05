@@ -113,6 +113,7 @@ use Cwd 'abs_path';
  For demo, cd to SCAFE dir and run,
    scafe.tool.sc.count \
    --overwrite=yes \
+   --genome= hg19.gencode_v32lift37 \
    --countRegion_bed_path=./demo/output/sc.solo/annotate/demo/bed/demo.CRE.annot.bed.gz \
    --cellBarcode_list_path=./demo/input/sc.solo/demo.barcodes.tsv.gz \
    --ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.CB.ctss.bed.gz \
@@ -126,6 +127,9 @@ v0.9.0-beta [March 20, 2021]
 
 v1.0.0 [June 6, 2022]
 	-Implemented region filter, will only count the ctss within the region filter, used for counting tssCluster only instead of the whole CRE
+
+v1.0.1 [June 26, 2022]
+	-No update
 
 =cut
 #<\doc>

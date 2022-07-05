@@ -71,21 +71,21 @@ use Cwd 'abs_path';
  ...===┴========================================================================================...
 
                       Single Cell Analysis of Five-prime End (SCAFE) Tool Suite 
-                              ---> download.demo.input <---
-                        <--- download, demo input data for testing --->
+                              ---> &download.demo.input <---
+                        <--- &download, demo input data for testing --->
 
  Description:
-   This scripts download demo data and save in ./demo/input dir.
+   This scripts &download demo data and save in ./demo/input dir.
 
  Usage:
-   download.demo.input
+   &download.demo.input
 
  Dependencies:
    wget
    tar
 
  For demo, cd to SCAFE dir and run,
-   scafe.download.demo.input
+   scafe.&download.demo.input
 
 =head1 VERSION
 
@@ -94,7 +94,10 @@ v0.9.0-beta [March 20, 2021]
 
 v1.0.0 [June 6, 2022]
 	-Updated to v1.0.0 demo data
-	
+
+v1.0.1 [June 26, 2022]
+	-No update
+
 =cut
 #<\doc>
 #====================================================================================================================================================#
@@ -123,9 +126,9 @@ v1.0.0 [June 6, 2022]
 #
 #<section ID="startTasks" num="0">
 my $demo_data_url = "https://www.dropbox.com/s/8cx0rdrghy3ntf0/input.tar.gz";
-&readParameters();#->151
-my ($scafe_dir, $script_dir, $demo_dir) = &prepDir();#->125
-&download($demo_dir, $demo_data_url);#->102
+&readParameters();#->165
+my ($scafe_dir, $script_dir, $demo_dir) = &prepDir();#->139
+&download($demo_dir, $demo_data_url);#->116
 #<\section>
 #====================================================================================================================================================#
 
@@ -156,12 +159,12 @@ sub download {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|69
+#	primaryAppearInSection: 0_startTasks|83
 #	secondaryAppearInSection: >none
 #	input: $demo_data_url, $demo_dir
 #	output: 
 #	toCall: &download($demo_dir, $demo_data_url);
-#	calledInLine: 75
+#	calledInLine: 89
 #....................................................................................................................................................#
 	my ($demo_dir, $demo_data_url) = @_;
 	
@@ -179,12 +182,12 @@ sub prepDir {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|69
+#	primaryAppearInSection: 0_startTasks|83
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: $demo_dir, $scafe_dir, $script_dir
 #	toCall: my ($scafe_dir, $script_dir, $demo_dir) = &prepDir();
-#	calledInLine: 74
+#	calledInLine: 88
 #....................................................................................................................................................#
 
 	my $scriptAbsPath = abs_path($0);
@@ -205,12 +208,12 @@ sub readParameters {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|69
+#	primaryAppearInSection: 0_startTasks|83
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: 
 #	toCall: &readParameters();
-#	calledInLine: 73
+#	calledInLine: 87
 #....................................................................................................................................................#
 	
 	GetOptions 	(

@@ -116,6 +116,9 @@ v0.9.0-beta [March 20, 2021]
 v1.0.0-rc [June 6, 2022]
 	-scafe.workflow.sc.pool and scafe.workflow.bk.pool are obsolete, will run scafe.workflow.cm.aggregate instead
 
+v1.0.1 [June 26, 2022]
+	-No update
+
 =cut
 #<\doc>
 #====================================================================================================================================================#

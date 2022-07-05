@@ -30,7 +30,27 @@
 Jonathan Moody and Tsukasa Kouno *et al*. Profiling of transcribed cis-regulatory elements in single cells. [bioRxiv 2021.04.04.438388](https://www.biorxiv.org/content/10.1101/2021.04.04.438388v1)
 
 ## Versions<a name="2"></a>
-### [v1.0.0]() (Lastest) [June 6, 2022] 	
+### [v1.0.1]() (Lastest developmental version) [June 26, 2022] 
+* Modified bamtobed command to accommodate long reads (in ***scafe.tool.bk.bam\_to\_ctss***)
+* Implemented region filter, will only count the ctss within the region filter, used for counting tssCluster only instead of the whole CRE (in ***scafe.tool.bk.count***)
+* definition of proximal CRE now include unannotated_promoter (in ***scafe.tool.cm.annotate***)
+* &defineCRE updated will first merge all tssClusters in a strand specific manner, assign the ones to genes, then merge the rest non-strand specifically (in ***scafe.tool.cm.annotate***)
+* simplified the options: removed exon_slop_rng, moved end5_slop_rng, merge_dist and merge_strandness as hard coded (in ***scafe.tool.cm.annotate***)
+* added proximal_extend_nt option to define proximity (in ***scafe.tool.cm.annotate***)
+* added min_CRE_count function to remove CRE with low read count (in ***scafe.tool.cm.annotate***)
+* will define also proximal CRE loci, similar to distal CRE loci (in ***scafe.tool.cm.annotate***)
+* added excl_chrom option, by default will remove CREs on mitochrondria genome (in ***scafe.tool.cm.annotate***)
+* min_num_sample_expr_cluster and min_num_sample_expr_summit are deprecated (in ***scafe.tool.cm.cluster***)
+* count_ctss_bed_path change to count_ctss_bed_path (in ***scafe.tool.cm.cluster***)
+* count_scope_bed_path is deprecated (in ***scafe.tool.cm.cluster***)
+* min_pos_count deprecated (in ***scafe.tool.cm.cluster***)
+* merge_dist deprecated (in ***scafe.tool.cm.cluster***)
+* added min_paraclu_count option (in ***scafe.tool.cm.cluster***)
+* In cluster step, will use unencoded G ctss for hard filtering (--count_ctss_bed_path= option) (in ***scafe.workflow.bk.solo*** and ***scafe.workflow.cm.aggregate*** and ***scafe.workflow.sc.solo*** and ***scafe.workflow.bk.subsample*** and ***scafe.workflow.sc.subsample***)
+* Updated samtools, tabix and bgzip binaries to their latest versions
+
+
+### [v1.0.0](https://github.com/chung-lab/SCAFE) (Lastest stable version) [June 6, 2022] 	
 * auto detects mode for TSO identification and trimming (in ***scafe.tool.sc.bam\_to\_ctss***)
 * use tabix/bgzip for fast indexing of ctss bed
 * annotate hyperactive distal locus, analogous to super-enhancer (in ***scafe.tool.cm.annotate***)
@@ -141,10 +161,10 @@ To install docker, please see [here](https://www.docker.com/). Noted that all fi
 
 ```shell
 #---to pull the docker image
-docker pull cchon/scafe:latest
+docker pull cchon/scafe:v1.0.1
 
 #---to run scafe within a docker container, run
-docker run -it cchon/scafe:latest
+docker run -it cchon/scafe:v1.0.1
 ```
 
 ## Getting started with demo data<a name="7"></a>
@@ -172,79 +192,79 @@ It should print the help message as the followings:
 
 ```shell
 Usage:
-               5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~AAA-3'
-                            O~~~AA      O~~         O~       O~~~~~~~AO~~~~~~~~A
-                          O~~    O~~ O~~   O~~     O~O~~     O~~      O~~       
-                           O~~      O~~           O~  O~~    O~~      O~~       
-                             O~~    O~~          O~~   O~~   O~~~~~AA O~~~~~~A  
-                                O~~ O~~         O~~~~~A O~~  O~~      O~~       
-                          O~~    O~~ O~~   O~~ O~~       O~~ O~~      O~~       
-                            O~~~~A     O~~~   O~~         O~~O~~      O~~~~~~~AA
-           ┌─ᐅ 5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-3'
-     ...===┴========================================================================================...
+           5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~AAA-3'
+                        O~~~AA      O~~         O~       O~~~~~~~AO~~~~~~~~A
+                      O~~    O~~ O~~   O~~     O~O~~     O~~      O~~       
+                       O~~      O~~           O~  O~~    O~~      O~~       
+                         O~~    O~~          O~~   O~~   O~~~~~AA O~~~~~~A  
+                            O~~ O~~         O~~~~~A O~~  O~~      O~~       
+                      O~~    O~~ O~~   O~~ O~~       O~~ O~~      O~~       
+                        O~~~~A     O~~~   O~~         O~~O~~      O~~~~~~~AA
+       ┌─ᐅ 5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-3'
+ ...===┴========================================================================================...
 
-                          Single Cell Analysis of Five-prime End (SCAFE) Tool Suite 
-                                    ---> scafe.workflow.sc.solo <---
-                      <--- workflow, single-cell mode, process a single sample --->
+                      Single Cell Analysis of Five-prime End (SCAFE) Tool Suite 
+                                ---> scafe.workflow.sc.solo <---
+                  <--- workflow, single-cell mode, process a single sample --->
 
-     Description:
-       This workflow process a single sample, from a cellranger bam file to tCRE UMI/cellbarcode count matrix
+ Description:
+   This workflow process a single sample, from a cellranger bam file to tCRE UMI/cellbarcode count matrix
 
-     Usage:
-       scafe.workflow.sc.solo [options] --run_bam_path --run_cellbarcode_path --genome --run_tag --run_outDir
+ Usage:
+   scafe.workflow.sc.solo [options] --run_bam_path --run_cellbarcode_path --genome --run_tag --run_outDir
    
-       --run_bam_path                  <required> [string] bam file from cellranger, can be read 1 only or pair-end
-       --run_cellbarcode_path          <required> [string] tsv file contains a list of cell barcodes,
-                                                           barcodes.tsv.gz from cellranger
-       --genome                        <required> [string] name of genome reference, e.g. hg19.gencode_v32lift37
-       --run_tag                       <required> [string] prefix for the output files
-       --run_outDir                    <required> [string] directory for the output files
-       --training_signal_path          (optional) [string] quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
-                                                           regions (e.g. annotated CRE, in bed format) used for training of logical 
-                                                           regression model If null, $usr_glm_model_path must be supplied for 
-                                                           pre-built logical regression model. It overrides usr_glm_model_path 
-                                                           (default=null)
-       --testing_signal_path           (optional) [string] quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
-                                                           regions (e.g. annotated CRE, in bed format) used for testing the performance 
-                                                           of the logical regression model. If null, annotated TSS from $genome will be 
-                                                           used as binary genomic regions. (default=null)
-       --detect_TS_oligo (optional) [match|trim|skip|auto] in bam_to_ctss step, the modes of detecting TS oligo. 1. match: search for 
-                                                           TS oligo sequence on the read, identify the TSO/cDNA junction as 5'end of 
-                                                           the read. This works only when the error rate of the TS oligo region on 
-                                                           the read is low, otherwise a considerable number of read will be invalid. 
-                                                           2. trim: assuming the 1st N bases of the reads are TS oligo, without 
-                                                           checking the actual sequence. N is determined by the length of TS oligo. 
-                                                           3. skip: assuming the TS oligo was not sequenced, the 1st base of the read
-                                                           will be treated as the 1st base after the TS oligo. 4. auto: automatically 
-                                                           determines the best mode, best of the observed error rate of the TS oligo
-                                                           and the frequency of 5'end softclipped bases by the aligner. If softcliped 
-                                                           bases is close to the length of TS oligo, mode 1 or 2 will be chosen, 
-                                                           depending on the observed error rate of the TS oligo (error rate <= 0.1, 
-                                                           mode 1 will be chosen or mode 2 otherwise). If softcliped base os close to 
-                                                           zero, mode 3 will be chosen. (default=auto).
-       --max_thread                   (optional) [integer] maximum number of parallel threads, capped at 10 to 
-                                                           avoid memory overflow (default=5)
-       --overwrite                     (optional) [yes/no] erase run_outDir before running (default=no)
+   --run_bam_path                  <required> [string] bam file from cellranger, can be read 1 only or pair-end
+   --run_cellbarcode_path          <required> [string] tsv file contains a list of cell barcodes,
+                                                       barcodes.tsv.gz from cellranger
+   --genome                        <required> [string] name of genome reference, e.g. hg19.gencode_v32lift37
+   --run_tag                       <required> [string] prefix for the output files
+   --run_outDir                    <required> [string] directory for the output files
+   --training_signal_path          (optional) [string] quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
+                                                       regions (e.g. annotated CRE, in bed format) used for training of logical 
+                                                       regression model If null, $usr_glm_model_path must be supplied for 
+                                                       pre-built logical regression model. It overrides usr_glm_model_path 
+                                                       (default=null)
+   --testing_signal_path           (optional) [string] quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic 
+                                                       regions (e.g. annotated CRE, in bed format) used for testing the performance 
+                                                       of the logical regression model. If null, annotated TSS from $genome will be 
+                                                       used as binary genomic regions. (default=null)
+   --detect_TS_oligo (optional) [match|trim|skip|auto] in bam_to_ctss step, the modes of detecting TS oligo. 1. match: search for 
+                                                       TS oligo sequence on the read, identify the TSO/cDNA junction as 5'end of 
+                                                       the read. This works only when the error rate of the TS oligo region on 
+                                                       the read is low, otherwise a considerable number of read will be invalid. 
+                                                       2. trim: assuming the 1st N bases of the reads are TS oligo, without 
+                                                       checking the actual sequence. N is determined by the length of TS oligo. 
+                                                       3. skip: assuming the TS oligo was not sequenced, the 1st base of the read
+                                                       will be treated as the 1st base after the TS oligo. 4. auto: automatically 
+                                                       determines the best mode, best of the observed error rate of the TS oligo
+                                                       and the frequency of 5'end softclipped bases by the aligner. If softcliped 
+                                                       bases is close to the length of TS oligo, mode 1 or 2 will be chosen, 
+                                                       depending on the observed error rate of the TS oligo (error rate <= 0.1, 
+                                                       mode 1 will be chosen or mode 2 otherwise). If softcliped base os close to 
+                                                       zero, mode 3 will be chosen. (default=auto).
+   --max_thread                   (optional) [integer] maximum number of parallel threads, capped at 10 to 
+                                                       avoid memory overflow (default=5)
+   --overwrite                     (optional) [yes/no] erase run_outDir before running (default=no)
 
-     Dependencies:
-       R packages: 'ROCR','PRROC', 'caret', 'e1071', 'ggplot2', 'scales', 'reshape2'
-       bigWigAverageOverBed
-       bedGraphToBigWig
-       bedtools
-       samtools
-       paraclu
-       paraclu-cut.sh
-       tabix
-       bgzip
+ Dependencies:
+   R packages: 'ROCR','PRROC', 'caret', 'e1071', 'ggplot2', 'scales', 'reshape2'
+   bigWigAverageOverBed
+   bedGraphToBigWig
+   bedtools
+   samtools
+   paraclu
+   paraclu-cut.sh
+   tabix
+   bgzip
 
-     For demo, cd to SCAFE dir and run,
-       scafe.workflow.sc.solo \
-       --overwrite=yes \
-       --run_bam_path=./demo/input/sc.solo/demo.cellranger.bam \
-       --run_cellbarcode_path=./demo/input/sc.solo/demo.barcodes.tsv.gz \
-       --genome=hg19.gencode_v32lift37 \
-       --run_tag=demo \
-       --run_outDir=./demo/output/sc.solo/
+ For demo, cd to SCAFE dir and run,
+   scafe.workflow.sc.solo \
+   --overwrite=yes \
+   --run_bam_path=./demo/input/sc.solo/demo.cellranger.bam \
+   --run_cellbarcode_path=./demo/input/sc.solo/demo.barcodes.tsv.gz \
+   --genome=hg19.gencode_v32lift37 \
+   --run_tag=demo \
+   --run_outDir=./demo/output/sc.solo/
 ```
 
 The help message details the input options, noted some are ***\<required\>*** and ***(optional)***. *workflow.sc.solo* takes a bam file (*--run\_bam\_path=*), a cellbarcode list file (*--run\_cellbarcode\_path=*), the corresponding reference genome (*--genome=*) and the output prefix (*--run_tag=*) and directory (*--run_outDir=*). At the end of the message, it also prints the commands for running the script on demo data. Now, copy the command and run as the following:

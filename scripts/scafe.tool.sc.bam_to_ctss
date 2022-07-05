@@ -141,6 +141,9 @@ v1.0.0 [June 6, 2022]
 	-updated the TSO detection and trimming method
 	-updated regular expression to get UMI and CB to be more permissive
 	-use tabix/bgzip for splitting be into chunks
+
+v1.0.1 [June 26, 2022]
+	-No update
 	
 =cut
 #<\doc>

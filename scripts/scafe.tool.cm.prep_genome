@@ -123,6 +123,9 @@ v0.9.0-beta [March 20, 2021]
 v1.0.0 [June 6, 2022]
 	-No update
 
+v1.0.1 [June 26, 2022]
+	-No update
+
 =cut
 #<\doc>
 #====================================================================================================================================================#
@@ -141,8 +144,8 @@ v1.0.0 [June 6, 2022]
 #<global>
 my $scriptDirPath = dirname(rel2abs($0));
 my $scriptAbsPath = abs_path($0);
-my ($curntTimeStamp) = &timeStamp();#->1140
-my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->360
+my ($curntTimeStamp) = &timeStamp();#->1143
+my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->363
 my $globalReadmeHsh_ref = {};
 our $tmplog_fh;
 #<\global>
@@ -156,7 +159,7 @@ our $tmplog_fh;
 #	section 0_startingTasks
 #
 #<section ID="startingTasks" num="0">
-my ($gtf_path, $fasta_path, $chrom_list_path, $mask_bed_path, $outputPrefix, $outDir, $overwrite) = &readParameters();#->1040
+my ($gtf_path, $fasta_path, $chrom_list_path, $mask_bed_path, $outputPrefix, $outDir, $overwrite) = &readParameters();#->1043
 #<\section>
 #====================================================================================================================================================#
 
@@ -184,8 +187,8 @@ my $result_gtf_dir = "$result_dir/gtf/"; push @mkDirAry, $result_gtf_dir;
 my $result_script_dir = "$result_dir/script/"; push @mkDirAry, $result_script_dir;
 foreach my $dir (@mkDirAry) {system ("mkdir -pm 755 $dir");}
 open $tmplog_fh, ">", "$result_dir/00_screen_log.$curntTimeStamp.log.txt";
-&printStartOrFinishMessage("startMessage");#->722
-&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->453
+&printStartOrFinishMessage("startMessage");#->725
+&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->456
 #<\section>
 #====================================================================================================================================================#
 
@@ -193,15 +196,15 @@ open $tmplog_fh, ">", "$result_dir/00_screen_log.$curntTimeStamp.log.txt";
 #	section 3_processInputData
 #
 #<section ID="processInputData" num="3">
-my ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
-my ($out_fasta_path, $out_fai_path, $out_gtf_path, $out_mask_bed_path) = &copySourceFile($gtf_path, $fasta_path, $samtools_bin, $mask_bed_path, $result_bed_dir, $result_fasta_dir, $result_gtf_dir);#->309
-my ($chromSizeHsh_ref) = &readChromSize($out_fai_path, $chrom_list_path, $result_tsv_dir);#->831
-my ($geneInfoHsh_ref) = &readGTF($gtf_path, $chromSizeHsh_ref);#->883
-my ($annoRegHsh_ref) = &generateAnnotationRegion($geneInfoHsh_ref, $flankSize_ary_ref, $chromSizeHsh_ref, $result_bed_dir);#->378
-my ($subtract_bed_hsh_ref, $region_bed_hsh_ref) = &printRegionBed($annoRegHsh_ref, $outputPrefix, $result_bed_dir, $bedtools_bin);#->662
-&subtractMask($region_bed_hsh_ref, $mask_bed_path, $bedtools_bin, $result_bed_dir, $subtract_bed_hsh_ref);#->1110
-&printTranscriptBed($geneInfoHsh_ref, $outputPrefix, $result_bed_dir);#->756
-&printGeneInfo($geneInfoHsh_ref, $outputPrefix, $result_tsv_dir);#->478
+my ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();#->212
+my ($out_fasta_path, $out_fai_path, $out_gtf_path, $out_mask_bed_path) = &copySourceFile($gtf_path, $fasta_path, $samtools_bin, $mask_bed_path, $result_bed_dir, $result_fasta_dir, $result_gtf_dir);#->312
+my ($chromSizeHsh_ref) = &readChromSize($out_fai_path, $chrom_list_path, $result_tsv_dir);#->834
+my ($geneInfoHsh_ref) = &readGTF($gtf_path, $chromSizeHsh_ref);#->886
+my ($annoRegHsh_ref) = &generateAnnotationRegion($geneInfoHsh_ref, $flankSize_ary_ref, $chromSizeHsh_ref, $result_bed_dir);#->381
+my ($subtract_bed_hsh_ref, $region_bed_hsh_ref) = &printRegionBed($annoRegHsh_ref, $outputPrefix, $result_bed_dir, $bedtools_bin);#->665
+&subtractMask($region_bed_hsh_ref, $mask_bed_path, $bedtools_bin, $result_bed_dir, $subtract_bed_hsh_ref);#->1113
+&printTranscriptBed($geneInfoHsh_ref, $outputPrefix, $result_bed_dir);#->759
+&printGeneInfo($geneInfoHsh_ref, $outputPrefix, $result_tsv_dir);#->481
 #<\section>
 #====================================================================================================================================================#
 
@@ -209,8 +212,8 @@ my ($subtract_bed_hsh_ref, $region_bed_hsh_ref) = &printRegionBed($annoRegHsh_re
 #	section 4_finishingTasks
 #
 #<section ID="finishingTasks" num="4">
-&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->542
-&printStartOrFinishMessage("finishMessage");#->722
+&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->545
+&printStartOrFinishMessage("finishMessage");#->725
 close $tmplog_fh;
 #<\section>
 #====================================================================================================================================================#
@@ -250,14 +253,14 @@ close $tmplog_fh;
 sub checkAllExecutable {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|1088
+#	dependOnSub: reportAndLogStatus|1091
 #	appearInSub: >none
-#	primaryAppearInSection: 3_processInputData|151
+#	primaryAppearInSection: 3_processInputData|154
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: $bedGraphToBigWig_bin, $bedtools_bin, $bgzip_bin, $bigWigAverageOverBed_bin, $cut_sh_path, $paraclu_bin, $samtools_bin, $tabix_bin
 #	toCall: my ($tabix_bin, $bgzip_bin, $bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
-#	calledInLine: 154
+#	calledInLine: 157
 #....................................................................................................................................................#
 	
 	my $dirPath = dirname(rel2abs($0));
@@ -271,12 +274,12 @@ sub checkAllExecutable {
 	my $bedGraphToBigWig_bin = "$dirPath/../resources/bin/bedGraphToBigWig/bedGraphToBigWig";
 	my $bigWigAverageOverBed_bin = "$dirPath/../resources/bin/bigWigAverageOverBed/bigWigAverageOverBed";
 	
-	&reportAndLogStatus("Checking all SCAFE executables", 10, "\n");#->1088
+	&reportAndLogStatus("Checking all SCAFE executables", 10, "\n");#->1091
 	
 	{
 		my $stdOut = `$tabix_bin  --version 2>&1`;
 		if ($stdOut =~ m/tabix \(htslib\) (\S+)/) {
-			&reportAndLogStatus("Checking: tabix version: $1", 0, "\n");#->1088
+			&reportAndLogStatus("Checking: tabix version: $1", 0, "\n");#->1091
 		} else {
 			die "tabix is not installed properly. Quitting.\n";
 		}
@@ -285,7 +288,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bgzip_bin --version 2>&1`;
 		if ($stdOut =~ m/bgzip \(htslib\) (\S+)/) {
-			&reportAndLogStatus("Checking: bgzip version: $1", 0, "\n");#->1088
+			&reportAndLogStatus("Checking: bgzip version: $1", 0, "\n");#->1091
 		} else {
 			die "bgzip is not installed properly. Quitting.\n";
 		}
@@ -294,7 +297,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bedtools_bin --version 2>&1`;
 		if ($stdOut =~ m/bedtools v(\S+)/) {
-			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->1088
+			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->1091
 		} else {
 			die "bedtools is not installed properly. Quitting.\n";
 		}
@@ -303,7 +306,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$samtools_bin 2>&1`;
 		if ($stdOut =~ m/\s+(Version: \S+)\s+/) {
-			&reportAndLogStatus("Checking: samtools version: $1", 0, "\n");#->1088
+			&reportAndLogStatus("Checking: samtools version: $1", 0, "\n");#->1091
 		} else {
 			die "samtools is not installed properly. Quitting.\n";
 		}
@@ -312,7 +315,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$paraclu_bin 2>&1`;
 		if ($stdOut =~ m/paraclu: I need a minValue and a fileName/) {
-			&reportAndLogStatus("Checking: paraclu found.", 0, "\n");#->1088
+			&reportAndLogStatus("Checking: paraclu found.", 0, "\n");#->1091
 		} else {
 			die "paraclu is not installed properly. Quitting.\n";
 		}
@@ -321,7 +324,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$cut_sh_path 55C7128A 2>&1`;
 		if ($stdOut =~ m/awk:/) {
-			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->1088
+			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->1091
 		} else {
 			die "paraclu-cut is not installed properly. Quitting.\n";
 		}
@@ -330,7 +333,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bedGraphToBigWig_bin 2>&1`;
 		if ($stdOut =~ m/bedGraphToBigWig v (\S+)/) {
-			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->1088
+			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->1091
 		} else {
 			die "bedGraphToBigWig not installed properly. Quitting.\n";
 		}
@@ -339,7 +342,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bigWigAverageOverBed_bin 2>&1`;
 		if ($stdOut =~ m/bigWigAverageOverBed v(\S+)/) {
-			&reportAndLogStatus("Checking: bigWigAverageOverBed version: $1", 0, "\n");#->1088
+			&reportAndLogStatus("Checking: bigWigAverageOverBed version: $1", 0, "\n");#->1091
 		} else {
 			die "bigWigAverageOverBed is not installed properly. Quitting.\n";
 		}
@@ -350,14 +353,14 @@ sub checkAllExecutable {
 sub copySourceFile {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|1088
+#	dependOnSub: reportAndLogStatus|1091
 #	appearInSub: >none
-#	primaryAppearInSection: 3_processInputData|151
+#	primaryAppearInSection: 3_processInputData|154
 #	secondaryAppearInSection: >none
 #	input: $fasta_path, $gtf_path, $mask_bed_path, $result_bed_dir, $result_fasta_dir, $result_gtf_dir, $samtools_bin
 #	output: $out_fai_path, $out_fasta_path, $out_gtf_path, $out_mask_bed_path
 #	toCall: my ($out_fasta_path, $out_fai_path, $out_gtf_path, $out_mask_bed_path) = &copySourceFile($gtf_path, $fasta_path, $samtools_bin, $mask_bed_path, $result_bed_dir, $result_fasta_dir, $result_gtf_dir);
-#	calledInLine: 155
+#	calledInLine: 158
 #....................................................................................................................................................#
 	my ($gtf_path, $fasta_path, $samtools_bin, $mask_bed_path, $result_bed_dir, $result_fasta_dir, $result_gtf_dir) = @_;
 	
@@ -366,7 +369,7 @@ sub copySourceFile {
 	my $out_gtf_path = "$result_gtf_dir/gene.gtf.gz";
 	my $out_mask_bed_path = "$result_bed_dir/mask.bed.gz";
 
-	&reportAndLogStatus("copying fasta", 10, "\n");#->1088
+	&reportAndLogStatus("copying fasta", 10, "\n");#->1091
 	if ($fasta_path =~ m/\.fasta\.gz$/ or $fasta_path =~ m/\.fa\.gz$/ or $fasta_path =~ m/\.fas\.gz$/) {
 		system ("gzip -dc $fasta_path >$out_fasta_path");
 	} elsif ($fasta_path =~ m/\.fasta$/ or $fasta_path =~ m/\.fa$/ or $fasta_path =~ m/\.fas$/) {
@@ -375,10 +378,10 @@ sub copySourceFile {
 		die "fasta_path must end with .fas, .fa, .fasta, .fas.gz, .fa.gz, .fasta.gz";
 	}
 	
-	&reportAndLogStatus("indexing fasta", 10, "\n");#->1088
+	&reportAndLogStatus("indexing fasta", 10, "\n");#->1091
 	system "$samtools_bin faidx $out_fasta_path";
 
-	&reportAndLogStatus("copying gtf", 10, "\n");#->1088
+	&reportAndLogStatus("copying gtf", 10, "\n");#->1091
 	if ($gtf_path =~ m/\.gtf\.gz$/) {
 		system ("cp $gtf_path $out_gtf_path");
 	} elsif ($gtf_path =~ m/\.gtf$/) {
@@ -387,7 +390,7 @@ sub copySourceFile {
 		die "gtf_path must end with .gtf or .gtf.gz";
 	}
 
-	&reportAndLogStatus("copying mask bed", 10, "\n");#->1088
+	&reportAndLogStatus("copying mask bed", 10, "\n");#->1091
 	if ($mask_bed_path =~ m/\.bed\.gz$/) {
 		system ("gzip -dc $mask_bed_path | sort -k1,1 -k2,2n | gzip -c >$out_mask_bed_path");
 	} elsif ($mask_bed_path =~ m/\.bed$/) {
@@ -402,13 +405,13 @@ sub currentTime {
 #....................................................................................................................................................#
 #	subroutineCategory: general
 #	dependOnSub: >none
-#	appearInSub: printStartOrFinishMessage|722, reportAndLogStatus|1088
+#	appearInSub: printStartOrFinishMessage|725, reportAndLogStatus|1091
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 2_defineOutDirPath|131, 4_finishingTasks|167
+#	secondaryAppearInSection: 2_defineOutDirPath|134, 4_finishingTasks|170
 #	input: none
 #	output: $runTime
 #	toCall: my ($runTime) = &currentTime();
-#	calledInLine: 103, 738, 742, 747, 751, 1104, 1105
+#	calledInLine: 106, 741, 745, 750, 754, 1107, 1108
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
@@ -419,25 +422,25 @@ sub currentTime {
 sub generateAnnotationRegion {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|1088
+#	dependOnSub: reportAndLogStatus|1091
 #	appearInSub: >none
-#	primaryAppearInSection: 3_processInputData|151
+#	primaryAppearInSection: 3_processInputData|154
 #	secondaryAppearInSection: >none
 #	input: $chromSizeHsh_ref, $flankSize_ary_ref, $geneInfoHsh_ref, $result_bed_dir
 #	output: $annoRegHsh_ref
 #	toCall: my ($annoRegHsh_ref) = &generateAnnotationRegion($geneInfoHsh_ref, $flankSize_ary_ref, $chromSizeHsh_ref, $result_bed_dir);
-#	calledInLine: 158
+#	calledInLine: 161
 #....................................................................................................................................................#
 	my ($geneInfoHsh_ref, $flankSize_ary_ref, $chromSizeHsh_ref, $result_bed_dir) = @_;
 	
 	my $annoRegHsh_ref = {};
 	
-	&reportAndLogStatus("generating annotation regions", 10, "\n");#->1088
+	&reportAndLogStatus("generating annotation regions", 10, "\n");#->1091
 	my $num_proc = 0;
 	
 	foreach my $geneID (keys %{$geneInfoHsh_ref}) {	
 		$num_proc++;
-		&reportAndLogStatus("$num_proc genes processed", 10, "\n") if $num_proc%100==0;#->1088
+		&reportAndLogStatus("$num_proc genes processed", 10, "\n") if $num_proc%100==0;#->1091
 		my $g_strnd = $geneInfoHsh_ref->{$geneID}{'strand'};
 		my $chrom = $geneInfoHsh_ref->{$geneID}{'chrom'};
 		my $chromSize = $chromSizeHsh_ref->{$chrom};
@@ -487,7 +490,7 @@ sub generateAnnotationRegion {
 			}
 		}
 	}
-	&reportAndLogStatus("$num_proc genes processed", 10, "\n");#->1088
+	&reportAndLogStatus("$num_proc genes processed", 10, "\n");#->1091
 	
 	return ($annoRegHsh_ref);
 }
@@ -496,12 +499,12 @@ sub logCalledCMDAndScript {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|131
+#	primaryAppearInSection: 2_defineOutDirPath|134
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $result_script_dir, $scriptAbsPath
 #	output: 
 #	toCall: &logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);
-#	calledInLine: 146
+#	calledInLine: 149
 #....................................................................................................................................................#
 	my ($ARGVStr, $result_script_dir, $scriptAbsPath) = @_;
 
@@ -519,14 +522,14 @@ sub logCalledCMDAndScript {
 sub printGeneInfo {
 #....................................................................................................................................................#
 #	subroutineCategory: specific
-#	dependOnSub: reportAndLogStatus|1088
+#	dependOnSub: reportAndLogStatus|1091
 #	appearInSub: >none
-#	primaryAppearInSection: 3_processInputData|151
+#	primaryAppearInSection: 3_processInputData|154
 #	secondaryAppearInSection: >none
 #	input: $geneInfoHsh_ref, $outputPrefix, $result_tsv_dir
 #	output: 
 #	toCall: &printGeneInfo($geneInfoHsh_ref, $outputPrefix, $result_tsv_dir);
-#	calledInLine: 162
+#	calledInLine: 165
 #....................................................................................................................................................#
 	my ($geneInfoHsh_ref, $outputPrefix, $result_tsv_dir) = @_;
 	
@@ -546,7 +549,7 @@ sub printGeneInfo {
 	open TRNSCPTBASEDINFO, ">", "$result_tsv_dir/transcript.info.tsv";
 	print GENEBASEDINFO join "", (join "\t", ('geneID', 'geneLocation', 'geneName', 'geneType', 'gene_codingStatus', 'numTrnscpt', 'chrom', 'strand', 'geneStart', 'geneEnd')), "\n";
 	print TRNSCPTBASEDINFO join "", (join "\t", ('trnscptID', 'geneID', 'trnscptLocation', 'geneType', 'gene_codingStatus', 'geneName', 'chrom', 'strand', 'trnscptStart', 'trnscptEnd', 'exonStr')), "\n";
-	&reportAndLogStatus("Printing gene and transcript info", 0, "\n");#->1088
+	&reportAndLogStatus("Printing gene and transcript info", 0, "\n");#->1091
 	foreach my $geneID (sort keys %{$geneInfoHsh_ref}) {
 		my $strand = $geneInfoHsh_ref->{$geneID}{'strand'};
 		my $chrom = $geneInfoHsh_ref->{$geneID}{'chrom'};
@@ -585,12 +588,12 @@ sub printOutputFileListAndReadme {
 #	subroutineCategory: output
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 4_finishingTasks|167
+#	primaryAppearInSection: 4_finishingTasks|170
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $outDir, $paramTag
 #	output: 
 #	toCall: &printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);
-#	calledInLine: 170
+#	calledInLine: 173
 #....................................................................................................................................................#
 	my ($ARGVStr, $paramTag, $outDir) = @_;
 	
@@ -703,21 +706,21 @@ sub printOutputFileListAndReadme {
 sub printRegionBed {
 #....................................................................................................................................................#
 #	subroutineCategory: specific
-#	dependOnSub: reportAndLogStatus|1088
+#	dependOnSub: reportAndLogStatus|1091
 #	appearInSub: >none
-#	primaryAppearInSection: 3_processInputData|151
+#	primaryAppearInSection: 3_processInputData|154
 #	secondaryAppearInSection: >none
 #	input: $annoRegHsh_ref, $bedtools_bin, $outputPrefix, $result_bed_dir
 #	output: $region_bed_hsh_ref, $subtract_bed_hsh_ref
 #	toCall: my ($subtract_bed_hsh_ref, $region_bed_hsh_ref) = &printRegionBed($annoRegHsh_ref, $outputPrefix, $result_bed_dir, $bedtools_bin);
-#	calledInLine: 159
+#	calledInLine: 162
 #....................................................................................................................................................#
 	my ($annoRegHsh_ref, $outputPrefix, $result_bed_dir, $bedtools_bin) = @_;
 	my $subtract_bed_hsh_ref = {};
 	my $region_bed_hsh_ref = {};
 	
 	foreach my $annoType (keys %{$annoRegHsh_ref}) {
-		&reportAndLogStatus("Printing $annoType bed", 0, "\n");#->1088
+		&reportAndLogStatus("Printing $annoType bed", 0, "\n");#->1091
 		my $nrd_bedID = "$annoType";
 		my $trn_bedID = "$annoType.trnscpt_based";
 		my $nrd_bed_path = "$result_bed_dir/$nrd_bedID.bed.gz";
@@ -763,48 +766,48 @@ sub printRegionBed {
 sub printStartOrFinishMessage {
 #....................................................................................................................................................#
 #	subroutineCategory: general
-#	dependOnSub: currentTime|360
+#	dependOnSub: currentTime|363
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|131, 4_finishingTasks|167
+#	primaryAppearInSection: 2_defineOutDirPath|134, 4_finishingTasks|170
 #	secondaryAppearInSection: >none
 #	input: $StartOrFinishMessage
 #	output: none
 #	toCall: &printStartOrFinishMessage($StartOrFinishMessage);
-#	calledInLine: 145, 171
+#	calledInLine: 148, 174
 #....................................................................................................................................................#
 
 	my ($StartOrFinishMessage) = @_;
 	
 	if ($StartOrFinishMessage eq "startMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] starts running ...... \n";#->360
+		print "[".&currentTime()."] starts running ...... \n";#->363
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->360
+		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->363
 		print $tmplog_fh "=========================================================================\n\n";
 
 	} elsif ($StartOrFinishMessage eq "finishMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] finished running .......\n";#->360
+		print "[".&currentTime()."] finished running .......\n";#->363
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->360
+		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->363
 		print $tmplog_fh "=========================================================================\n\n";
 	}
 }
 sub printTranscriptBed {
 #....................................................................................................................................................#
 #	subroutineCategory: specific
-#	dependOnSub: reportAndLogStatus|1088
+#	dependOnSub: reportAndLogStatus|1091
 #	appearInSub: >none
-#	primaryAppearInSection: 3_processInputData|151
+#	primaryAppearInSection: 3_processInputData|154
 #	secondaryAppearInSection: >none
 #	input: $geneInfoHsh_ref, $outputPrefix, $result_bed_dir
 #	output: 
 #	toCall: &printTranscriptBed($geneInfoHsh_ref, $outputPrefix, $result_bed_dir);
-#	calledInLine: 161
+#	calledInLine: 164
 #....................................................................................................................................................#
 	my ($geneInfoHsh_ref, $outputPrefix, $result_bed_dir) = @_;
 	
@@ -817,7 +820,7 @@ sub printTranscriptBed {
 		'+' => '.',
 	);
 
-	&reportAndLogStatus("Printing trancript and gene BED files", 10, "\n");#->1088
+	&reportAndLogStatus("Printing trancript and gene BED files", 10, "\n");#->1091
 
 	open (ALLTRNSCPTANNO, "| sort -k1,1 -k2,2n  | gzip -c >$result_bed_dir/transcript.bed.gz");
 	open (ALLGENEANNO, "| sort -k1,1 -k2,2n  | gzip -c >$result_bed_dir/gene.bed.gz");
@@ -874,12 +877,12 @@ sub readChromSize {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 3_processInputData|151
+#	primaryAppearInSection: 3_processInputData|154
 #	secondaryAppearInSection: >none
 #	input: $chrom_list_path, $out_fai_path, $result_tsv_dir
 #	output: $chromSizeHsh_ref
 #	toCall: my ($chromSizeHsh_ref) = &readChromSize($out_fai_path, $chrom_list_path, $result_tsv_dir);
-#	calledInLine: 156
+#	calledInLine: 159
 #....................................................................................................................................................#
 	my ($out_fai_path, $chrom_list_path, $result_tsv_dir) = @_;
 	
@@ -924,14 +927,14 @@ sub readChromSize {
 sub readGTF {
 #....................................................................................................................................................#
 #	subroutineCategory: GFF
-#	dependOnSub: reportAndLogStatus|1088
+#	dependOnSub: reportAndLogStatus|1091
 #	appearInSub: >none
-#	primaryAppearInSection: 3_processInputData|151
+#	primaryAppearInSection: 3_processInputData|154
 #	secondaryAppearInSection: >none
 #	input: $chromSizeHsh_ref, $gtfPath
 #	output: $geneInfoHsh_ref
 #	toCall: my ($geneInfoHsh_ref) = &readGTF($gtfPath, $chromSizeHsh_ref);
-#	calledInLine: 157
+#	calledInLine: 160
 #....................................................................................................................................................#
 
 	my ($gtfPath, $chromSizeHsh_ref) = @_;
@@ -946,7 +949,7 @@ sub readGTF {
 		die;
 	}
 	
-	&reportAndLogStatus("Reading GTF", 10, "\n");#->1088
+	&reportAndLogStatus("Reading GTF", 10, "\n");#->1091
 
 	#from http://asia.ensembl.org/info/website/upload/gff.html
 	#seqname - name of the chromosome or scaffold; chromosome names can be given with or without the 'chr' prefix.
@@ -964,7 +967,7 @@ sub readGTF {
 	while (<GTF>) {
 		chomp;
 		$lineProc++;
-		&reportAndLogStatus("$lineProc lines processed and $lineSkip lines skipped", 10, "\n") if $lineProc % 10000 == 0;	#->1088
+		&reportAndLogStatus("$lineProc lines processed and $lineSkip lines skipped", 10, "\n") if $lineProc % 10000 == 0;	#->1091
 		next if $_ =~ m/^#/;
 		last if $_ =~ m/^##FASTA/;
 		
@@ -973,9 +976,9 @@ sub readGTF {
 		#chr1	mitranscriptome	transcript	38817620	38822140	1000.0	-	.	tcat "lncrna"; gene_id "G001796"; tss_id "TSS003710"; uce "FALSE"; transcript_id "T008413"; tstatus "unannotated"; tgenic "intergenic"; func_name_final "NA";
 		foreach my $value ($seqname, $lineType, $start, $end, $strand) {
 			if (not defined $value) {
-				&reportAndLogStatus("############################", 10, "\n");#->1088
-				&reportAndLogStatus("$_", 10, "\n");#->1088
-				&reportAndLogStatus("############################", 10, "\n");#->1088
+				&reportAndLogStatus("############################", 10, "\n");#->1091
+				&reportAndLogStatus("$_", 10, "\n");#->1091
+				&reportAndLogStatus("############################", 10, "\n");#->1091
 				die "miss value in GTF\n";
 			}
 		}
@@ -1073,8 +1076,8 @@ sub readGTF {
 		$geneInfoHsh_ref->{$geneID}{'geneRng'} = [$geneStart, $genetEnd];
 	}
 	
-	&reportAndLogStatus("$numGene gene read. $numGene_valid are stranded.", 10, "\n"); #->1088
-	&reportAndLogStatus("$numTrnscpt trnscpt read. $numTrnscpt_valid are stranded.", 10, "\n"); #->1088
+	&reportAndLogStatus("$numGene gene read. $numGene_valid are stranded.", 10, "\n"); #->1091
+	&reportAndLogStatus("$numTrnscpt trnscpt read. $numTrnscpt_valid are stranded.", 10, "\n"); #->1091
 
 	return ($geneInfoHsh_ref);
 }
@@ -1083,12 +1086,12 @@ sub readParameters {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startingTasks|114
+#	primaryAppearInSection: 0_startingTasks|117
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: $chrom_list_path, $fasta_path, $gtf_path, $mask_bed_path, $outDir, $outputPrefix, $overwrite
 #	toCall: my ($gtf_path, $fasta_path, $chrom_list_path, $mask_bed_path, $outputPrefix, $outDir, $overwrite) = &readParameters();
-#	calledInLine: 117
+#	calledInLine: 120
 #....................................................................................................................................................#
 	
 	my ($gtf_path, $fasta_path, $chrom_list_path, $mask_bed_path, $outputPrefix, $outDir, $overwrite);
@@ -1129,36 +1132,36 @@ sub readParameters {
 sub reportAndLogStatus {
 #....................................................................................................................................................#
 #	subroutineCategory: log
-#	dependOnSub: currentTime|360
-#	appearInSub: checkAllExecutable|209, copySourceFile|309, generateAnnotationRegion|378, printGeneInfo|478, printRegionBed|662, printTranscriptBed|756, readGTF|883, subtractMask|1110
+#	dependOnSub: currentTime|363
+#	appearInSub: checkAllExecutable|212, copySourceFile|312, generateAnnotationRegion|381, printGeneInfo|481, printRegionBed|665, printTranscriptBed|759, readGTF|886, subtractMask|1113
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 3_processInputData|151
+#	secondaryAppearInSection: 3_processInputData|154
 #	input: $lineEnd, $message, $numTrailingSpace
 #	output: 
 #	toCall: &reportAndLogStatus($message, $numTrailingSpace, $lineEnd);
-#	calledInLine: 232, 237, 246, 255, 264, 273, 282, 291, 300, 327, 336, 339, 348, 393, 398, 448, 507, 678, 778, 907, 925, 934, 935, 936, 1034, 1035, 1128
+#	calledInLine: 235, 240, 249, 258, 267, 276, 285, 294, 303, 330, 339, 342, 351, 396, 401, 451, 510, 681, 781, 910, 928, 937, 938, 939, 1037, 1038, 1131
 #....................................................................................................................................................#
 	my ($message, $numTrailingSpace, $lineEnd) = @_;
 
 	my $trailingSpaces = '';
 	$trailingSpaces .= " " for (1..$numTrailingSpace);
 	
-	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->360
-	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->360
+	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->363
+	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->363
 	
 	return ();
 }
 sub subtractMask {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|1088
+#	dependOnSub: reportAndLogStatus|1091
 #	appearInSub: >none
-#	primaryAppearInSection: 3_processInputData|151
+#	primaryAppearInSection: 3_processInputData|154
 #	secondaryAppearInSection: >none
 #	input: $bedtools_bin, $mask_bed_path, $region_bed_hsh_ref, $result_bed_dir, $subtract_bed_hsh_ref
 #	output: 
 #	toCall: &subtractMask($region_bed_hsh_ref, $mask_bed_path, $bedtools_bin, $result_bed_dir, $subtract_bed_hsh_ref);
-#	calledInLine: 160
+#	calledInLine: 163
 #....................................................................................................................................................#
 	my ($region_bed_hsh_ref, $mask_bed_path, $bedtools_bin, $result_bed_dir, $subtract_bed_hsh_ref) = @_;
 
@@ -1167,7 +1170,7 @@ sub subtractMask {
 	foreach my $bedID (keys %{$region_bed_hsh_ref}) {
 		if ($bedID =~ m/exon/ or $bedID =~ m/intron/) {
 			my $region_bed_path = $region_bed_hsh_ref->{$bedID};
-			&reportAndLogStatus("masking $bedID", 10, "\n");#->1088
+			&reportAndLogStatus("masking $bedID", 10, "\n");#->1091
 			foreach my $subtract_annotype (keys %{$subtract_bed_hsh_ref}) {
 				my $subtract_annotype_bed_path = $subtract_bed_hsh_ref->{$subtract_annotype};
 				my $subtracted_region_bed_path = "$result_bed_dir/$bedID.subtract_$subtract_annotype.bed.gz";
@@ -1188,7 +1191,7 @@ sub timeStamp {
 #	input: none
 #	output: $curntTimeStamp
 #	toCall: my ($curntTimeStamp) = &timeStamp();
-#	calledInLine: 102
+#	calledInLine: 105
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);

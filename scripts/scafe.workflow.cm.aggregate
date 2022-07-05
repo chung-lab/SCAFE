@@ -131,6 +131,9 @@ v1.0.0 [June 6, 2022]
 	-Initial release
 	-added directionality
 
+v1.0.1 [June 26, 2022]
+	-In cluster step, will use unencoded G ctss for hard filtering (--count_ctss_bed_path= option) 
+
 =cut
 #<\doc>
 #====================================================================================================================================================#
@@ -290,8 +293,7 @@ sub define_task {
 			'script_name' => 'scafe.tool.cm.cluster',
 			'param' => [
 				['cluster_ctss_bed_path', $path_hsh_ref->{'collapse_ctss_bed_path'}],
-				['count_ctss_bed_path_list', $path_hsh_ref->{'collapse_ctss_bed_path'}],
-				['count_scope_bed_path', $path_hsh_ref->{'collapse_ctss_bed_path'}],
+				['count_ctss_bed_path', $path_hsh_ref->{'ung_ctss_bed_path'}],
 				['outputPrefix', $run_tag],
 				['outDir', $run_outDir."/cluster"],
 			],

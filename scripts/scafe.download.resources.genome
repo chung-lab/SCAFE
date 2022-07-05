@@ -71,14 +71,14 @@ use Cwd 'abs_path';
  ...===┴========================================================================================...
 
                       Single Cell Analysis of Five-prime End (SCAFE) Tool Suite 
-                           ---> download.resources.genome <---
-                     <--- download, reference genome to resources dir --->
+                           ---> &download.resources.genome <---
+                     <--- &download, reference genome to resources dir --->
 
  Description:
-   This script download reference genome data and save in ./resources/genome.
+   This script &download reference genome data and save in ./resources/genome.
 
  Usage:
-   download.resources.genome --genome
+   &download.resources.genome --genome
    
    --genome <required> [string] name of genome reference, currently available genomes:
                                 hg19.gencode_v32lift37
@@ -91,7 +91,7 @@ use Cwd 'abs_path';
    tar
 
  For demo, cd to SCAFE dir and run,
-   scafe.download.resources.genome \
+   scafe.&download.resources.genome \
    --genome=hg19.gencode_v32lift37
 
 =head1 VERSION
@@ -101,6 +101,9 @@ v0.9.0-beta [March 20, 2021]
 
 v1.0.0 [June 6, 2022]
 	-No major update
+
+v1.0.1 [June 26, 2022]
+	-No update
 
 =cut
 #<\doc>
@@ -135,9 +138,9 @@ my $genome_url_hsh_ref = {
 	'mm10.gencode_vM25' => "https://www.dropbox.com/s/a2397vqfm1igpml/mm10.gencode_vM25.tar.gz",
 	'TAIR10.AtRTDv2' => "https://www.dropbox.com/s/kekn3p6e2n5lv88/TAIR10.AtRTDv2.tar.gz",
 };
-my ($genome) = &readParameters();#->171
-my ($scafe_dir, $script_dir, $genome_dir) = &prepDir();#->145
-&download($genome_dir, $genome, $genome_url_hsh_ref);#->117
+my ($genome) = &readParameters();#->182
+my ($scafe_dir, $script_dir, $genome_dir) = &prepDir();#->156
+&download($genome_dir, $genome, $genome_url_hsh_ref);#->128
 #<\section>
 #====================================================================================================================================================#
 
@@ -168,12 +171,12 @@ sub download {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|79
+#	primaryAppearInSection: 0_startTasks|90
 #	secondaryAppearInSection: >none
 #	input: $genome, $genome_dir, $genome_url_hsh_ref
 #	output: 
 #	toCall: &download($genome_dir, $genome, $genome_url_hsh_ref);
-#	calledInLine: 90
+#	calledInLine: 101
 #....................................................................................................................................................#
 	my ($genome_dir, $genome, $genome_url_hsh_ref) = @_;
 	
@@ -196,12 +199,12 @@ sub prepDir {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|79
+#	primaryAppearInSection: 0_startTasks|90
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: $genome_dir, $scafe_dir, $script_dir
 #	toCall: my ($scafe_dir, $script_dir, $genome_dir) = &prepDir();
-#	calledInLine: 89
+#	calledInLine: 100
 #....................................................................................................................................................#
 
 	my $scriptAbsPath = abs_path($0);
@@ -222,12 +225,12 @@ sub readParameters {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|79
+#	primaryAppearInSection: 0_startTasks|90
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: $genome
 #	toCall: my ($genome) = &readParameters();
-#	calledInLine: 88
+#	calledInLine: 99
 #....................................................................................................................................................#
 	
 	my ($genome);

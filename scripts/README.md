@@ -20,8 +20,8 @@ This folder contains the following tools and workflows. A tool perform a single 
 * [**scafe.tool.bk.subsample\_ctss**](#17) ---> tool, bulk mode, subsample ctss
 * [**scafe.tool.bk.count**](#18) ---> tool, bulk mode, count ctss within tCREs
 * [**scafe.tool.bk.bam\_to\_ctss**](#19) ---> tool, bulk mode, convert bam to ctss bed
-* [**scafe.download.resources.genome**](#20) ---> download, reference genome to resources dir
-* [**scafe.download.demo.input**](#21) ---> download, demo input data for testing
+* [**scafe.download.resources.genome**](#20) ---> &download, reference genome to resources dir
+* [**scafe.download.demo.input**](#21) ---> &download, demo input data for testing
 * [**scafe.demo.test.run**](#22) ---> demo, run demo data for testing
 * [**scafe.check.dependencies**](#23) ---> check dependencies
 
@@ -344,6 +344,7 @@ This folder contains the following tools and workflows. A tool perform a single 
  To demo run, cd to SCAFE dir and run:
    scafe.tool.sc.count \
    --overwrite=yes \
+   --genome= hg19.gencode_v32lift37 \
    --countRegion_bed_path=./demo/output/sc.solo/annotate/demo/bed/demo.CRE.annot.bed.gz \
    --cellBarcode_list_path=./demo/input/sc.solo/demo.barcodes.tsv.gz \
    --ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.CB.ctss.bed.gz \
@@ -614,28 +615,21 @@ This folder contains the following tools and workflows. A tool perform a single 
    scafe.tool.cm.cluster [options] --cluster_ctss_bed_path --outputPrefix --outDir
    
    --cluster_ctss_bed_path       <required> [string]  ctss file used for clustering,
-                                                      "collapse" ctss file from scafe.tool.sc.bam_to_ctss.pl, 
-                                                      4th column is number of cells and 5th column is number UMI
+                                                      for single cell, *.pass.ctss.bed.gz ctss file from 
+                                                      scafe.tool.cm.remove_strand_invader; for bulk,
+                                                      *collapse.ctss.bed.gz from scafe.tool.bk.bam_to_ctss;
+                                                      for aggregate, *collapse.ctss.bed.gz from scafe.tool.cm.aggregate
+   --count_ctss_bed_path         <required> [string]  ctss file used for counting, 
+                                                      using for filtering of clusters, on min_summit_count and min_cluster_count
+                                                      for stringent filter, can consider using *.unencoded_G.collapse.ctss.bed.gz
+                                                      for permissive filter, use the same as cluster_ctss_bed_path, e.g. *collapse.ctss.bed.gz
    --outputPrefix                <required> [string]  prefix for the output files
    --outDir                      <required> [string]  directory for the output files
-   --count_ctss_bed_path_list    (optional) [string]  comma delimited list of ctss bed file, 
-                                                      using for filtering of clusters based signal 
-                                                      (default=$cluster_ctss_bed_path) 
-   --count_scope_bed_path        (optional) [string]  a bed file specify the scope for counting in $count_ctss_bed_path_list, 
-                                                      using for filtering of clusters based signal
-                                                      (default=$cluster_ctss_bed_path) 
-   --min_pos_count               (optional) [integer] minimum counts per position, used for filtering the raw signal 
-                                                      in $cluster_ctss_bed_path before clustering (default = 1)
-   --min_cluster_cpm             (optional) [float]   minimum counts per million (cpm) for a cluster (default = 1e-5)
-   --min_summit_count            (optional) [integer] minimum counts at the summit of a cluster (default = 3)
-   --min_cluster_count           (optional) [integer] minimum counts within a cluster (default = 5)
-   --min_num_sample_expr_cluster (optional) [integer] minimum number of samples (or cells) detected at the 
-                                                      summit of a cluster (default = 3)
-   --min_num_sample_expr_summit  (optional) [integer] minimum number of samples (or cells) detected within 
-                                                      of a cluster (default = 5)
-   --merge_dist                  (optional) [integer] maximum distance for merging closely located clusters, 
-                                                      -1 to turn off merging (default = -1)
-   --overwrite                   (optional) [yes/no]  erase outDir/outputPrefix before running (default=no)
+   --min_summit_count            (optional) [integer] minimum counts at the summit of a cluster, based on count_ctss_bed_path (default = 0)
+   --min_cluster_count           (optional) [integer] minimum counts within a cluster, based on count_ctss_bed_path (default = 2)
+   --min_paraclu_count           (optional) [integer] minimum number of read in a cluster to be retained in paraclu (as paraclu input parameter) 
+                                                      based on cluster_ctss_bed_path (default = 3)
+   --overwrite                    (optional) [yes/no] erase outDir/outputPrefix before running (default=no)
 
  Dependencies:
    paraclu
@@ -656,74 +650,68 @@ This folder contains the following tools and workflows. A tool perform a single 
 ```
  Usage:
    scafe.tool.cm.annotate [options] --tssCluster_bed_path --tssCluster_info_path --genome --outputPrefix --outDir
-   
-   --tssCluster_bed_path       <required> [string]   bed file contains the ranges of filtered TSS clusters,
+    
+   --tssCluster_bed_path         <required> [string] bed file contains the ranges of filtered TSS clusters,
                                                      *.tssCluster.*.filtered.bed.gz from scafe.tool.cm.filter.pl
-   --tssCluster_info_path      <required> [string]   tsv file contains the information of all TSS clusters,
+   --tssCluster_info_path        <required> [string] tsv file contains the information of all TSS clusters,
                                                      *.tssCluster.log.tsv from scafe.tool.cm.filter.pl
-   --genome                    <required> [string]   name of genome reference, e.g. hg19.gencode_v32lift37
-   --outputPrefix              <required> [string]   prefix for the output files
-   --outDir                    <required> [string]   directory for the output files
-   --up_end5Rng                (optional) [integer]  TSS clusters will be classified as gene TSS, exonic, intron 
+   --genome                      <required> [string] name of genome reference, e.g. hg19.gencode_v32lift37
+   --outputPrefix                <required> [string] prefix for the output files
+   --outDir                      <required> [string] directory for the output files
+   --up_end5Rng                 (optional) [integer] TSS clusters will be classified as gene TSS, exonic, intron 
                                                      and intergenic. $up_end5Rng determines the range upstream of 
                                                      annotated gene TSS to be used for gene TSS assignment 
                                                      (default = 500)
-   --dn_end5Rng                (optional) [integer]  TSS clusters will be classified as gene TSS, exonic, intron 
+   --dn_end5Rng                 (optional) [integer] TSS clusters will be classified as gene TSS, exonic, intron 
                                                      and intergenic. $dn_end5Rng determines the range downstream of 
-                                                     annotated gene TSS to be used for gene TSS assignment 
-                                                     (default = 500)
-   --exon_slop_rng             (optional) [integer]  TSS clusters will be classified as gene TSS, exonic, intron 
-                                                     and intergenic. $exon_slop_rng determines the range to be extended
-                                                     (i.e. slopped) from exon for assignment of exonic class. 
-                                                     Used -1 to NOT to extend (default = -1)
-   --merge_dist                (optional) [integer]  TSS clusters outside annotated gene promoters are grouped
+                                                     annotated gene TSS to be used for gene TSS assignment. If the 
+                                                     first exon is shorter than 'dn_end5Rng', the end of first exon 
+                                                     will be used instead (default = 500).
+   --merge_dist                 (optional) [integer] TSS clusters outside annotated gene promoters are grouped
                                                      as "dummy genes" (for operational uniformity) by merging closely 
                                                      located TSS clusters.  $merge_dist determines the maximum distances 
                                                      between TSS clusters to be merged (default = 500)
-   --addon_length              (optional) [integer]  see $merge_dist. add-on "dummy transcrips" will assigned to TSS cluster of 
+   --addon_length               (optional) [integer] see $merge_dist. add-on "dummy transcrips" will assigned to TSS cluster of 
                                                      "dummy genes" (for operational uniformity).$addon_length determines 
                                                      the length of these add-on "dummy transcrips" (default = 500).
-   --proximity_slop_rng        (optional) [integer]  TSS clusters will be assigned to annotated gene TSS are "proximal"
-                                                     TSS clusters. $proximity_slop_rng determines the range to be extended
-                                                     (i.e. slopped) from gene TSS for assignment of proximal TSS clusters. 
-                                                     (default = 500)
-   --merge_strandness          (optional) [string]   see $merge_dist. $merge_strandness decides the merge to be 
-                                                     strand-aware ("stranded") or strand-agnostic "strandless".
-                                                     (default = strandless)
-   --proximal_strandness       (optional) [string]   closely located proximal TSS clusters are merged  
-                                                     tCREs. $proximal_strandness decides the merge to be 
+   --proximal_extend_nt         (optional) [integer] tCRE are defined as "proximal" if it is located within "proximal_extend_nt" nucleotide (+/–)
+                                                     of the tCREs that were assigned as gene promoters (default = 500)
                                                      strand-aware ("stranded") or strand-agnostic "strandless".
                                                      (default = stranded)
-   --CRE_extend_size           (optional) [integer]  tCREs were defined by merging the extended ranges of TSS clusters.
+   --CRE_extend_size            (optional) [integer] tCREs were defined by merging the extended ranges of TSS clusters.
                                                      $CRE_extend_size determine the size of this range (both sides of 
                                                      summit) (default = 500)
-   --CRE_extend_upstrm_ratio   (optional) [float]    see $CRE_extend_size. $CRE_extend_upstrm_ratio determines the ratio 
+   --CRE_extend_upstrm_ratio      (optional) [float] see $CRE_extend_size. $CRE_extend_upstrm_ratio determines the ratio 
                                                      (X:1) of flanking sizes on the upstream and downstream of summit. 
                                                      e.g. $CRE_extend_upstrm_ratio=4, upstream and downstream size will be 
                                                      taken as 4:1 ratio. $CRE_extend_size=500 and $CRE_extend_upstrm_ratio=4,
                                                      upstream and downstream will be 400 and 100 respectively 
                                                      (default = 4)
-   --stitch_distance           (optional) [integer]  distance (nt) for stitching distal tCRE for defining hyperactive distal loci.
+   --distal_stitch_distance            (optional) [integer] distance (nt) for stitching distal tCRE for defining hyperactive distal loci.
                                                      aka superenhancer candidates. If undefined, an optimized value will be 
                                                      determined based on the tangent to rank-distance plot. As a note, the original 
                                                      distance for stitching enhancer in 
                                                      ROSE (http://younglab.wi.mit.edu/super_enhancer_code.html) is 12,500.
-                                                     (default = undefined)
+                                                     (default = undefined). Proximal CRE were stitched a fixed 2000 nt
+   --min_CRE_count              (optional) [integer] minimum num of UMI/read count of within the TSScluster of the non-promoter CRE,
+                                                     i.e. non-promoter CREs small than this number will be removed (default = 5)
    --min_total_exp_frac        (optional) [fraction] minimum fraction of the expression amount (read/UMI) within a gene for an annotated 
                                                      tCRE to be regarded as an unannotated promoter of the gene. The total expression amount 
                                                      of a gene is defined as the total number of UMI/read of all its annotated promoters.
-                                                     (default = 0.1)
+                                                     (default = 0.05)
    --min_gene_strand_read_frac (optional) [fraction] minimum fraction of the expression amount (read/UMI) on the gene strand (in total number 
                                                      of UMI/read both strand) of a tCRE to be regarded as an unannotated promoter of the gene.
-                                                     (default = 0.8)
+                                                     (default = 0.75)
    --min_spreadness            (optional) [fraction] minimum spreadness of the distal CRE to be considered as hyperactive distal loci.
                                                      Spreadness is defined as "num-of-CRE/top-fraction". Top-fraction is defined as the expression 
                                                      amount (read/UMI) on the highest expressed distal CRE in the expression amount of all distal CRE 
                                                      within the locus. Num-of-CRE refers to the number of CRE within the distal CRE locus 
                                                      (default = 4, equivalent to Num-of-CRE=3 and Top-fraction = 0.75, i.e. 3/0.75 = 4)
-   --Rscript_bin               (optional) [string]   path to the Rscript bin, aim to allow users to supply an R version other the 
+   --excl_chrom                  (optional) [string] chromosome to be excluded for CRE defintion, for example mitochrondria; comma delimited list;
+                                                     use 'null' to deactivate (default = chrM,ChrM)
+   --Rscript_bin                 (optional) [string] path to the Rscript bin, aim to allow users to supply an R version other the 
                                                      system wide R version. Package Caret must be installed. (default = Rscript)
-   --overwrite                 (optional) [yes/no]   erase outDir/outputPrefix before running (default=no)
+   --overwrite                   (optional) [yes/no] erase outDir/outputPrefix before running (default=no)
  
 
  Dependencies:
@@ -817,6 +805,18 @@ This folder contains the following tools and workflows. A tool perform a single 
    --ctss_bed_path          <required> [string] ctss file for counting,
                                                 *collapse.ctss.bed.gz from scafe.tool.bk.bam_to_ctss, 
                                                 5th column is number of read
+   --genome                 <required> [string] name of genome reference, e.g. hg19.gencode_v32lift37
+   --ctss_scope_bed_path    <optional> [string] bed file contains the regions for filtering CTSS, e.g. tssCluster ranges, 
+                                                so only the ctss within these ranges (i.e. scope) will be count. This is to 
+                                                prevent over permissive counting to ctss in the CRE range by stricting only 
+                                                ctss within valid tssClusters to be counted. 
+                                                *.tssCluster.default.filtered.bed.gz from scafe.tool.cm.filter.
+                                                It will skip filtering if not file was provide (default=null).
+   --ctss_scope_slop_bp    <optional> [integer] the length of the boundary extension (in bp) for filter region provided in
+                                                option ctss_scope_bed_path. All regions in ctss_scope_bed_path will be 
+                                                extended both side by ctss_scope_slop_bp, for controlling the permissiveness
+                                                of the counting. A large value of ctss_scope_slop_bp (e.g. 400) will be 
+                                                equivalent to no filtering (default=0).
    --outputPrefix           <required> [string] prefix for the output files
    --outDir                 <required> [string] directory for the output files
    --overwrite              (optional) [yes/no] erase outDir/outputPrefix before running (default=no)
@@ -827,6 +827,7 @@ This folder contains the following tools and workflows. A tool perform a single 
  To demo run, cd to SCAFE dir and run:
    scafe.tool.bk.count \
    --overwrite=yes \
+   --genome=hg19.gencode_v32lift37 \
    --countRegion_bed_path=./demo/output/bk.solo/annotate/demo/bed/demo.CRE.annot.bed.gz \
    --ctss_bed_path=./demo/output/bk.solo/bam_to_ctss/demo/bed/demo.collapse.ctss.bed.gz \
    --outputPrefix=demo \
@@ -872,11 +873,11 @@ This folder contains the following tools and workflows. A tool perform a single 
 ```
 
 ### scafe.download.resources.genome [[top]](#0)<a name="20"></a>
-   This script download reference genome data and save in ./resources/genome.
+   This script &download reference genome data and save in ./resources/genome.
 
 ```
  Usage:
-   download.resources.genome --genome
+   &download.resources.genome --genome
    
    --genome <required> [string] name of genome reference, currently available genomes:
                                 hg19.gencode_v32lift37
@@ -889,23 +890,23 @@ This folder contains the following tools and workflows. A tool perform a single 
    tar
 
  To demo run, cd to SCAFE dir and run:
-   scafe.download.resources.genome \
+   scafe.&download.resources.genome \
    --genome=hg19.gencode_v32lift37
 ```
 
 ### scafe.download.demo.input [[top]](#0)<a name="21"></a>
-   This scripts download demo data and save in ./demo/input dir.
+   This scripts &download demo data and save in ./demo/input dir.
 
 ```
  Usage:
-   download.demo.input
+   &download.demo.input
 
  Dependencies:
    wget
    tar
 
  To demo run, cd to SCAFE dir and run:
-   scafe.download.demo.input
+   scafe.&download.demo.input
 ```
 
 ### scafe.demo.test.run [[top]](#0)<a name="22"></a>

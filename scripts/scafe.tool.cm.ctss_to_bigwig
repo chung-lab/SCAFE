@@ -108,6 +108,9 @@ v0.9.0-beta [March 20, 2021]
 v1.0.0 [June 6, 2022]
 	-No update
 
+v1.0.1 [June 26, 2022]
+	-No update
+
 =cut#
 #<\doc>
 #====================================================================================================================================================#
@@ -390,6 +393,7 @@ sub convertCTSS {
 				while (<INBEDGRAPH>) {
 					chomp;
 					my ($chrom, $chromStart, $chromEnd, $count) = split /\t/;
+
 					my $score = $count;
 					$score = sprintf "%.2e", $count/($total_count/1000000) if $mode eq 'cpm';
 					print OUTBEDGRAPH join "", (join "\t", ($chrom, $chromStart, $chromEnd, $score)), "\n";

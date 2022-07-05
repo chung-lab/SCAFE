@@ -98,6 +98,9 @@ v1.0.0 [June 6, 2022]
 	-will check tabix and bgzip
 	-will not check cicero related function
 
+v1.0.1 [June 26, 2022]
+	-No update
+
 =cut
 #<\doc>
 #====================================================================================================================================================#
@@ -126,15 +129,15 @@ v1.0.0 [June 6, 2022]
 #
 #<section ID="startTasks" num="0">
 my $check_hsh_ref = {};
-&readParameters();#->433
-my ($scafe_dir, $script_dir, $check_dir) = &prepDir();#->407
-&checkPerlScript($script_dir, $check_hsh_ref);#->156
-&checkDownload($check_dir, $check_hsh_ref);#->123
-&checkThirdParty($scafe_dir, $check_hsh_ref);#->291
-&checkRVersion($check_hsh_ref);#->252
-&checkRPackages($check_hsh_ref);#->197
-&checkRScript($scafe_dir, $check_hsh_ref);#->224
-&summary($check_hsh_ref);#->453
+&readParameters();#->437
+my ($scafe_dir, $script_dir, $check_dir) = &prepDir();#->411
+&checkPerlScript($script_dir, $check_hsh_ref);#->160
+&checkDownload($check_dir, $check_hsh_ref);#->127
+&checkThirdParty($scafe_dir, $check_hsh_ref);#->295
+&checkRVersion($check_hsh_ref);#->256
+&checkRPackages($check_hsh_ref);#->201
+&checkRScript($scafe_dir, $check_hsh_ref);#->228
+&summary($check_hsh_ref);#->457
 #<\section>
 #====================================================================================================================================================#
 
@@ -167,12 +170,12 @@ sub checkDownload {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|82
+#	primaryAppearInSection: 0_startTasks|86
 #	secondaryAppearInSection: >none
 #	input: $check_dir, $check_hsh_ref
 #	output: 
 #	toCall: &checkDownload($check_dir, $check_hsh_ref);
-#	calledInLine: 89
+#	calledInLine: 93
 #....................................................................................................................................................#
 	my ($check_dir, $check_hsh_ref) = @_;
 	
@@ -200,12 +203,12 @@ sub checkPerlScript {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|82
+#	primaryAppearInSection: 0_startTasks|86
 #	secondaryAppearInSection: >none
 #	input: $check_hsh_ref, $script_dir
 #	output: 
 #	toCall: &checkPerlScript($script_dir, $check_hsh_ref);
-#	calledInLine: 88
+#	calledInLine: 92
 #....................................................................................................................................................#
 	my ($script_dir, $check_hsh_ref) = @_;
 	print "===============================\n";
@@ -241,12 +244,12 @@ sub checkRPackages {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|82
+#	primaryAppearInSection: 0_startTasks|86
 #	secondaryAppearInSection: >none
 #	input: $check_hsh_ref
 #	output: 
 #	toCall: &checkRPackages($check_hsh_ref);
-#	calledInLine: 92
+#	calledInLine: 96
 #....................................................................................................................................................#
 	my ($check_hsh_ref) = @_;
 		
@@ -268,12 +271,12 @@ sub checkRScript {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|82
+#	primaryAppearInSection: 0_startTasks|86
 #	secondaryAppearInSection: >none
 #	input: $check_hsh_ref, $scafe_dir
 #	output: 
 #	toCall: &checkRScript($scafe_dir, $check_hsh_ref);
-#	calledInLine: 93
+#	calledInLine: 97
 #....................................................................................................................................................#
 	my ($scafe_dir, $check_hsh_ref) = @_;
 	
@@ -296,12 +299,12 @@ sub checkRVersion {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|82
+#	primaryAppearInSection: 0_startTasks|86
 #	secondaryAppearInSection: >none
 #	input: $check_hsh_ref
 #	output: 
 #	toCall: &checkRVersion($check_hsh_ref);
-#	calledInLine: 91
+#	calledInLine: 95
 #....................................................................................................................................................#
 	my ($check_hsh_ref) = @_;
 	
@@ -335,12 +338,12 @@ sub checkThirdParty {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|82
+#	primaryAppearInSection: 0_startTasks|86
 #	secondaryAppearInSection: >none
 #	input: $check_hsh_ref, $scafe_dir
 #	output: 
 #	toCall: &checkThirdParty($scafe_dir, $check_hsh_ref);
-#	calledInLine: 90
+#	calledInLine: 94
 #....................................................................................................................................................#
 	
 	my ($scafe_dir, $check_hsh_ref) = @_;
@@ -451,12 +454,12 @@ sub prepDir {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|82
+#	primaryAppearInSection: 0_startTasks|86
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: $check_dir, $scafe_dir, $script_dir
 #	toCall: my ($scafe_dir, $script_dir, $check_dir) = &prepDir();
-#	calledInLine: 87
+#	calledInLine: 91
 #....................................................................................................................................................#
 
 	my $scriptAbsPath = abs_path($0);
@@ -477,12 +480,12 @@ sub readParameters {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|82
+#	primaryAppearInSection: 0_startTasks|86
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: 
 #	toCall: &readParameters();
-#	calledInLine: 86
+#	calledInLine: 90
 #....................................................................................................................................................#
 	
 	GetOptions 	(
@@ -497,12 +500,12 @@ sub summary {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startTasks|82
+#	primaryAppearInSection: 0_startTasks|86
 #	secondaryAppearInSection: >none
 #	input: $check_hsh_ref
 #	output: 
 #	toCall: &summary($check_hsh_ref);
-#	calledInLine: 94
+#	calledInLine: 98
 #....................................................................................................................................................#
 	my ($check_hsh_ref) = @_;
 

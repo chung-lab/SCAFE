@@ -83,74 +83,68 @@ use Cwd 'abs_path';
 
  Usage:
    scafe.tool.cm.annotate [options] --tssCluster_bed_path --tssCluster_info_path --genome --outputPrefix --outDir
-   
-   --tssCluster_bed_path       <required> [string]   bed file contains the ranges of filtered TSS clusters,
+    
+   --tssCluster_bed_path         <required> [string] bed file contains the ranges of filtered TSS clusters,
                                                      *.tssCluster.*.filtered.bed.gz from scafe.tool.cm.filter.pl
-   --tssCluster_info_path      <required> [string]   tsv file contains the information of all TSS clusters,
+   --tssCluster_info_path        <required> [string] tsv file contains the information of all TSS clusters,
                                                      *.tssCluster.log.tsv from scafe.tool.cm.filter.pl
-   --genome                    <required> [string]   name of genome reference, e.g. hg19.gencode_v32lift37
-   --outputPrefix              <required> [string]   prefix for the output files
-   --outDir                    <required> [string]   directory for the output files
-   --up_end5Rng                (optional) [integer]  TSS clusters will be classified as gene TSS, exonic, intron 
+   --genome                      <required> [string] name of genome reference, e.g. hg19.gencode_v32lift37
+   --outputPrefix                <required> [string] prefix for the output files
+   --outDir                      <required> [string] directory for the output files
+   --up_end5Rng                 (optional) [integer] TSS clusters will be classified as gene TSS, exonic, intron 
                                                      and intergenic. $up_end5Rng determines the range upstream of 
                                                      annotated gene TSS to be used for gene TSS assignment 
                                                      (default = 500)
-   --dn_end5Rng                (optional) [integer]  TSS clusters will be classified as gene TSS, exonic, intron 
+   --dn_end5Rng                 (optional) [integer] TSS clusters will be classified as gene TSS, exonic, intron 
                                                      and intergenic. $dn_end5Rng determines the range downstream of 
-                                                     annotated gene TSS to be used for gene TSS assignment 
-                                                     (default = 500)
-   --exon_slop_rng             (optional) [integer]  TSS clusters will be classified as gene TSS, exonic, intron 
-                                                     and intergenic. $exon_slop_rng determines the range to be extended
-                                                     (i.e. slopped) from exon for assignment of exonic class. 
-                                                     Used -1 to NOT to extend (default = -1)
-   --merge_dist                (optional) [integer]  TSS clusters outside annotated gene promoters are grouped
+                                                     annotated gene TSS to be used for gene TSS assignment. If the 
+                                                     first exon is shorter than 'dn_end5Rng', the end of first exon 
+                                                     will be used instead (default = 500).
+   --merge_dist                 (optional) [integer] TSS clusters outside annotated gene promoters are grouped
                                                      as "dummy genes" (for operational uniformity) by merging closely 
                                                      located TSS clusters.  $merge_dist determines the maximum distances 
                                                      between TSS clusters to be merged (default = 500)
-   --addon_length              (optional) [integer]  see $merge_dist. add-on "dummy transcrips" will assigned to TSS cluster of 
+   --addon_length               (optional) [integer] see $merge_dist. add-on "dummy transcrips" will assigned to TSS cluster of 
                                                      "dummy genes" (for operational uniformity).$addon_length determines 
                                                      the length of these add-on "dummy transcrips" (default = 500).
-   --proximity_slop_rng        (optional) [integer]  TSS clusters will be assigned to annotated gene TSS are "proximal"
-                                                     TSS clusters. $proximity_slop_rng determines the range to be extended
-                                                     (i.e. slopped) from gene TSS for assignment of proximal TSS clusters. 
-                                                     (default = 500)
-   --merge_strandness          (optional) [string]   see $merge_dist. $merge_strandness decides the merge to be 
-                                                     strand-aware ("stranded") or strand-agnostic "strandless".
-                                                     (default = strandless)
-   --proximal_strandness       (optional) [string]   closely located proximal TSS clusters are merged  
-                                                     tCREs. $proximal_strandness decides the merge to be 
+   --proximal_extend_nt         (optional) [integer] tCRE are defined as "proximal" if it is located within "proximal_extend_nt" nucleotide (+/–)
+                                                     of the tCREs that were assigned as gene promoters (default = 500)
                                                      strand-aware ("stranded") or strand-agnostic "strandless".
                                                      (default = stranded)
-   --CRE_extend_size           (optional) [integer]  tCREs were defined by merging the extended ranges of TSS clusters.
+   --CRE_extend_size            (optional) [integer] tCREs were defined by merging the extended ranges of TSS clusters.
                                                      $CRE_extend_size determine the size of this range (both sides of 
                                                      summit) (default = 500)
-   --CRE_extend_upstrm_ratio   (optional) [float]    see $CRE_extend_size. $CRE_extend_upstrm_ratio determines the ratio 
+   --CRE_extend_upstrm_ratio      (optional) [float] see $CRE_extend_size. $CRE_extend_upstrm_ratio determines the ratio 
                                                      (X:1) of flanking sizes on the upstream and downstream of summit. 
                                                      e.g. $CRE_extend_upstrm_ratio=4, upstream and downstream size will be 
                                                      taken as 4:1 ratio. $CRE_extend_size=500 and $CRE_extend_upstrm_ratio=4,
                                                      upstream and downstream will be 400 and 100 respectively 
                                                      (default = 4)
-   --stitch_distance           (optional) [integer]  distance (nt) for stitching distal tCRE for defining hyperactive distal loci.
+   --distal_stitch_distance            (optional) [integer] distance (nt) for stitching distal tCRE for defining hyperactive distal loci.
                                                      aka superenhancer candidates. If undefined, an optimized value will be 
                                                      determined based on the tangent to rank-distance plot. As a note, the original 
                                                      distance for stitching enhancer in 
                                                      ROSE (http://younglab.wi.mit.edu/super_enhancer_code.html) is 12,500.
-                                                     (default = undefined)
+                                                     (default = undefined). Proximal CRE were stitched a fixed 2000 nt
+   --min_CRE_count              (optional) [integer] minimum num of UMI/read count of within the TSScluster of the non-promoter CRE,
+                                                     i.e. non-promoter CREs small than this number will be removed (default = 5)
    --min_total_exp_frac        (optional) [fraction] minimum fraction of the expression amount (read/UMI) within a gene for an annotated 
                                                      tCRE to be regarded as an unannotated promoter of the gene. The total expression amount 
                                                      of a gene is defined as the total number of UMI/read of all its annotated promoters.
-                                                     (default = 0.1)
+                                                     (default = 0.05)
    --min_gene_strand_read_frac (optional) [fraction] minimum fraction of the expression amount (read/UMI) on the gene strand (in total number 
                                                      of UMI/read both strand) of a tCRE to be regarded as an unannotated promoter of the gene.
-                                                     (default = 0.8)
+                                                     (default = 0.75)
    --min_spreadness            (optional) [fraction] minimum spreadness of the distal CRE to be considered as hyperactive distal loci.
                                                      Spreadness is defined as "num-of-CRE/top-fraction". Top-fraction is defined as the expression 
                                                      amount (read/UMI) on the highest expressed distal CRE in the expression amount of all distal CRE 
                                                      within the locus. Num-of-CRE refers to the number of CRE within the distal CRE locus 
                                                      (default = 4, equivalent to Num-of-CRE=3 and Top-fraction = 0.75, i.e. 3/0.75 = 4)
-   --Rscript_bin               (optional) [string]   path to the Rscript bin, aim to allow users to supply an R version other the 
+   --excl_chrom                  (optional) [string] chromosome to be excluded for CRE defintion, for example mitochrondria; comma delimited list;
+                                                     use 'null' to deactivate (default = chrM,ChrM)
+   --Rscript_bin                 (optional) [string] path to the Rscript bin, aim to allow users to supply an R version other the 
                                                      system wide R version. Package Caret must be installed. (default = Rscript)
-   --overwrite                 (optional) [yes/no]   erase outDir/outputPrefix before running (default=no)
+   --overwrite                   (optional) [yes/no] erase outDir/outputPrefix before running (default=no)
  
  Dependencies:
    bedtools,
@@ -174,6 +168,16 @@ v1.0.0 [June 6, 2022]
    -Added hyperactive distal tCRE locus definition with uniformity restritions (using --min_spreadness)
    -Annotate potential alternative promoters
 
+v1.0.1 [June 22, 2022]
+   -major update
+   -definition of proximal CRE now include unannotated_promoter
+   -&defineCRE updated will first merge all tssClusters in a strand specific manner, assign the ones to genes, then merge the rest non-strand specifically
+   -simplified the options: removed exon_slop_rng, moved end5_slop_rng, merge_dist and merge_strandness as hard coded
+   -added proximal_extend_nt option to define proximity
+   -added min_CRE_count function to remove CRE with low read count
+   -will define also proximal CRE loci, similar to distal CRE loci
+   -added excl_chrom option, by default will remove CREs on mitochrondria genome
+
 =cut
 #<\doc>
 #====================================================================================================================================================#
@@ -192,8 +196,8 @@ v1.0.0 [June 6, 2022]
 #<global>
 my $scriptDirPath = dirname(rel2abs($0));
 my $scriptAbsPath = abs_path($0);
-my ($curntTimeStamp) = &timeStamp();#->3161
-my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->695
+my ($curntTimeStamp) = &timeStamp();#->3372
+my $ARGVStr = join "\n", (&currentTime(), $scriptAbsPath, @ARGV);#->736
 my $globalReadmeHsh_ref = {};
 our $tmplog_fh;
 #<\global>
@@ -207,7 +211,7 @@ our $tmplog_fh;
 #	section 0_startingTasks
 #
 #<section ID="startingTasks" num="0">
-my ($exon_slop_rng, $addon_length, $merge_dist, $up_end5Rng, $dn_end5Rng, $tssCluster_bed_path, $tssCluster_info_path, $merge_strandness, $proximity_slop_rng, $CRE_extend_size, $CRE_extend_upstrm_ratio, $genome, $proximal_strandness, $stitch_distance, $min_total_exp_frac, $min_gene_strand_read_frac, $min_spreadness, $Rscript_bin, $outputPrefix, $outDir, $overwrite) = &readParameters();#->2676
+my ($addon_length, $up_end5Rng, $dn_end5Rng, $tssCluster_bed_path, $tssCluster_info_path, $CRE_extend_size, $CRE_extend_upstrm_ratio, $genome, $distal_stitch_distance, $min_total_exp_frac, $min_gene_strand_read_frac, $min_spreadness, $proximal_extend_nt, $min_CRE_count, $Rscript_bin, $excl_chrom, $outputPrefix, $outDir, $overwrite) = &readParameters();#->2951
 #<\section>
 #====================================================================================================================================================#
 
@@ -215,19 +219,11 @@ my ($exon_slop_rng, $addon_length, $merge_dist, $up_end5Rng, $dn_end5Rng, $tssCl
 #	section 1_defineHardCodedParam
 #
 #<section ID="defineHardCodedParam" num="1">
-my $mask_class_hsh_ref = {
-	'Mt_rRNA' => 1,
-	'Mt_tRNA' => 1,
-	'rRNA' => 1,
-	'snRNA' => 1,
-	'snoRNA' => 1,
-	'structural_RNA' => 1,
-	'small_RNA' => 1,
-	'miRNA' => 1,
-};
 my $max_dist_rank = 100000; #---[2021/08/04 22:13] maximum distance to be used for optimize tangent for optimize distal tCRE stitching
 my $paramTag = "$outputPrefix";
-#$chrom_size_path, $gene_info_path, $transcript_bed_path, $transcript_info_path,
+my $end5_slop_rng = 500; #---[2022/06/27 18:09] slop size from geneTSS for assigning TSS cluster to regionType
+my $max_gene_num = 5; #---[2022/06/28 11:50] maximum number of genes to be included in the name of CRE and clusters
+my $pseudocount_correction = 1; #---[2022/06/30 16:57] to correct for the cluster count with pseudocount from the cluster script
 #<\section>
 #====================================================================================================================================================#
 
@@ -247,11 +243,11 @@ my $result_script_dir = "$result_dir/script/"; push @mkDirAry, $result_script_di
 foreach my $dir (@mkDirAry) {system ("mkdir -pm 755 $dir");}
 
 open $tmplog_fh, ">", "$result_dir/00_screen_log.$curntTimeStamp.log.txt";
-&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->1407
-&printStartOrFinishMessage("startMessage");#->1760
-my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();#->553
-my ($chrom_size_path, $gene_info_path, $transcript_info_path, $transcript_bed_path) = &checkTranscriptInfoBedChromSizeGeneInfoPath($genome);#->666
-my ($optimize_tangent_R) = &checkRScriptVersion($Rscript_bin);#->633
+&logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);#->1599
+&printStartOrFinishMessage("startMessage");#->1995
+my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();#->594
+my ($chrom_size_path, $gene_info_path, $transcript_info_path, $transcript_bed_path) = &checkTranscriptInfoBedChromSizeGeneInfoPath($genome);#->707
+my ($optimize_tangent_R) = &checkRScriptVersion($Rscript_bin);#->674
 #<\section>
 #====================================================================================================================================================#
 
@@ -259,40 +255,40 @@ my ($optimize_tangent_R) = &checkRScriptVersion($Rscript_bin);#->633
 #	section 3_readInfo
 #
 #<section ID="readInfo" num="3">
-my ($chrom_size_hsh_ref) = &readChromSize($chrom_size_path);#->2454
-my ($trnscptInfoHsh_ref, $transcript_in_scope_bed_path) = &readTranscriptBed($transcript_bed_path, $chrom_size_hsh_ref, $tmp_bed_dir, $outDir);#->2751
-my ($geneInfoHsh_ref) = &readTranscriptInfo($transcript_info_path, $trnscptInfoHsh_ref);#->2830
-&readGeneInfo($gene_info_path, $geneInfoHsh_ref);#->2604
-my ($coding_class_hsh_ref) = &defineCodingClasses();#->787
-my ($end5_rng_bed_path, $end5_point_bed_path) = &printEnd5Bed($trnscptInfoHsh_ref, $up_end5Rng, $dn_end5Rng, $tmp_bed_dir);#->1514
-my ($clusterInfoHsh_ref) = &readClusterBed($tssCluster_bed_path);#->2479
-&readClusterInfo($tssCluster_info_path, $clusterInfoHsh_ref);#->2543
-my ($extended_tssCluster_bed_path) = &generateExtendedCluster($clusterInfoHsh_ref, $tmp_bed_dir, $CRE_extend_size, $CRE_extend_upstrm_ratio);#->1198
-&intersectCluster($transcript_in_scope_bed_path, $tssCluster_bed_path, $end5_rng_bed_path, $chrom_size_path, $exon_slop_rng, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $bedtools_bin);#->1346
-&filterUnannotatedCluster($clusterInfoHsh_ref);#->1119
-my ($superClusterHsh_ref) = &getSuperCluster($tmp_bed_dir, $clusterInfoHsh_ref, $merge_dist, $merge_strandness, $bedtools_bin);#->1291
-&addonTranscript($superClusterHsh_ref, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $addon_length, $chrom_size_hsh_ref);#->348
-&summerizeGeneInfo($geneInfoHsh_ref, $trnscptInfoHsh_ref);#->3103
-&addGeneMask($geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $mask_class_hsh_ref);#->313
-&assignClusterProximity($transcript_in_scope_bed_path, $tssCluster_bed_path, $end5_point_bed_path, $chrom_size_path, $proximity_slop_rng, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $bedtools_bin);#->445
-&rankClusterWithinGene($clusterInfoHsh_ref, $geneInfoHsh_ref);#->2396
-my ($CREInfoHsh_ref) = &defineCRE($CRE_extend_size, $CRE_extend_upstrm_ratio, $clusterInfoHsh_ref, $tmp_bed_dir, $chrom_size_path, $bedtools_bin, $proximal_strandness, $extended_tssCluster_bed_path);#->713
-&summerizeCREInfo($clusterInfoHsh_ref, $CREInfoHsh_ref, $geneInfoHsh_ref);#->3025
-&rankCREWithinGene($CREInfoHsh_ref, $geneInfoHsh_ref);#->2338
-&removeUnsupportedGene($geneInfoHsh_ref, $trnscptInfoHsh_ref);#->2911
-my ($gene_promoter_CRE_pair_hsh_ref) = &defineUnannoPromoter($CREInfoHsh_ref, $geneInfoHsh_ref, $min_total_exp_frac, $min_gene_strand_read_frac, $clusterInfoHsh_ref);#->1002
-my ($distal_CRE_locus_info_hsh_ref) = &defineHyperactiveDistalLoci($CREInfoHsh_ref, $tmp_bed_dir, $bedtools_bin, $optimize_tangent_R, $max_dist_rank, $Rscript_bin, $stitch_distance, $min_spreadness, $result_plot_dir);#->861
-my ($gene_promoter_info_hsh_ref) = &generateGenePromoterInfoHsh($CREInfoHsh_ref);#->1264
-&printAllBed($result_bed_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $CREInfoHsh_ref, $distal_CRE_locus_info_hsh_ref, $gene_promoter_info_hsh_ref, $outputPrefix);#->1432
-&printTableClusterInfo($result_log_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $coding_class_hsh_ref, $outputPrefix);#->1930
-&printTableGeneInfo($result_log_dir, $geneInfoHsh_ref, $coding_class_hsh_ref, $outputPrefix);#->2099
-&printTableIDMappingInfo($result_log_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $coding_class_hsh_ref, $outputPrefix);#->2161
-&printTableTranscriptInfo($result_log_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $coding_class_hsh_ref, $outputPrefix);#->2221
-&printTableCREInfo($result_log_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $CREInfoHsh_ref, $coding_class_hsh_ref, $outputPrefix);#->1794
-&printTrnscptGtf($result_gtf_dir, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $outputPrefix);#->2278
-&printTableDistalCRELocusInfo($result_log_dir, $distal_CRE_locus_info_hsh_ref, $outputPrefix);#->2045
-&printGenePromoterInfo($result_log_dir, $gene_promoter_CRE_pair_hsh_ref, $geneInfoHsh_ref, $CREInfoHsh_ref, $outputPrefix);#->1595
-&removeTmpBedDir($tmp_bed_dir);#->2892
+my ($chrom_size_hsh_ref) = &readChromSize($chrom_size_path);#->2723
+my ($trnscptInfoHsh_ref, $transcript_in_scope_bed_path) = &readTranscriptBed($transcript_bed_path, $chrom_size_hsh_ref, $tmp_bed_dir, $outDir);#->3022
+my ($geneInfoHsh_ref) = &readTranscriptInfo($transcript_info_path, $trnscptInfoHsh_ref);#->3101
+&readGeneInfo($gene_info_path, $geneInfoHsh_ref);#->2879
+&addAnnoGeneInfoLoc($geneInfoHsh_ref, $trnscptInfoHsh_ref);#->309
+my ($coding_class_hsh_ref) = &defineCodingClasses();#->1002
+my ($end5_rng_bed_path, $end5_point_bed_path) = &printEnd5Bed($trnscptInfoHsh_ref, $up_end5Rng, $dn_end5Rng, $tmp_bed_dir);#->1749
+my ($clusterInfoHsh_ref) = &readClusterBed($tssCluster_bed_path, $excl_chrom);#->2748
+&readClusterInfo($tssCluster_info_path, $clusterInfoHsh_ref, $pseudocount_correction);#->2818
+my ($extended_tssCluster_bed_path) = &generateExtendedCluster($clusterInfoHsh_ref, $tmp_bed_dir, $CRE_extend_size, $CRE_extend_upstrm_ratio);#->1503
+&assignClusterGenePromoter($tssCluster_bed_path, $end5_rng_bed_path, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $bedtools_bin);#->459
+&assignClusterRegion($transcript_in_scope_bed_path, $tssCluster_bed_path, $end5_point_bed_path, $chrom_size_path, $end5_slop_rng, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $bedtools_bin);#->499
+my ($stranded_CREInfoHsh_ref) = &defineStrandedCRE($clusterInfoHsh_ref, $tmp_bed_dir, $bedtools_bin, $extended_tssCluster_bed_path);#->1223
+&summerizeStrandedCREInfo($clusterInfoHsh_ref, $stranded_CREInfoHsh_ref, $geneInfoHsh_ref);#->3305
+my ($gene_promoter_CRE_pair_hsh_ref) = &defineGenePromoter($stranded_CREInfoHsh_ref, $geneInfoHsh_ref, $min_total_exp_frac, $min_gene_strand_read_frac, $clusterInfoHsh_ref);#->1076
+my ($CREInfoHsh_ref) = &defineCRE($tmp_bed_dir, $bedtools_bin, $stranded_CREInfoHsh_ref, $proximal_extend_nt, $chrom_size_path, $clusterInfoHsh_ref);#->754
+&filterCRE($CREInfoHsh_ref, $clusterInfoHsh_ref, $min_CRE_count);#->1323
+&addonTranscriptGene($CREInfoHsh_ref, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $addon_length, $chrom_size_hsh_ref);#->358
+&summerizeGeneInfo($geneInfoHsh_ref, $trnscptInfoHsh_ref);#->3247
+&removeUnsupportedGene($geneInfoHsh_ref, $trnscptInfoHsh_ref);#->3183
+&rankCREWithinGene($CREInfoHsh_ref, $geneInfoHsh_ref, $max_gene_num);#->2579
+&rankClusterWithinGene($clusterInfoHsh_ref, $geneInfoHsh_ref, $max_gene_num);#->2650
+my ($locusInfoHsh_ref) = &defineCRELocus($CREInfoHsh_ref, $tmp_bed_dir, $bedtools_bin, $optimize_tangent_R, $max_dist_rank, $Rscript_bin, $distal_stitch_distance, $min_spreadness, $result_plot_dir);#->863
+my ($gene_promoter_info_hsh_ref) = &generateGenePromoterInfoHsh($CREInfoHsh_ref);#->1572
+&printAllBed($result_bed_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $CREInfoHsh_ref, $locusInfoHsh_ref, $gene_promoter_info_hsh_ref, $outputPrefix);#->1624
+&printTableClusterInfo($result_log_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $coding_class_hsh_ref, $outputPrefix);#->2232
+&printTableGeneInfo($result_log_dir, $geneInfoHsh_ref, $coding_class_hsh_ref, $outputPrefix);#->2345
+&printTableIDMappingInfo($result_log_dir, $CREInfoHsh_ref, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $coding_class_hsh_ref, $locusInfoHsh_ref, $outputPrefix);#->2407
+&printTableTranscriptInfo($result_log_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $coding_class_hsh_ref, $outputPrefix);#->2476
+&printTableCREInfo($result_log_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $CREInfoHsh_ref, $coding_class_hsh_ref, $outputPrefix);#->2029
+&printTrnscptGtf($result_gtf_dir, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $outputPrefix);#->2531
+&printTableCRELocusInfo($result_log_dir, $locusInfoHsh_ref, $outputPrefix);#->2172
+&printGenePromoterInfo($result_log_dir, $gene_promoter_CRE_pair_hsh_ref, $geneInfoHsh_ref, $CREInfoHsh_ref, $outputPrefix);#->1830
+&removeTmpBedDir($tmp_bed_dir);#->3163
 #<\section>
 #====================================================================================================================================================#
 
@@ -300,8 +296,8 @@ my ($gene_promoter_info_hsh_ref) = &generateGenePromoterInfoHsh($CREInfoHsh_ref)
 #	section 4_finishingTasks
 #
 #<section ID="finishingTasks" num="4">
-&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->1640
-&printStartOrFinishMessage("finishMessage");#->1760
+&printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);#->1875
+&printStartOrFinishMessage("finishMessage");#->1995
 #<\section>
 #====================================================================================================================================================#
 
@@ -334,176 +330,234 @@ my ($gene_promoter_info_hsh_ref) = &generateGenePromoterInfoHsh($CREInfoHsh_ref)
 #	time [n=1]:
 #		timeStamp
 #
-#	unassigned [n=37]:
-#		addGeneMask, addonTranscript, assignClusterProximity
-#		checkAllExecutable, checkTranscriptInfoBedChromSizeGeneInfoPath, defineCRE
-#		defineCodingClasses, defineHyperactiveDistalLoci, defineUnannoPromoter
-#		exonRngToGtf, filterUnannotatedCluster, generateAddonGene
-#		generateExtendedCluster, generateGenePromoterInfoHsh, getSuperCluster
-#		intersectCluster, printAllBed, printEnd5Bed
-#		printGenePromoterInfo, printTableCREInfo, printTableClusterInfo
-#		printTableDistalCRELocusInfo, printTableGeneInfo, printTableIDMappingInfo
-#		printTableTranscriptInfo, rankCREWithinGene, rankClusterWithinGene
-#		readChromSize, readClusterBed, readClusterInfo
-#		readTranscriptBed, readTranscriptInfo, removeTmpBedDir
-#		removeUnsupportedGene, storeCREInfoFromBed, summerizeCREInfo
-#		summerizeGeneInfo
+#	unassigned [n=39]:
+#		addAnnoGeneInfoLoc, addonTranscriptGene, assignClusterGenePromoter
+#		assignClusterRegion, checkAllExecutable, checkTranscriptInfoBedChromSizeGeneInfoPath
+#		defineCRE, defineCRELocus, defineCodingClasses
+#		defineGenePromoter, defineStitchDistance, defineStrandedCRE
+#		exonRngToGtf, filterCRE, generateAddonGene
+#		generateAddonTranscript, generateExtendedCluster, generateGenePromoterInfoHsh
+#		printAllBed, printEnd5Bed, printGenePromoterInfo
+#		printTableCREInfo, printTableCRELocusInfo, printTableClusterInfo
+#		printTableGeneInfo, printTableIDMappingInfo, printTableTranscriptInfo
+#		rankCREWithinGene, rankClusterWithinGene, readChromSize
+#		readClusterBed, readClusterInfo, readTranscriptBed
+#		readTranscriptInfo, removeTmpBedDir, removeUnsupportedGene
+#		summerizeGeneInfo, summerizeStrandedCREInfo, transferStrandedCREData
 #
 #====================================================================================================================================================#
 
-sub addGeneMask {
+sub addAnnoGeneInfoLoc {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: >none
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
-#	input: $clusterInfoHsh_ref, $geneInfoHsh_ref, $mask_class_hsh_ref, $trnscptInfoHsh_ref
-#	output: 
-#	toCall: &addGeneMask($geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $mask_class_hsh_ref);
-#	calledInLine: 234
+#	input: $geneInfoHsh_ref, $trnscptInfoHsh_ref
+#	output: none
+#	toCall: &addAnnoGeneInfoLoc($geneInfoHsh_ref, $trnscptInfoHsh_ref);
+#	calledInLine: 220
 #....................................................................................................................................................#
-	my ($geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $mask_class_hsh_ref) = @_;
+
+	my ($geneInfoHsh_ref, $trnscptInfoHsh_ref) = @_;
+	
+	&reportAndLogStatus("adding annotated gene loci information", 10, "\n");#->3225
 	
 	foreach my $geneID (keys %{$geneInfoHsh_ref}) {
-		my $geneClass = $geneInfoHsh_ref->{$geneID}{'geneClass'};
-		my $mask = 'no';
-		$mask = 'yes' if exists $mask_class_hsh_ref->{$geneClass};
-		$geneInfoHsh_ref->{$geneID}{'mask'} = $mask;
+		my @tmpRngAry = ();
+		my %strandHsh = ();
+		my %chromHsh = ();
 		foreach my $trnscptID (keys %{$geneInfoHsh_ref->{$geneID}{'trnscptID'}}) {
-			#die "$trnscptID\n" if not exists $trnscptInfoHsh_ref->{$trnscptID}{'bedLine'};
-			$trnscptInfoHsh_ref->{$trnscptID}{'mask'} = $mask;
+			$strandHsh{$trnscptInfoHsh_ref->{$trnscptID}{'strand'}}++;
+			$chromHsh{$trnscptInfoHsh_ref->{$trnscptID}{'chrom'}}++;
+			push @tmpRngAry, @{$trnscptInfoHsh_ref->{$trnscptID}{'exonRng'}};
 		}
-	}
-	
-	foreach my $clusterID (keys %{$clusterInfoHsh_ref}) {
-		my $mask = 'yes';
-		foreach my $geneID (keys %{$clusterInfoHsh_ref->{$clusterID}{'geneID'}}) {
-			$mask = 'no' if $geneInfoHsh_ref->{$geneID}{'mask'} eq 'no';
+		
+		my @chromAry = keys %chromHsh;
+		die "chrom error\n" if @chromAry != 1;
+		my $chrom = shift(@chromAry);
+		
+		@tmpRngAry = sort {$a <=> $b} @tmpRngAry;
+		my $geneStart = $tmpRngAry[0];
+		my $geneEnd = $tmpRngAry[-1];
+		my $strand;
+		
+		if (exists $strandHsh{'+'} and not exists $strandHsh{'-'}) {
+			$strand = '+';
+		} elsif (not exists $strandHsh{'+'} and exists $strandHsh{'-'}) {
+			$strand = '-';
 		}
-		$clusterInfoHsh_ref->{$clusterID}{'mask'} = $mask;
+		die "strand conflicts in geneID $geneID\n" if not defined $strand;
+		
+		$geneInfoHsh_ref->{$geneID}{'chrom'} = $chrom;
+		$geneInfoHsh_ref->{$geneID}{'strand'} = $strand;
+		$geneInfoHsh_ref->{$geneID}{'geneRng'} = [$geneStart, $geneEnd];
+		
 	}
-	
-	return ();
 }
-sub addonTranscript {
+sub addonTranscriptGene {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: generateAddonGene|1150, reportAndLogStatus|2953
+#	dependOnSub: generateAddonGene|1359, generateAddonTranscript|1407, reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
-#	input: $addon_length, $chrom_size_hsh_ref, $clusterInfoHsh_ref, $geneInfoHsh_ref, $superClusterHsh_ref, $trnscptInfoHsh_ref
+#	input: $CREInfoHsh_ref, $addon_length, $chrom_size_hsh_ref, $clusterInfoHsh_ref, $geneInfoHsh_ref, $trnscptInfoHsh_ref
 #	output: none
-#	toCall: &addonTranscript($superClusterHsh_ref, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $addon_length, $chrom_size_hsh_ref);
-#	calledInLine: 232
+#	toCall: &addonTranscriptGene($CREInfoHsh_ref, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $addon_length, $chrom_size_hsh_ref);
+#	calledInLine: 233
 #....................................................................................................................................................#
 	
-	my ($superClusterHsh_ref, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $addon_length, $chrom_size_hsh_ref) = @_;
+	my ($CREInfoHsh_ref, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $addon_length, $chrom_size_hsh_ref) = @_;
 
-	my $trnscptIDHsh_ref = {};
+	&reportAndLogStatus("creating addon transcripts and genes", 10, "\n");#->3225
+	my $addon_t_prefix_hsh_ref = {};
+	my $addon_gene_num = 0;
+	my $proximity_tag_hsh_ref = {
+		'proximal' => "P",
+		'distal' => "D",
+	};
+	#---[2022/06/28 15:16] sort by expression level so the highest expressed CRE will get the smallest number
+	foreach my $CREID (sort {$CREInfoHsh_ref->{$b}{'sumClusterRead'} <=> $CREInfoHsh_ref->{$a}{'sumClusterRead'}} keys %{$CREInfoHsh_ref}) {
+		my $gene_promoter = $CREInfoHsh_ref->{$CREID}{'gene_promoter'};
 
-	&reportAndLogStatus("creating addon transcripts", 10, "\n");#->2953
-	foreach my $superclusterID (keys %{$superClusterHsh_ref}) {
-		
-		my ($geneID, $addon_chrom) = &generateAddonGene($superClusterHsh_ref, $clusterInfoHsh_ref, $superclusterID);#->1150
-
-		$geneInfoHsh_ref->{$geneID}{'geneName'} = $geneID;
-		$geneInfoHsh_ref->{$geneID}{'geneClass'} = 'unanno_tss';
-		
-		foreach my $clusterID (@{$superClusterHsh_ref->{$superclusterID}}) {
-
-			my $strand = $clusterInfoHsh_ref->{$clusterID}{'strand'};
-			my $chrom = $clusterInfoHsh_ref->{$clusterID}{'chrom'};
+		if ($gene_promoter eq 'none') {
+			my ($geneID, $addon_g_strand) = &generateAddonGene($CREInfoHsh_ref, $clusterInfoHsh_ref, $CREID);#->1359
+			$addon_gene_num++;
+			my $status = 'addon_unknown';
+			my $proximity = $CREInfoHsh_ref->{$CREID}{'proximity'};
+			my $proximity_tag = $proximity_tag_hsh_ref->{$proximity};
 			
-			my $start = $clusterInfoHsh_ref->{$clusterID}{'start'};
-			my $end = $clusterInfoHsh_ref->{$clusterID}{'end'};
-			my $peakPos = $clusterInfoHsh_ref->{$clusterID}{'peakPos'};
-			my @t_strandAry = ();
+			my $geneName = join "", ('ADDG', $proximity_tag, $addon_gene_num, $addon_g_strand);
+			$geneInfoHsh_ref->{$geneID}{'geneName'} = $geneName;
+			$geneInfoHsh_ref->{$geneID}{'geneClass'} = 'unanno_tss';
+			$CREInfoHsh_ref->{$CREID}{'geneID'}{$geneID} = $status;
+			$geneInfoHsh_ref->{$geneID}{'CREID'}{$CREID} = $status;
 
-			if ($strand eq '.') {
-				push @t_strandAry, '+';
-				push @t_strandAry, '-';
-			} else {
-				push @t_strandAry, $strand;
+			&generateAddonTranscript($CREInfoHsh_ref, $CREID, $geneInfoHsh_ref, $geneID, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $addon_length, $chrom_size_hsh_ref, $status, $addon_t_prefix_hsh_ref);#->1407
+
+		} elsif ($gene_promoter eq 'annotated') {
+		
+			my $status = 'annotated_promoter';
+			#---[2022/06/28 1:50] assign clusterID vs geneID
+			foreach my $geneID (keys %{$CREInfoHsh_ref->{$CREID}{'geneID'}}) {
+				$CREInfoHsh_ref->{$CREID}{'geneID'}{$geneID} = $status;
+				$geneInfoHsh_ref->{$geneID}{'CREID'}{$CREID} = $status;
+				foreach my $clusterID (keys %{$CREInfoHsh_ref->{$CREID}{'clusterID'}}) {
+					if ($clusterInfoHsh_ref->{$clusterID}{'type'} ne 'gene_tss') {
+						$geneInfoHsh_ref->{$geneID}{'clusterID'}{$clusterID} = 'end5_proximal';
+						$clusterInfoHsh_ref->{$clusterID}{'geneID'}{$geneID} = 'end5_proximal';
+						$clusterInfoHsh_ref->{$clusterID}{'type'} = 'gene_tss';
+					}
+				}
+			}
+			
+			#---[2022/06/28 1:50] find the trnscptID associated with the maximum cluster
+			my $max = 0;
+			my $trnscptID_hsh_ref = {};
+			foreach my $clusterID (keys %{$CREInfoHsh_ref->{$CREID}{'clusterID'}}) {
+				if ($clusterInfoHsh_ref->{$clusterID}{'type'} eq 'gene_tss') {
+					if ($clusterInfoHsh_ref->{$clusterID}{'max'} >= $max) {
+						$trnscptID_hsh_ref = $clusterInfoHsh_ref->{$clusterID}{'trnscptID'};
+					}
+				}
+			}
+			
+			#---[2022/06/28 1:50] assign clusterID vs trnscptID
+			foreach my $clusterID (keys %{$CREInfoHsh_ref->{$CREID}{'clusterID'}}) {
+				if ($clusterInfoHsh_ref->{$clusterID}{'type'} ne 'gene_tss') {
+					foreach my $trnscptID (keys %{$trnscptID_hsh_ref}) {
+						$trnscptInfoHsh_ref->{$trnscptID}{'clusterID'}{$clusterID} = 'end5_proximal';
+						$clusterInfoHsh_ref->{$clusterID}{'trnscptID'}{$trnscptID} = 'end5_proximal';
+					}
+				}
 			}
 
-			foreach my $t_strand (@t_strandAry) {
-				my $t_start;
-				my $t_end;
-				my $addon_t_strand;
-				
-				if ($t_strand eq '+') {
-					$t_start = $peakPos;
-					$t_end = $t_start + $addon_length;
-					$addon_t_strand = 'F';
-				} else {
-					$t_start = $peakPos - $addon_length;
-					$t_end = $peakPos;
-					$addon_t_strand = 'R';
+		} elsif ($gene_promoter eq 'unannotated') {
+
+			my $status = 'unannotated_promoter';
+			foreach my $geneID (keys %{$CREInfoHsh_ref->{$CREID}{'geneID'}}) {
+				$CREInfoHsh_ref->{$CREID}{'geneID'}{$geneID} = $status;
+				$geneInfoHsh_ref->{$geneID}{'CREID'}{$CREID} = $status;
+				foreach my $clusterID (keys %{$CREInfoHsh_ref->{$CREID}{'clusterID'}}) {
+					$geneInfoHsh_ref->{$geneID}{'clusterID'}{$clusterID} = $status;
+					$clusterInfoHsh_ref->{$clusterID}{'geneID'}{$geneID} = $status;
+					$clusterInfoHsh_ref->{$clusterID}{'type'} = 'gene_tss';
 				}
-				
-				$t_start = 1 if $t_start < 1;
-				$t_end = $chrom_size_hsh_ref->{$chrom}-1 if $t_end >= $chrom_size_hsh_ref->{$chrom};
-				
-				my $addon_t_start = sprintf "%.9d", $t_start;
-
-				my $trnscptID = "ADDT".$addon_chrom.$addon_t_start.'.'.$addon_t_strand;
-
-				if (exists $trnscptInfoHsh_ref->{$trnscptID}) {
-					$trnscptIDHsh_ref->{$trnscptID}++;
-					$trnscptID = "ADDT".$addon_chrom.$addon_t_start.'.'.$addon_t_strand.$trnscptIDHsh_ref->{$trnscptID};
-				}
-				
-				$trnscptIDHsh_ref->{$trnscptID}++;
-				$trnscptInfoHsh_ref->{$trnscptID}{'chrom'} = $chrom;
-				$trnscptInfoHsh_ref->{$trnscptID}{'strand'} = $t_strand;
-				@{$trnscptInfoHsh_ref->{$trnscptID}{'exonRng'}} = ($t_start, $t_end);
-
-				$clusterInfoHsh_ref->{$clusterID}{'trnscptID'}{$trnscptID} = 'addon';
-				$clusterInfoHsh_ref->{$clusterID}{'geneID'}{$geneID}++;
-
-				$trnscptInfoHsh_ref->{$trnscptID}{'clusterID'}{$clusterID} = 'addon';
-				$trnscptInfoHsh_ref->{$trnscptID}{'geneID'} = $geneID;
-
-				$geneInfoHsh_ref->{$geneID}{'clusterID'}{$clusterID} = 'addon';
-				$geneInfoHsh_ref->{$geneID}{'trnscptID'}{$trnscptID}++;
-
-				my $chromStart = $t_start - 1;
-				my $chromEnd = $t_end;
-				my $thickStart = $chromStart;
-				my $thickEnd = $chromEnd;
-				my $blockSizes = $chromEnd - $chromStart;
-				my $blockCount = 1;
-				my $blockStarts = 0;
-	
-				$trnscptInfoHsh_ref->{$trnscptID}{'bedLine'} = [$chrom, $chromStart, $chromEnd, $trnscptID, '0', $t_strand, $thickStart, $thickEnd, ".", $blockCount, $blockSizes, $blockStarts];
-
 			}
+
+			foreach my $geneID (keys %{$CREInfoHsh_ref->{$CREID}{'geneID'}}) {
+				&generateAddonTranscript($CREInfoHsh_ref, $CREID, $geneInfoHsh_ref, $geneID, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $addon_length, $chrom_size_hsh_ref, $status, $addon_t_prefix_hsh_ref);#->1407
+			}
+			
+		} else {
+			die "gene_promoter status error\n";
 		}
-	}	
+	}
+
 }
-sub assignClusterProximity {
+sub assignClusterGenePromoter {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
-#	input: $bedtools_bin, $chrom_size_path, $clusterInfoHsh_ref, $end5_point_bed_path, $geneInfoHsh_ref, $proximity_slop_rng, $transcript_in_scope_bed_path, $trnscptInfoHsh_ref, $tssCluster_bed_path
+#	input: $bedtools_bin, $clusterInfoHsh_ref, $end5_rng_bed_path, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $tssCluster_bed_path
 #	output: none
-#	toCall: &assignClusterProximity($transcript_in_scope_bed_path, $tssCluster_bed_path, $end5_point_bed_path, $chrom_size_path, $proximity_slop_rng, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $bedtools_bin);
-#	calledInLine: 235
+#	toCall: &assignClusterGenePromoter($tssCluster_bed_path, $end5_rng_bed_path, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $bedtools_bin);
+#	calledInLine: 226
 #....................................................................................................................................................#
 	
-	my ($transcript_in_scope_bed_path, $tssCluster_bed_path, $end5_point_bed_path, $chrom_size_path, $proximity_slop_rng, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $bedtools_bin) = @_;
+	my ($tssCluster_bed_path, $end5_rng_bed_path, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $bedtools_bin) = @_;
+	
+	&reportAndLogStatus("Intersecting cluster and transcript end5", 10, "\n");#->3225
+	open BEDTOOLS, "$bedtools_bin intersect -s -wo -a $end5_rng_bed_path -b $tssCluster_bed_path |" ;
 
-	&reportAndLogStatus("assigning region to cluster", 10, "\n");#->2953
+	while (<BEDTOOLS>) {
+		#chr10	13141663	13142302	ENST00000482140.5_1	1	+	chr10	13142075	13142193	p1@OPTN	247174	+	13142162	13142163	255,0,0	118
+		my (@splt) = split /\t/;
+		my $clusterID = $splt[9];
+		my $cluster_strand = $splt[11];
+		my $trnscptIDStr = $splt[3];
+		my $trnscpt_strand = $splt[5];
+		my @trnscptIDStrAry = split /\|/, $trnscptIDStr;
+		my $trnscptID = $trnscptIDStrAry[-1];
+		
+		next if not exists $clusterInfoHsh_ref->{$clusterID};
+		die "$trnscptID does not exists in trnscptInfoHsh_ref\n" if not exists $trnscptInfoHsh_ref->{$trnscptID};
+		my $geneID = $trnscptInfoHsh_ref->{$trnscptID}{'geneID'};
+	
+		$clusterInfoHsh_ref->{$clusterID}{'type'} = 'gene_tss';
+		$trnscptInfoHsh_ref->{$trnscptID}{'clusterID'}{$clusterID} = 'end5';
+		$clusterInfoHsh_ref->{$clusterID}{'trnscptID'}{$trnscptID} = 'end5';
+		$clusterInfoHsh_ref->{$clusterID}{'geneID'}{$geneID} = 'end5';
+		$geneInfoHsh_ref->{$geneID}{'clusterID'}{$clusterID} = 'end5';
+	}
+	close BEDTOOLS;
+}
+sub assignClusterRegion {
+#....................................................................................................................................................#
+#	subroutineCategory: unassigned
+#	dependOnSub: reportAndLogStatus|3225
+#	appearInSub: >none
+#	primaryAppearInSection: 3_readInfo|213
+#	secondaryAppearInSection: >none
+#	input: $bedtools_bin, $chrom_size_path, $clusterInfoHsh_ref, $end5_point_bed_path, $end5_slop_rng, $geneInfoHsh_ref, $transcript_in_scope_bed_path, $trnscptInfoHsh_ref, $tssCluster_bed_path
+#	output: none
+#	toCall: &assignClusterRegion($transcript_in_scope_bed_path, $tssCluster_bed_path, $end5_point_bed_path, $chrom_size_path, $end5_slop_rng, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $bedtools_bin);
+#	calledInLine: 227
+#....................................................................................................................................................#
+	
+	my ($transcript_in_scope_bed_path, $tssCluster_bed_path, $end5_point_bed_path, $chrom_size_path, $end5_slop_rng, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $bedtools_bin) = @_;
+
+	&reportAndLogStatus("assigning region to cluster", 10, "\n");#->3225
 	
 	my $region_cmd_hsh_ref = {
 		'end5' => {
 			'in_bed6_cmd' => "cut -f 1-6 $end5_point_bed_path",
-			'slop_rng' => $proximity_slop_rng,
+			'slop_rng' => $end5_slop_rng,
 		},
 		'exon' => {
 			'in_bed6_cmd' => "$bedtools_bin bed12tobed6 -i $transcript_in_scope_bed_path",
@@ -518,7 +572,7 @@ sub assignClusterProximity {
 	foreach my $regionType (qw/end5 exon intron/) {
 		foreach my $oritentation (qw/ss as/) {
 		
-			&reportAndLogStatus("Getting cluster at $regionType $oritentation", 10, "\n");#->2953
+			&reportAndLogStatus("Getting cluster at $regionType $oritentation", 10, "\n");#->3225
 
 			my $in_bed6_cmd = $region_cmd_hsh_ref->{$regionType}{'in_bed6_cmd'};
 			my $slop_rng = $region_cmd_hsh_ref->{$regionType}{'slop_rng'};
@@ -529,6 +583,7 @@ sub assignClusterProximity {
 				#chr10	13141663	13142302	ENST00000482140.5_1	1	+	chr10	13142075	13142193	p1@OPTN	247174	+	13142162	13142163	255,0,0	118
 				my (@splt) = split /\t/;
 				my $clusterID = $splt[9];
+				next if not exists $clusterInfoHsh_ref->{$clusterID};
 				next if exists $clusterInfoHsh_ref->{$clusterID}{'regionType'};
 
 				my $cluster_strand = $splt[11];
@@ -555,7 +610,6 @@ sub assignClusterProximity {
 				if ($oritentation_matched eq 'yes') {
 
 					die "$trnscptID does not exists in trnscptInfoHsh_ref\n" if not exists $trnscptInfoHsh_ref->{$trnscptID};
-					die "$clusterID does not exists in clusterInfoHsh_ref\n" if not exists $clusterInfoHsh_ref->{$clusterID};
 
 					my $geneID = $trnscptInfoHsh_ref->{$trnscptID}{'geneID'};
 					
@@ -568,7 +622,7 @@ sub assignClusterProximity {
 		}
 	}
 	
-	&reportAndLogStatus("Adding intergenic region type", 10, "\n");#->2953
+	&reportAndLogStatus("Adding intergenic region type", 10, "\n");#->3225
 	foreach my $clusterID (keys %{$clusterInfoHsh_ref}) {
 		if (not exists $clusterInfoHsh_ref->{$clusterID}{'regionType'}) {
 			$clusterInfoHsh_ref->{$clusterID}{'regionGeneID'} = '__na';
@@ -577,31 +631,18 @@ sub assignClusterProximity {
 		}
 	}
 
-	&reportAndLogStatus("Adding proximity", 10, "\n");#->2953
-	foreach my $clusterID (keys %{$clusterInfoHsh_ref}) {
-		if ($clusterInfoHsh_ref->{$clusterID}{'regionType'} eq 'end5') {
-			$clusterInfoHsh_ref->{$clusterID}{'proximity'} = 'proximal';
-
-		#} elsif ($clusterInfoHsh_ref->{$clusterID}{'regionType'} eq 'exon') {
-			#$clusterInfoHsh_ref->{$clusterID}{'proximity'} = 'exonic';
-		
-		} else {
-			$clusterInfoHsh_ref->{$clusterID}{'proximity'} = 'distal';
-		}
-	}
-
 }
 sub checkAllExecutable {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|193
+#	primaryAppearInSection: 2_defineOutDirPath|189
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: $bedGraphToBigWig_bin, $bedtools_bin, $bigWigAverageOverBed_bin, $cut_sh_path, $paraclu_bin, $samtools_bin
 #	toCall: my ($bedtools_bin, $samtools_bin, $paraclu_bin, $cut_sh_path, $bedGraphToBigWig_bin, $bigWigAverageOverBed_bin) = &checkAllExecutable();
-#	calledInLine: 210
+#	calledInLine: 206
 #....................................................................................................................................................#
 	
 	my $dirPath = dirname(rel2abs($0));
@@ -613,12 +654,12 @@ sub checkAllExecutable {
 	my $bedGraphToBigWig_bin = "$dirPath/../resources/bin/bedGraphToBigWig/bedGraphToBigWig";
 	my $bigWigAverageOverBed_bin = "$dirPath/../resources/bin/bigWigAverageOverBed/bigWigAverageOverBed";
 	
-	&reportAndLogStatus("Checking all SCAFE executables", 10, "\n");#->2953
+	&reportAndLogStatus("Checking all SCAFE executables", 10, "\n");#->3225
 	
 	{
 		my $stdOut = `$bedtools_bin --version 2>&1`;
 		if ($stdOut =~ m/bedtools v(\S+)/) {
-			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->2953
+			&reportAndLogStatus("Checking: bedtools version: $1", 0, "\n");#->3225
 		} else {
 			die "bedtools is not installed properly. Quitting.\n";
 		}
@@ -627,7 +668,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$samtools_bin 2>&1`;
 		if ($stdOut =~ m/\s+(Version: \S+)\s+/) {
-			&reportAndLogStatus("Checking: samtools version: $1", 0, "\n");#->2953
+			&reportAndLogStatus("Checking: samtools version: $1", 0, "\n");#->3225
 		} else {
 			die "samtools is not installed properly. Quitting.\n";
 		}
@@ -636,7 +677,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$paraclu_bin 2>&1`;
 		if ($stdOut =~ m/paraclu: I need a minValue and a fileName/) {
-			&reportAndLogStatus("Checking: paraclu found.", 0, "\n");#->2953
+			&reportAndLogStatus("Checking: paraclu found.", 0, "\n");#->3225
 		} else {
 			die "paraclu is not installed properly. Quitting.\n";
 		}
@@ -645,7 +686,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$cut_sh_path 55C7128A 2>&1`;
 		if ($stdOut =~ m/awk:/) {
-			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->2953
+			&reportAndLogStatus("Checking: paraclu-cut found.", 0, "\n");#->3225
 		} else {
 			die "paraclu-cut is not installed properly. Quitting.\n";
 		}
@@ -654,7 +695,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bedGraphToBigWig_bin 2>&1`;
 		if ($stdOut =~ m/bedGraphToBigWig v (\S+)/) {
-			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->2953
+			&reportAndLogStatus("Checking: bedGraphToBigWig version: $1", 0, "\n");#->3225
 		} else {
 			die "bedGraphToBigWig not installed properly. Quitting.\n";
 		}
@@ -663,7 +704,7 @@ sub checkAllExecutable {
 	{
 		my $stdOut = `$bigWigAverageOverBed_bin 2>&1`;
 		if ($stdOut =~ m/bigWigAverageOverBed v(\S+)/) {
-			&reportAndLogStatus("Checking: bigWigAverageOverBed version: $1", 0, "\n");#->2953
+			&reportAndLogStatus("Checking: bigWigAverageOverBed version: $1", 0, "\n");#->3225
 		} else {
 			die "bigWigAverageOverBed is not installed properly. Quitting.\n";
 		}
@@ -674,14 +715,14 @@ sub checkAllExecutable {
 sub checkRScriptVersion {
 #....................................................................................................................................................#
 #	subroutineCategory: general, checkTools
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|193
+#	primaryAppearInSection: 2_defineOutDirPath|189
 #	secondaryAppearInSection: >none
 #	input: $Rscript_bin
 #	output: $optimize_tangent_R
 #	toCall: my ($optimize_tangent_R) = &checkRScriptVersion($Rscript_bin);
-#	calledInLine: 212
+#	calledInLine: 208
 #....................................................................................................................................................#
 	
 	my ($Rscript_bin) = @_;
@@ -691,13 +732,13 @@ sub checkRScriptVersion {
 
 	my $stdOut = `$Rscript_bin --version 2>&1`;
 	if ($stdOut =~ m/R scripting front-end version (\S+)/) {
-		&reportAndLogStatus("Checking: Rscript version: $1", 0, "\n");#->2953
+		&reportAndLogStatus("Checking: Rscript version: $1", 0, "\n");#->3225
 	} else {
 		die "Rscript is not installed properly at $Rscript_bin. Quitting.\n";
 	}
 	
 	if (-s $optimize_tangent_R) {
-		&reportAndLogStatus("optimize_tangent_R found.", 0, "\n");#->2953
+		&reportAndLogStatus("optimize_tangent_R found.", 0, "\n");#->3225
 	} else {
 		die "Rscript optimize_tangent_R is not found. Quitting.\n";
 	}
@@ -709,12 +750,12 @@ sub checkTranscriptInfoBedChromSizeGeneInfoPath {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|193
+#	primaryAppearInSection: 2_defineOutDirPath|189
 #	secondaryAppearInSection: >none
 #	input: $genome
 #	output: $chrom_size_path, $gene_info_path, $transcript_bed_path, $transcript_info_path
 #	toCall: my ($chrom_size_path, $gene_info_path, $transcript_info_path, $transcript_bed_path) = &checkTranscriptInfoBedChromSizeGeneInfoPath($genome);
-#	calledInLine: 211
+#	calledInLine: 207
 #....................................................................................................................................................#
 	my ($genome) = @_;
 
@@ -737,13 +778,13 @@ sub currentTime {
 #....................................................................................................................................................#
 #	subroutineCategory: general
 #	dependOnSub: >none
-#	appearInSub: printStartOrFinishMessage|1760, reportAndLogStatus|2953
+#	appearInSub: printStartOrFinishMessage|1995, reportAndLogStatus|3225
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 2_defineOutDirPath|193, 4_finishingTasks|258
+#	secondaryAppearInSection: 2_defineOutDirPath|189, 4_finishingTasks|254
 #	input: none
 #	output: $runTime
 #	toCall: my ($runTime) = &currentTime();
-#	calledInLine: 154, 1776, 1780, 1785, 1789, 2969, 2970
+#	calledInLine: 158, 2011, 2015, 2020, 2024, 3241, 3242
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
@@ -754,88 +795,265 @@ sub currentTime {
 sub defineCRE {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953, storeCREInfoFromBed|2975
+#	dependOnSub: reportAndLogStatus|3225, transferStrandedCREData|3390
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
-#	input: $CRE_extend_size, $CRE_extend_upstrm_ratio, $bedtools_bin, $chrom_size_path, $clusterInfoHsh_ref, $extended_tssCluster_bed_path, $proximal_strandness, $tmp_bed_dir
+#	input: $bedtools_bin, $chrom_size_path, $clusterInfoHsh_ref, $proximal_extend_nt, $stranded_CREInfoHsh_ref, $tmp_bed_dir
 #	output: $CREInfoHsh_ref
-#	toCall: my ($CREInfoHsh_ref) = &defineCRE($CRE_extend_size, $CRE_extend_upstrm_ratio, $clusterInfoHsh_ref, $tmp_bed_dir, $chrom_size_path, $bedtools_bin, $proximal_strandness, $extended_tssCluster_bed_path);
-#	calledInLine: 237
+#	toCall: my ($CREInfoHsh_ref) = &defineCRE($tmp_bed_dir, $bedtools_bin, $stranded_CREInfoHsh_ref, $proximal_extend_nt, $chrom_size_path, $clusterInfoHsh_ref);
+#	calledInLine: 231
 #....................................................................................................................................................#
-	my ($CRE_extend_size, $CRE_extend_upstrm_ratio, $clusterInfoHsh_ref, $tmp_bed_dir, $chrom_size_path, $bedtools_bin, $proximal_strandness, $extended_tssCluster_bed_path) = @_;
+	my ($tmp_bed_dir, $bedtools_bin, $stranded_CREInfoHsh_ref, $proximal_extend_nt, $chrom_size_path, $clusterInfoHsh_ref) = @_;
 	
 	my $CREInfoHsh_ref = {};
-
-	{	
-		&reportAndLogStatus("defining proximal CRE", 10, "\n");#->2953
-		my $proximity = 'proximal';
-		my $strand_opt = '-s';
-		$strand_opt = '' if $proximal_strandness eq 'strandless';
 	
-		my $tmp_merged_CRE_bed = "$tmp_bed_dir/cluster_merged_CRE.$proximity.bed";
-		my $tmp_indiv_CRE_bed = "$tmp_bed_dir/cluster_indiv_CRE.$proximity.bed";
-		my $tmp_indiv_CRE_plus_bed = "$tmp_bed_dir/cluster_indiv_CRE.$proximity.plus_edge_distal.bed";
+	my $tmp_merge_non_promoter_CRE_bed = "$tmp_bed_dir/merged_non_promoter_CRE.bed";
+	my $tmp_promoter_CRE_bed = "$tmp_bed_dir/promoter_CRE.bed";
+	my $tmp_for_intersect_proximity_all_CRE_bed = "$tmp_bed_dir/all_CRE_for_intersect_proximity.bed";
 	
-		open INDIVCRE, "| sort -k1,1 -k2,2n >$tmp_indiv_CRE_bed";
-		foreach my $clusterID (keys %{$clusterInfoHsh_ref}) {
-			if ($clusterInfoHsh_ref->{$clusterID}{'proximity'} eq $proximity) {
-				my $extendedStart = $clusterInfoHsh_ref->{$clusterID}{'extendedStart'};
-				my $extendedEnd = $clusterInfoHsh_ref->{$clusterID}{'extendedEnd'};
-				my $chrom = $clusterInfoHsh_ref->{$clusterID}{'chrom'};
-				my $score = $clusterInfoHsh_ref->{$clusterID}{'score'};
-				my $strand = $clusterInfoHsh_ref->{$clusterID}{'strand'};
-				print INDIVCRE join "", (join "\t", ($chrom, $extendedStart, $extendedEnd, $clusterID, $score, $strand)), "\n";
-			}
+	&reportAndLogStatus("Extending promoter proximity by $proximal_extend_nt nt", 10, "\n");#->3225
+	open EXTENDPROMOTER, "| $bedtools_bin slop -g $chrom_size_path -b $proximal_extend_nt -i stdin | cut -f 1,2,3,4,5,6 | sort -k1,1 -k2,2n >$tmp_promoter_CRE_bed";
+	open MERGENONPROMOTER, "| sort -k1,1 -k2,2n | $bedtools_bin merge -c 4,5,6 -o distinct,sum,distinct -delim \";\" -i stdin | sort -k1,1 -k2,2n >$tmp_merge_non_promoter_CRE_bed";
+	foreach my $CREID (keys %{$stranded_CREInfoHsh_ref}) {
+		if ($stranded_CREInfoHsh_ref->{$CREID}{'gene_promoter'} eq 'none') {
+			print MERGENONPROMOTER join "", (join "\t", (@{$stranded_CREInfoHsh_ref->{$CREID}{'bedLine'}})), "\n";
+		} else {
+			print EXTENDPROMOTER join "", (join "\t", (@{$stranded_CREInfoHsh_ref->{$CREID}{'bedLine'}})), "\n";
+			my $chrom = $stranded_CREInfoHsh_ref->{$CREID}{'chrom'};
+			my $start = $stranded_CREInfoHsh_ref->{$CREID}{'start'};
+			my $end = $stranded_CREInfoHsh_ref->{$CREID}{'end'};
+			my $strand = $stranded_CREInfoHsh_ref->{$CREID}{'strand'};
+			my $gene_promoter = $stranded_CREInfoHsh_ref->{$CREID}{'gene_promoter'};
+			my $CREIDStr = $CREID;
+			&transferStrandedCREData($chrom, $start, $end, $strand, $gene_promoter, $CREIDStr, $CREInfoHsh_ref, $stranded_CREInfoHsh_ref, $clusterInfoHsh_ref);#->3390
 		}
-		close INDIVCRE;
-		
-		#---[2021/01/13 1:13] get the distal clusters at the edge of the proximal clusters
-		system  "$bedtools_bin intersect $strand_opt -wa -a $extended_tssCluster_bed_path -b $tmp_indiv_CRE_bed >$tmp_indiv_CRE_plus_bed";
-
-		system  "$bedtools_bin merge $strand_opt -c 4,5,6 -o distinct,sum,distinct -delim \";\" -i $tmp_indiv_CRE_plus_bed >$tmp_merged_CRE_bed";
-		&storeCREInfoFromBed($tmp_merged_CRE_bed, $proximity, $CREInfoHsh_ref, $clusterInfoHsh_ref);#->2975
 	}
-
-	{
-		&reportAndLogStatus("defining distal CRE", 10, "\n");#->2953
-		my $proximity = 'distal';
-		my $strand_opt = '';
+	close EXTENDPROMOTER;
+	close MERGENONPROMOTER;
 	
-		my $tmp_merged_CRE_bed = "$tmp_bed_dir/cluster_merged_CRE.$proximity.bed";
-		my $tmp_indiv_CRE_bed = "$tmp_bed_dir/cluster_indiv_CRE.$proximity.bed";
+	&reportAndLogStatus("Merging overlaping non promoter CRE", 10, "\n");#->3225
+	open MERGENONPROMOTER, "<", "$tmp_merge_non_promoter_CRE_bed";
+	while (<MERGENONPROMOTER>) {
+		chomp;
+		my ($chrom, $start, $end, $CREIDStr, $score, $strandStr) = split /\t/;
+		my $strand = $strandStr;
+		$strand = '.' if $strandStr =~ m/\;/;
+		my $gene_promoter = 'none';
+		&transferStrandedCREData($chrom, $start, $end, $strand, $gene_promoter, $CREIDStr, $CREInfoHsh_ref, $stranded_CREInfoHsh_ref, $clusterInfoHsh_ref);#->3390
+	}
+	close MERGECREBED;
 	
-		open INDIVCRE, "| sort -k1,1 -k2,2n >$tmp_indiv_CRE_bed";
-		foreach my $clusterID (keys %{$clusterInfoHsh_ref}) {
-			#---[2021/01/13 1:21] get the unassigned CREID
-			if (not exists $clusterInfoHsh_ref->{$clusterID}{'CREID'}) {
-				my $extendedStart = $clusterInfoHsh_ref->{$clusterID}{'extendedStart'};
-				my $extendedEnd = $clusterInfoHsh_ref->{$clusterID}{'extendedEnd'};
-				my $chrom = $clusterInfoHsh_ref->{$clusterID}{'chrom'};
-				my $score = $clusterInfoHsh_ref->{$clusterID}{'score'};
-				my $strand = $clusterInfoHsh_ref->{$clusterID}{'strand'};
-				print INDIVCRE join "", (join "\t", ($chrom, $extendedStart, $extendedEnd, $clusterID, $score, $strand)), "\n";
-			}
+	&reportAndLogStatus("Assigning CRE proximity", 10, "\n");#->3225
+	open ALLCREINTERSECT, "| sort -k1,1 -k2,2n >$tmp_for_intersect_proximity_all_CRE_bed";
+	foreach my $CREID (keys %{$CREInfoHsh_ref}) {
+		my $chrom = $CREInfoHsh_ref->{$CREID}{'chrom'};
+		my $start = $CREInfoHsh_ref->{$CREID}{'start'};
+		my $end = $CREInfoHsh_ref->{$CREID}{'end'};
+		my $strand = $CREInfoHsh_ref->{$CREID}{'strand'};
+		my $score = $CREInfoHsh_ref->{$CREID}{'score'};
+		$CREInfoHsh_ref->{$CREID}{'proximity'} = 'distal';
+		foreach my $clusterID (keys %{$CREInfoHsh_ref->{$CREID}{'clusterID'}}) {
+			$clusterInfoHsh_ref->{$clusterID}{'proximity'} = 'distal';
 		}
-		close INDIVCRE;
-		
-		system  "$bedtools_bin merge $strand_opt -c 4,5,6 -o distinct,sum,distinct -delim \";\" -i $tmp_indiv_CRE_bed >$tmp_merged_CRE_bed";
-		&storeCREInfoFromBed($tmp_merged_CRE_bed, $proximity, $CREInfoHsh_ref, $clusterInfoHsh_ref);#->2975
+		print ALLCREINTERSECT join "", (join "\t", ($chrom, $start, $end, $CREID, $score, $strand)), "\n";
 	}
+	close ALLCREINTERSECT;
 
+	open PROXIMALINTERSECT, "$bedtools_bin intersect -u -a $tmp_for_intersect_proximity_all_CRE_bed -b $tmp_promoter_CRE_bed | cut -f 4 |";
+	while (<PROXIMALINTERSECT>) {
+		chomp (my $CREID = $_);
+		$CREInfoHsh_ref->{$CREID}{'proximity'} = 'proximal';
+		foreach my $clusterID (keys %{$CREInfoHsh_ref->{$CREID}{'clusterID'}}) {
+			$clusterInfoHsh_ref->{$clusterID}{'proximity'} = 'proximal';
+		}
+	}
+	close PROXIMALINTERSECT;
+
+	foreach my $CREID (keys %{$CREInfoHsh_ref}) {
+		my $chrom = $CREInfoHsh_ref->{$CREID}{'chrom'};
+		my $start = $CREInfoHsh_ref->{$CREID}{'start'};
+		my $end = $CREInfoHsh_ref->{$CREID}{'end'};
+		my $score = $CREInfoHsh_ref->{$CREID}{'score'};
+		my $strand = $CREInfoHsh_ref->{$CREID}{'strand'};
+		my $peakPos = $CREInfoHsh_ref->{$CREID}{'peakPos'};
+		my $sumClusterRead = $CREInfoHsh_ref->{$CREID}{'sumClusterRead'};
+
+		my $chromStart = $start;
+		my $chromEnd = $end;
+		my $blockSizes = $chromEnd - $chromStart;
+		my $blockCount = 1;
+		my $blockStarts = 0;
+		my $thickEnd = $peakPos;
+		my $thickStart = $thickEnd - 1;
+
+		if ($CREInfoHsh_ref->{$CREID}{'proximity'} eq 'proximal') {
+			$CREInfoHsh_ref->{$CREID}{'rgbItem'} = '106,61,154';
+
+		} elsif ($CREInfoHsh_ref->{$CREID}{'proximity'} eq 'distal') {
+			$CREInfoHsh_ref->{$CREID}{'rgbItem'} = '255,127,0';
+		
+		} else {
+			die;
+		}
+		$CREInfoHsh_ref->{$CREID}{'bedLine'} = [$chrom, $chromStart, $chromEnd, $CREID, $sumClusterRead, $strand, $thickStart, $thickEnd, ".", $blockCount, $blockSizes, $blockStarts];
+	}
+	
 	return ($CREInfoHsh_ref);
+}
+sub defineCRELocus {
+#....................................................................................................................................................#
+#	subroutineCategory: unassigned
+#	dependOnSub: defineStitchDistance|1190, reportAndLogStatus|3225
+#	appearInSub: >none
+#	primaryAppearInSection: 3_readInfo|213
+#	secondaryAppearInSection: >none
+#	input: $CREInfoHsh_ref, $Rscript_bin, $bedtools_bin, $distal_stitch_distance, $max_dist_rank, $min_spreadness, $optimize_tangent_R, $result_plot_dir, $tmp_bed_dir
+#	output: $locusInfoHsh_ref
+#	toCall: my ($locusInfoHsh_ref) = &defineCRELocus($CREInfoHsh_ref, $tmp_bed_dir, $bedtools_bin, $optimize_tangent_R, $max_dist_rank, $Rscript_bin, $distal_stitch_distance, $min_spreadness, $result_plot_dir);
+#	calledInLine: 238
+#....................................................................................................................................................#
+	my ($CREInfoHsh_ref, $tmp_bed_dir, $bedtools_bin, $optimize_tangent_R, $max_dist_rank, $Rscript_bin, $distal_stitch_distance, $min_spreadness, $result_plot_dir) = @_;
+	
+	#time perl /osc-fs_home/hon-chun/analysis/tenX_single_cell/scafe/dev/scripts/1.2/scafe.tool.cm.annotate.pl --overwrite=yes --tssCluster_bed_path=/osc-fs_home/hon-chun/analysis/tenX_single_cell/paper_run/cellranger_unified_proc/pooled_celltype/scafe_run/PBMC/filter/PBMC/bed/PBMC.tssCluster.default.filtered.bed.gz --tssCluster_info_path=/osc-fs_home/hon-chun/analysis/tenX_single_cell/paper_run/cellranger_unified_proc/pooled_celltype/scafe_run/PBMC/filter/PBMC/log/PBMC.tssCluster.log.tsv --genome=hg19.gencode_v32lift37 --outputPrefix=demo --outDir=/osc-fs_home/hon-chun/analysis/tenX_single_cell/scafe/dev/test_run/annotate_super_enhancer/
+
+	my $proximity_hsh_ref = {
+		'proximal' => 'PLOC',
+		'distal' => 'DLOC',
+	};
+
+	my $locusInfoHsh_ref = {};
+	foreach my $proximity (keys %{$proximity_hsh_ref}) {
+		&reportAndLogStatus("defining $proximity loci", 10, "\n");#->3225
+		my $proximity_CRE_bed = "$tmp_bed_dir/$proximity\_CRE.bed";
+		open OUTBED, "| sort -k1,1 -k2,2n >$proximity_CRE_bed";
+		foreach my $CREID (keys %{$CREInfoHsh_ref}) {
+			if ($CREInfoHsh_ref->{$CREID}{'proximity'} eq $proximity) {
+				my $sumClusterRead = $CREInfoHsh_ref->{$CREID}{'sumClusterRead'};
+				my ($chrom, $chromStart, $chromEnd) = @{$CREInfoHsh_ref->{$CREID}{'bedLine'}};
+				print OUTBED join "", (join "\t", ($chrom, $chromStart, $chromEnd, $CREID, $sumClusterRead)), "\n";
+			}
+		}
+		close OUTBED;
+		my $final_stitch_distance;
+		if ($proximity eq 'distal') {
+			my $distal_CRE_bed = $proximity_CRE_bed;
+			if ($distal_stitch_distance eq 'undefined') {
+				($final_stitch_distance) = &defineStitchDistance($distal_stitch_distance, $distal_CRE_bed, $tmp_bed_dir, $bedtools_bin, $max_dist_rank, $Rscript_bin, $optimize_tangent_R, $result_plot_dir);#->1190
+			} else {
+				$final_stitch_distance = $distal_stitch_distance;
+				&reportAndLogStatus("distal_stitch_distance is user-defined at $distal_stitch_distance", 10, "\n");#->3227
+			}
+		} else {
+			$final_stitch_distance = 2000;
+		}
+		
+		&reportAndLogStatus("stitching $proximity CREs at $final_stitch_distance nt", 10, "\n");#->3225
+		my $tmp_locus_hsh_ref = {};
+		open BEDTOOLSCLOSEST, "$bedtools_bin cluster -d $final_stitch_distance -i $proximity_CRE_bed |";
+		while (<BEDTOOLSCLOSEST>) {
+			chomp;
+			my ($chrom, $start, $end, $CREID, $count, $locus_num) = split /\t/;
+			push @{$tmp_locus_hsh_ref->{$locus_num}{'count'}}, $count;
+			push @{$tmp_locus_hsh_ref->{$locus_num}{'CREID'}}, $CREID;
+			push @{$tmp_locus_hsh_ref->{$locus_num}{'start'}}, $start;
+			push @{$tmp_locus_hsh_ref->{$locus_num}{'end'}}, $end;
+			$tmp_locus_hsh_ref->{$locus_num}{'chrom'} = $chrom;
+		}
+		close BEDTOOLSCLOSEST;
+		
+		my @count_ary = ();
+		foreach my $locus_num (sort keys %{$tmp_locus_hsh_ref}) {
+			my $start = min(@{$tmp_locus_hsh_ref->{$locus_num}{'start'}});
+			my $end = max(@{$tmp_locus_hsh_ref->{$locus_num}{'end'}});
+			my $size = $end - $start;
+			my $chrom = $tmp_locus_hsh_ref->{$locus_num}{'chrom'};
+			my $total_count = sum(@{$tmp_locus_hsh_ref->{$locus_num}{'count'}});
+			my $top_count = max(@{$tmp_locus_hsh_ref->{$locus_num}{'count'}});
+			my $top_frac = $top_count/$total_count;
+			my $num_CRE = @{$tmp_locus_hsh_ref->{$locus_num}{'CREID'}};
+			my $spreadness = $num_CRE/$top_frac;
+			my $proximity_tag = $proximity_hsh_ref->{$proximity};
+			my $locusID = join "_", ($chrom, $start, $end);
+			my $locusName = join "", ($proximity_tag, $locus_num);
+			@{$locusInfoHsh_ref->{$locusID}{'CREID'}} = @{$tmp_locus_hsh_ref->{$locus_num}{'CREID'}};
+			$locusInfoHsh_ref->{$locusID}{'loc'} = [$chrom, $start, $end];
+			$locusInfoHsh_ref->{$locusID}{'total_count'} = $total_count;
+			$locusInfoHsh_ref->{$locusID}{'top_count'} = $top_count;
+			$locusInfoHsh_ref->{$locusID}{'top_frac'} = $top_frac;
+			$locusInfoHsh_ref->{$locusID}{'spreadness'} = $spreadness;
+			$locusInfoHsh_ref->{$locusID}{'size'} = $size;
+			$locusInfoHsh_ref->{$locusID}{'locusName'} = $locusName;
+			$locusInfoHsh_ref->{$locusID}{'proximity'} = $proximity;
+			push @count_ary, $total_count;
+		}
+		my $num_loci = @count_ary;
+		@count_ary = sort {$a <=> $b} @count_ary;
+		my $max_index = $#count_ary - int($num_loci*0.001);
+		my $locus_count_rank = "$tmp_bed_dir/locus_count_rank.txt";
+		open COUNT, ">", $locus_count_rank;
+		foreach my $i (0..$max_index) {
+			print COUNT join "", (join "\t", ($count_ary[$i])), "\n";
+		}
+		close COUNT;
+	
+		&reportAndLogStatus("getting $proximity hyperactive locus cutoff", 10, "\n");#->3225
+		my $hyperactive_count_plot_path = "$result_plot_dir/optimize.$proximity.locus.hyperactive_count.pdf";
+		$globalReadmeHsh_ref->{$hyperactive_count_plot_path}{'description'} = "Plot of UMI/read counts for all $proximity CRE loci ranked in ascending order, a tangent line is used to define the cutoff a hyperactive";
+
+		chomp (my $hyperactive_cutoff = `$Rscript_bin $optimize_tangent_R $locus_count_rank $hyperactive_count_plot_path optimize_hyperactive_count locus_rank_by_count count`);
+		&reportAndLogStatus("hyperactive_cutoff for $proximity locus = $hyperactive_cutoff", 10, "\n");#->3225
+
+		my $num_hyperactive = 0;
+		foreach my $locusID (keys %{$locusInfoHsh_ref}) {
+			my $total_count = $locusInfoHsh_ref->{$locusID}{'total_count'};
+			my $spreadness = $locusInfoHsh_ref->{$locusID}{'spreadness'};
+			my $locusName = $locusInfoHsh_ref->{$locusID}{'locusName'};
+			my $hyperactive = 'no';
+			my $rgbItem = '55,126,184';
+			if (($proximity eq 'distal' and $total_count >= $hyperactive_cutoff and $spreadness >= $min_spreadness) 
+				or ($proximity eq 'proximal' and $total_count >= $hyperactive_cutoff)) { #---[2022/06/30 22:29] spreadness cutoff only for distal locus
+				$hyperactive = 'yes';
+				$num_hyperactive++;
+				$rgbItem = '228,26,28';
+			}
+			$locusInfoHsh_ref->{$locusID}{'hyperactive'} = $hyperactive;
+			foreach my $CREID (@{$locusInfoHsh_ref->{$locusID}{'CREID'}}) {
+				$CREInfoHsh_ref->{$CREID}{'locusID'} = $locusID;
+				$CREInfoHsh_ref->{$CREID}{'locusName'} = $locusName;
+				$CREInfoHsh_ref->{$CREID}{'locus_count'} = $total_count;
+				$CREInfoHsh_ref->{$CREID}{'locus_hyperactive'} = $hyperactive;
+			}
+
+			my ($chrom, $start, $end) = @{$locusInfoHsh_ref->{$locusID}{'loc'}};
+			my $score = $locusInfoHsh_ref->{$locusID}{'total_count'};
+			my $strand = '.';
+			my $thickStart = $start;
+			my $thickEnd = $end;
+			my $blockCount = 1;
+			my $blockSizes = $locusInfoHsh_ref->{$locusID}{'size'};
+			my $blockStarts = 0;
+			$locusInfoHsh_ref->{$locusID}{'rgbItem'} = $rgbItem;
+			$locusInfoHsh_ref->{$locusID}{'bedLine'} = [$chrom, $start, $end, $locusID, $score, $strand, $thickStart, $thickEnd, $rgbItem, $blockCount, $blockSizes, $blockStarts];
+		}
+
+		&reportAndLogStatus("num of hyperactive $proximity locus = $num_hyperactive", 10, "\n");#->3225
+
+	}
+
+	return ($locusInfoHsh_ref);
 }
 sub defineCodingClasses {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
 #	input: none
 #	output: $coding_class_hsh_ref
 #	toCall: my ($coding_class_hsh_ref) = &defineCodingClasses();
-#	calledInLine: 224
+#	calledInLine: 221
 #....................................................................................................................................................#
 	
 	my $coding_class_hsh_ref = {
@@ -899,183 +1117,58 @@ sub defineCodingClasses {
 
 	return ($coding_class_hsh_ref);
 }
-sub defineHyperactiveDistalLoci {
+sub defineGenePromoter {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
-#	input: $CREInfoHsh_ref, $Rscript_bin, $bedtools_bin, $max_dist_rank, $min_spreadness, $optimize_tangent_R, $result_plot_dir, $stitch_distance, $tmp_bed_dir
-#	output: $distal_CRE_locus_info_hsh_ref
-#	toCall: my ($distal_CRE_locus_info_hsh_ref) = &defineHyperactiveDistalLoci($CREInfoHsh_ref, $tmp_bed_dir, $bedtools_bin, $optimize_tangent_R, $max_dist_rank, $Rscript_bin, $stitch_distance, $min_spreadness, $result_plot_dir);
-#	calledInLine: 242
-#....................................................................................................................................................#
-	my ($CREInfoHsh_ref, $tmp_bed_dir, $bedtools_bin, $optimize_tangent_R, $max_dist_rank, $Rscript_bin, $stitch_distance, $min_spreadness, $result_plot_dir) = @_;
-	
-	#time perl /osc-fs_home/hon-chun/analysis/tenX_single_cell/scafe/dev/scripts/1.2/scafe.tool.cm.annotate.pl --overwrite=yes --tssCluster_bed_path=/osc-fs_home/hon-chun/analysis/tenX_single_cell/paper_run/cellranger_unified_proc/pooled_celltype/scafe_run/PBMC/filter/PBMC/bed/PBMC.tssCluster.default.filtered.bed.gz --tssCluster_info_path=/osc-fs_home/hon-chun/analysis/tenX_single_cell/paper_run/cellranger_unified_proc/pooled_celltype/scafe_run/PBMC/filter/PBMC/log/PBMC.tssCluster.log.tsv --genome=hg19.gencode_v32lift37 --outputPrefix=demo --outDir=/osc-fs_home/hon-chun/analysis/tenX_single_cell/scafe/dev/test_run/annotate_super_enhancer/
-
-	&reportAndLogStatus("defining hyperactive distal loci", 10, "\n");#->2953
-	my $distal_CRE_bed = "$tmp_bed_dir/distal_CRE.bed";
-	open OUTBED, "| sort -k1,1 -k2,2n >$distal_CRE_bed";
-	foreach my $CREID (keys %{$CREInfoHsh_ref}) {
-		my $proximity = $CREInfoHsh_ref->{$CREID}{'proximity'};
-		my $gene_promoter = $CREInfoHsh_ref->{$CREID}{'gene_promoter'};
-		if ($proximity eq 'distal' and $gene_promoter eq 'none') {
-			my $sumClusterRead = $CREInfoHsh_ref->{$CREID}{'sumClusterRead'};
-			my ($chrom, $chromStart, $chromEnd) = @{$CREInfoHsh_ref->{$CREID}{'bedLine'}};
-			print OUTBED join "", (join "\t", ($chrom, $chromStart, $chromEnd, $CREID, $sumClusterRead)), "\n";
-		}
-	}
-	close OUTBED;
-
-	if ($stitch_distance eq 'undefined') {
-		my $distal_CRE_dist_rank = "$tmp_bed_dir/distal_CRE_dist_rank.txt";
-		open DIST, ">", $distal_CRE_dist_rank;
-		open BEDTOOLSCLOSEST, "$bedtools_bin closest -io -d -a $distal_CRE_bed -b $distal_CRE_bed |";
-		while (<BEDTOOLSCLOSEST>) {
-			chomp;
-			my @bedtools_ary = split /\t/;
-			my $dist = $bedtools_ary[-1];
-			print DIST "$dist\n" if $dist < $max_dist_rank;
-		}
-		close DIST;
-		close BEDTOOLSCLOSEST;
-		&reportAndLogStatus("getting optimized stitch distance", 10, "\n");#->2953
-		my $stitch_dist_plot_path = "$result_plot_dir/optimize.stitch_distance.pdf";
-		$globalReadmeHsh_ref->{$stitch_dist_plot_path}{'description'} = "Plot of the closest distance of a distal CRE to another, ranked in ascending order, a tangent line is used to define the cutoff for stitching within a distal CRE locus";
-		chomp ($stitch_distance = `$Rscript_bin $optimize_tangent_R $distal_CRE_dist_rank $stitch_dist_plot_path optimize_stitch_distance CRE_rank_by_distance distance`);
-		&reportAndLogStatus("optimized stitch_distance = $stitch_distance", 10, "\n");#->2953
-	} else {
-		&reportAndLogStatus("stitch_distance is user-defined at $stitch_distance", 10, "\n");#->2953
-	}
-	
-	&reportAndLogStatus("stitching distal CREs", 10, "\n");#->2953
-	my $tmp_distal_CRE_locus_hsh_ref = {};
-	open BEDTOOLSCLOSEST, "$bedtools_bin cluster -d $stitch_distance -i $distal_CRE_bed |";
-	while (<BEDTOOLSCLOSEST>) {
-		chomp;
-		my ($chrom, $start, $end, $CREID, $count, $distal_CRE_locus_num) = split /\t/;
-		push @{$tmp_distal_CRE_locus_hsh_ref->{$distal_CRE_locus_num}{'count'}}, $count;
-		push @{$tmp_distal_CRE_locus_hsh_ref->{$distal_CRE_locus_num}{'CREID'}}, $CREID;
-		push @{$tmp_distal_CRE_locus_hsh_ref->{$distal_CRE_locus_num}{'start'}}, $start;
-		push @{$tmp_distal_CRE_locus_hsh_ref->{$distal_CRE_locus_num}{'end'}}, $end;
-		$tmp_distal_CRE_locus_hsh_ref->{$distal_CRE_locus_num}{'chrom'} = $chrom;
-	}
-	close BEDTOOLSCLOSEST;
-	
-	my @count_ary = ();
-	my $distal_CRE_locus_info_hsh_ref = {};
-	foreach my $distal_CRE_locus_num (keys %{$tmp_distal_CRE_locus_hsh_ref}) {
-		my $start = min(@{$tmp_distal_CRE_locus_hsh_ref->{$distal_CRE_locus_num}{'start'}});
-		my $end = max(@{$tmp_distal_CRE_locus_hsh_ref->{$distal_CRE_locus_num}{'end'}});
-		my $size = $end - $start;
-		my $chrom = $tmp_distal_CRE_locus_hsh_ref->{$distal_CRE_locus_num}{'chrom'};
-		my $total_count = sum(@{$tmp_distal_CRE_locus_hsh_ref->{$distal_CRE_locus_num}{'count'}});
-		my $top_count = max(@{$tmp_distal_CRE_locus_hsh_ref->{$distal_CRE_locus_num}{'count'}});
-		my $top_frac = $top_count/$total_count;
-		my $num_CRE = @{$tmp_distal_CRE_locus_hsh_ref->{$distal_CRE_locus_num}{'CREID'}};
-		my $spreadness = $num_CRE/$top_frac;
-		my $distal_CRE_locus_ID = join "_", ($chrom, $start, $end);
-		@{$distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'CREID'}} = @{$tmp_distal_CRE_locus_hsh_ref->{$distal_CRE_locus_num}{'CREID'}};
-		$distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'loc'} = [$chrom, $start, $end];
-		$distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'total_count'} = $total_count;
-		$distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'top_count'} = $top_count;
-		$distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'top_frac'} = $top_frac;
-		$distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'spreadness'} = $spreadness;
-		$distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'size'} = $size;
-		push @count_ary, $total_count;
-	}
-	my $num_loci = @count_ary;
-	@count_ary = sort {$a <=> $b} @count_ary;
-	my $max_index = $#count_ary - int($num_loci*0.001);
-	my $distal_CRE_locus_count_rank = "$tmp_bed_dir/distal_CRE_locus_count_rank.txt";
-	open COUNT, ">", $distal_CRE_locus_count_rank;
-	foreach my $i (0..$max_index) {
-		print COUNT join "", (join "\t", ($count_ary[$i])), "\n";
-	}
-	close COUNT;
-	
-	&reportAndLogStatus("getting hyperactive locus cutoff", 10, "\n");#->2953
-	my $hyperactive_count_plot_path = "$result_plot_dir/optimize.hyperactive_count.pdf";
-	$globalReadmeHsh_ref->{$hyperactive_count_plot_path}{'description'} = "Plot of UMI/read counts for all distal CRE loci ranked in ascending order, a tangent line is used to define the cutoff a hyperactive";
-
-	chomp (my $hyperactive_cutoff = `$Rscript_bin $optimize_tangent_R $distal_CRE_locus_count_rank $hyperactive_count_plot_path optimize_hyperactive_count locus_rank_by_count count`);
-	&reportAndLogStatus("hyperactive_cutoff=$hyperactive_cutoff", 10, "\n");#->2953
-	
-	foreach my $CREID (keys %{$CREInfoHsh_ref}) {
-		$CREInfoHsh_ref->{$CREID}{'distal_CRE_locus_ID'} = '__na';
-		$CREInfoHsh_ref->{$CREID}{'distal_CRE_locus_count'} = '__na';
-		$CREInfoHsh_ref->{$CREID}{'distal_CRE_locus_hyperactive'} = '__na';
-	}
-	
-	my $num_hyperactive = 0;
-	foreach my $distal_CRE_locus_ID (keys %{$distal_CRE_locus_info_hsh_ref}) {
-		my $total_count = $distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'total_count'};
-		my $spreadness = $distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'spreadness'};
-		my $hyperactive = 'no';
-		my $rgbItem = '55,126,184';
-		if ($total_count >= $hyperactive_cutoff and $spreadness >= $min_spreadness) {
-			$hyperactive = 'yes';
-			$num_hyperactive++;
-			$rgbItem = '228,26,28';
-		}
-		$distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'hyperactive'} = $hyperactive;
-		foreach my $CREID (@{$distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'CREID'}}) {
-			$CREInfoHsh_ref->{$CREID}{'distal_CRE_locus_ID'} = $distal_CRE_locus_ID;
-			$CREInfoHsh_ref->{$CREID}{'distal_CRE_locus_count'} = $total_count;
-			$CREInfoHsh_ref->{$CREID}{'distal_CRE_locus_hyperactive'} = $hyperactive;
-		}
-
-		my ($chrom, $start, $end) = @{$distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'loc'}};
-		my $score = $distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'total_count'};
-		my $strand = '.';
-		my $thickStart = $start;
-		my $thickEnd = $end;
-		my $blockCount = 1;
-		my $blockSizes = $distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'size'};
-		my $blockStarts = 0;
-		$distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'rgbItem'} = $rgbItem;
-		$distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'bedLine'} = [$chrom, $start, $end, $distal_CRE_locus_ID, $score, $strand, $thickStart, $thickEnd, $rgbItem, $blockCount, $blockSizes, $blockStarts];
-	}
-
-	&reportAndLogStatus("num_hyperactive = $num_hyperactive", 10, "\n");#->2953
-	
-	return ($distal_CRE_locus_info_hsh_ref);
-}
-sub defineUnannoPromoter {
-#....................................................................................................................................................#
-#	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
-#	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
-#	secondaryAppearInSection: >none
-#	input: $CREInfoHsh_ref, $clusterInfoHsh_ref, $geneInfoHsh_ref, $min_gene_strand_read_frac, $min_total_exp_frac
+#	input: $clusterInfoHsh_ref, $geneInfoHsh_ref, $min_gene_strand_read_frac, $min_total_exp_frac, $stranded_CREInfoHsh_ref
 #	output: $gene_promoter_CRE_pair_hsh_ref
-#	toCall: my ($gene_promoter_CRE_pair_hsh_ref) = &defineUnannoPromoter($CREInfoHsh_ref, $geneInfoHsh_ref, $min_total_exp_frac, $min_gene_strand_read_frac, $clusterInfoHsh_ref);
-#	calledInLine: 241
+#	toCall: my ($gene_promoter_CRE_pair_hsh_ref) = &defineGenePromoter($stranded_CREInfoHsh_ref, $geneInfoHsh_ref, $min_total_exp_frac, $min_gene_strand_read_frac, $clusterInfoHsh_ref);
+#	calledInLine: 230
 #....................................................................................................................................................#
-	my ($CREInfoHsh_ref, $geneInfoHsh_ref, $min_total_exp_frac, $min_gene_strand_read_frac, $clusterInfoHsh_ref) = @_;
+	my ($stranded_CREInfoHsh_ref, $geneInfoHsh_ref, $min_total_exp_frac, $min_gene_strand_read_frac, $clusterInfoHsh_ref) = @_;
 
-	&reportAndLogStatus("defining unannotated promoters", 10, "\n");#->2953
+	&reportAndLogStatus("defining gene promoters", 10, "\n");#->3225
 
 	my $gene_promoter_CRE_pair_hsh_ref = {};
 	my $tmp_unanno_tCRE_hsh_ref = {};
 	my $num_unanno_alt_promt = 0;
+	my $anno_gene_promoter_hsh_ref = {};
 	
-	foreach my $CREID (sort keys %{$CREInfoHsh_ref}) {
-		my $sumClusterRead = $CREInfoHsh_ref->{$CREID}{'sumClusterRead'};
-		my $regionGeneID = $CREInfoHsh_ref->{$CREID}{'regionGeneID'};
-		my $regionType = $CREInfoHsh_ref->{$CREID}{'regionType'};
-		my $regionOritentation = $CREInfoHsh_ref->{$CREID}{'regionOritentation'};
-		my $proximity = $CREInfoHsh_ref->{$CREID}{'proximity'};
-		if (exists $geneInfoHsh_ref->{$regionGeneID}) {
+	foreach my $CREID (sort keys %{$stranded_CREInfoHsh_ref}) {
+		$stranded_CREInfoHsh_ref->{$CREID}{'gene_promoter'} = 'none';
+	}
+	
+	#---[2022/06/27 14:17] get annotated gene TSS
+	foreach my $geneID (sort keys %{$geneInfoHsh_ref}) {
+		my $geneClass = $geneInfoHsh_ref->{$geneID}{'geneClass'};
+		next if ($geneClass eq 'unanno_tss');
+		foreach my $CREID (keys %{$geneInfoHsh_ref->{$geneID}{'CREID'}}) {
+			foreach my $clusterID (sort keys %{$stranded_CREInfoHsh_ref->{$CREID}{'clusterID'}}) {
+				my $type = $clusterInfoHsh_ref->{$clusterID}{'type'};
+				if ($type eq 'gene_tss') {
+					$anno_gene_promoter_hsh_ref->{'gene'}{$geneID}{$CREID}++;
+					$anno_gene_promoter_hsh_ref->{'CREID'}{$CREID}{$geneID}++;
+				}
+			}
+		}
+	}
+
+	#---[2022/06/27 14:17] get annotated potential unannotated promoter
+	foreach my $CREID (sort keys %{$stranded_CREInfoHsh_ref}) {
+		next if exists $anno_gene_promoter_hsh_ref->{'CREID'}{$CREID};
+		my $regionGeneID = $stranded_CREInfoHsh_ref->{$CREID}{'regionGeneID'};
+		my $regionType = $stranded_CREInfoHsh_ref->{$CREID}{'regionType'};
+		my $regionOritentation = $stranded_CREInfoHsh_ref->{$CREID}{'regionOritentation'};
+		if (exists $geneInfoHsh_ref->{$regionGeneID}) {#---[2022/06/27 14:15] only for annotated gene models
 			my $geneClass = $geneInfoHsh_ref->{$regionGeneID}{'geneClass'};
-			if ($geneClass ne 'unanno_tss' and $proximity eq 'distal' and $regionOritentation eq 'ss' and ($regionType eq 'exon' or $regionType eq 'intron')) {
+			if ($geneClass ne 'unanno_tss' and $regionOritentation eq 'ss' and ($regionType eq 'exon' or $regionType eq 'intron')) {
 				$tmp_unanno_tCRE_hsh_ref->{$regionGeneID}{$CREID}++;
 			}
 		}
-		$CREInfoHsh_ref->{$CREID}{'gene_promoter'} = 'none';
 	}
 
 	foreach my $geneID (sort keys %{$geneInfoHsh_ref}) {
@@ -1084,69 +1177,180 @@ sub defineUnannoPromoter {
 		next if ($geneClass eq 'unanno_tss');
 		my $total_read_within_gene = 0;
 		my $promoter_CRE_hsh_ref = {};
-		foreach my $CREID (keys %{$geneInfoHsh_ref->{$geneID}{'CREID'}}) {
-			my $gene_tss = 'no';
-			foreach my $clusterID (sort keys %{$CREInfoHsh_ref->{$CREID}{'clusterID'}}) {
-				my $type = $clusterInfoHsh_ref->{$clusterID}{'type'};
-				$gene_tss = 'yes' if $type eq 'gene_tss';
+		if (exists $anno_gene_promoter_hsh_ref->{'gene'}{$geneID}) {
+
+			foreach my $CREID (keys %{$anno_gene_promoter_hsh_ref->{'gene'}{$geneID}}) {
+				$total_read_within_gene += $stranded_CREInfoHsh_ref->{$CREID}{'sumClusterRead'};
 			}
-			if ($gene_tss eq 'yes') {
-				my $sumClusterRead = $CREInfoHsh_ref->{$CREID}{'sumClusterRead'};
-				$promoter_CRE_hsh_ref->{$CREID}++;
-				$total_read_within_gene += $sumClusterRead;
-			}
-		}
-		
-		foreach my $CREID (keys %{$promoter_CRE_hsh_ref}) {
-			my $sumClusterRead = $CREInfoHsh_ref->{$CREID}{'sumClusterRead'};
-			my $plusClusterRead = $CREInfoHsh_ref->{$CREID}{'plusClusterRead'};
-			my $minusClusterRead = $CREInfoHsh_ref->{$CREID}{'minusClusterRead'};
-			my $gene_strand_read_frac = $plusClusterRead/$sumClusterRead;
-			$gene_strand_read_frac = $minusClusterRead/$sumClusterRead if $strand eq '-';
-			my $total_exp_frac = 1;
-			$total_exp_frac = $sumClusterRead/$total_read_within_gene if $total_read_within_gene > 0;
+
+			foreach my $CREID (keys %{$anno_gene_promoter_hsh_ref->{'gene'}{$geneID}}) {
+				my $sumClusterRead = $stranded_CREInfoHsh_ref->{$CREID}{'sumClusterRead'};
+				my $plusClusterRead = $stranded_CREInfoHsh_ref->{$CREID}{'stranded_count'}{'+'};
+				my $minusClusterRead = $stranded_CREInfoHsh_ref->{$CREID}{'stranded_count'}{'-'};
+
+				my $gene_strand_read_frac = $plusClusterRead/($plusClusterRead+$minusClusterRead);
+				$gene_strand_read_frac = $minusClusterRead/($plusClusterRead+$minusClusterRead) if $strand eq '-';
+
+				my $total_exp_frac = 1;
+				$total_exp_frac = $sumClusterRead/$total_read_within_gene if $total_read_within_gene > 0;
 			
-			my $status = 'annotated';
-			$gene_promoter_CRE_pair_hsh_ref->{$geneID}{$CREID} = [$status, $total_exp_frac, $gene_strand_read_frac, $sumClusterRead];
-			$CREInfoHsh_ref->{$CREID}{'gene_promoter'} = $status;
-			$CREInfoHsh_ref->{$CREID}{'gene_promoter_geneID'}{$geneID}++;
+				my $status = 'annotated';
+				$geneInfoHsh_ref->{$geneID}{'gene_promoter'}{$CREID} = $status;
+				$gene_promoter_CRE_pair_hsh_ref->{$geneID}{$CREID} = [$status, $total_exp_frac, $gene_strand_read_frac, $sumClusterRead];
+				$stranded_CREInfoHsh_ref->{$CREID}{'gene_promoter'} = $status;
+				$stranded_CREInfoHsh_ref->{$CREID}{'gene_promoter_geneID'}{$geneID}++;
+				$stranded_CREInfoHsh_ref->{$CREID}{'geneID'}{$geneID} = $status."_promoter";
+			}
 		}
 
 		if (exists $tmp_unanno_tCRE_hsh_ref->{$geneID}) {
 			foreach my $CREID (keys %{$tmp_unanno_tCRE_hsh_ref->{$geneID}}) {
-				my $sumClusterRead = $CREInfoHsh_ref->{$CREID}{'sumClusterRead'};
-				my $plusClusterRead = $CREInfoHsh_ref->{$CREID}{'plusClusterRead'};
-				my $minusClusterRead = $CREInfoHsh_ref->{$CREID}{'minusClusterRead'};
-				my $gene_strand_read_frac = $plusClusterRead/$sumClusterRead;
-				$gene_strand_read_frac = $minusClusterRead/$sumClusterRead if $strand eq '-';
+				my $sumClusterRead = $stranded_CREInfoHsh_ref->{$CREID}{'sumClusterRead'};
+				my $plusClusterRead = $stranded_CREInfoHsh_ref->{$CREID}{'stranded_count'}{'+'};
+				my $minusClusterRead = $stranded_CREInfoHsh_ref->{$CREID}{'stranded_count'}{'-'};
+
+				my $gene_strand_read_frac = $plusClusterRead/($plusClusterRead+$minusClusterRead);
+				$gene_strand_read_frac = $minusClusterRead/($plusClusterRead+$minusClusterRead) if $strand eq '-';
+
 				my $total_exp_frac = 1;
 				$total_exp_frac = $sumClusterRead/$total_read_within_gene if $total_read_within_gene > 0;
+
 				if ($total_exp_frac >= $min_total_exp_frac and $gene_strand_read_frac >= $min_gene_strand_read_frac) {
 					my $status = 'unannotated';
 					$gene_promoter_CRE_pair_hsh_ref->{$geneID}{$CREID} = [$status, $total_exp_frac, $gene_strand_read_frac, $sumClusterRead];
-					$CREInfoHsh_ref->{$CREID}{'gene_promoter'} = $status;
-					$CREInfoHsh_ref->{$CREID}{'gene_promoter_geneID'}{$geneID}++;
+					$stranded_CREInfoHsh_ref->{$CREID}{'gene_promoter'} = $status;
+					$stranded_CREInfoHsh_ref->{$CREID}{'gene_promoter_geneID'}{$geneID}++;
+					$stranded_CREInfoHsh_ref->{$CREID}{'geneID'}{$geneID} = $status."_promoter";
 					$num_unanno_alt_promt++;
 				}
 			}
 		}
 	}
 
-	&reportAndLogStatus("$num_unanno_alt_promt CRE is defined as unannotated alternative promoter", 10, "\n");#->2953
+	&reportAndLogStatus("$num_unanno_alt_promt CRE is defined as unannotated alternative promoter", 10, "\n");#->3225
 	
 	return ($gene_promoter_CRE_pair_hsh_ref);
+}
+sub defineStitchDistance {
+#....................................................................................................................................................#
+#	subroutineCategory: unassigned
+#	dependOnSub: reportAndLogStatus|3225
+#	appearInSub: defineCRE|754Locus
+#	primaryAppearInSection: >none
+#	secondaryAppearInSection: 3_readInfo|213
+#	input: $Rscript_bin, $bedtools_bin, $distal_CRE_bed, $distal_stitch_distance, $max_dist_rank, $optimize_tangent_R, $result_plot_dir, $tmp_bed_dir
+#	output: $distal_stitch_distance
+#	toCall: my ($distal_stitch_distance) = &defineStitchDistance($distal_stitch_distance, $distal_CRE_bed, $tmp_bed_dir, $bedtools_bin, $max_dist_rank, $Rscript_bin, $optimize_tangent_R, $result_plot_dir);
+#	calledInLine: 901
+#....................................................................................................................................................#
+	my ($distal_stitch_distance, $distal_CRE_bed, $tmp_bed_dir, $bedtools_bin, $max_dist_rank, $Rscript_bin, $optimize_tangent_R, $result_plot_dir) = @_;
+
+	my $distal_CRE_dist_rank = "$tmp_bed_dir/distal_CRE_dist_rank.txt";
+	open DIST, ">", $distal_CRE_dist_rank;
+	open BEDTOOLSCLOSEST, "$bedtools_bin closest -io -d -a $distal_CRE_bed -b $distal_CRE_bed |";
+	while (<BEDTOOLSCLOSEST>) {
+		chomp;
+		my @bedtools_ary = split /\t/;
+		my $dist = $bedtools_ary[-1];
+		print DIST "$dist\n" if $dist < $max_dist_rank;
+	}
+	close DIST;
+	close BEDTOOLSCLOSEST;
+	&reportAndLogStatus("getting optimized stitch distance", 10, "\n");#->3225
+	my $stitch_dist_plot_path = "$result_plot_dir/optimize.distal_CRE.distal_stitch_distance.pdf";
+	$globalReadmeHsh_ref->{$stitch_dist_plot_path}{'description'} = "Plot of the closest distance of a distal CRE to another, ranked in ascending order, a tangent line is used to define the cutoff for stitching within a distal CRE locus";
+	chomp ($distal_stitch_distance = `$Rscript_bin $optimize_tangent_R $distal_CRE_dist_rank $stitch_dist_plot_path optimize_distal_stitch_distance CRE_rank_by_distance distance`);
+	&reportAndLogStatus("optimized distal_stitch_distance = $distal_stitch_distance", 10, "\n");#->3225
+	
+	return ($distal_stitch_distance);
+}
+sub defineStrandedCRE {
+#....................................................................................................................................................#
+#	subroutineCategory: unassigned
+#	dependOnSub: reportAndLogStatus|3225
+#	appearInSub: >none
+#	primaryAppearInSection: 3_readInfo|213
+#	secondaryAppearInSection: >none
+#	input: $bedtools_bin, $clusterInfoHsh_ref, $extended_tssCluster_bed_path, $tmp_bed_dir
+#	output: $stranded_CREInfoHsh_ref
+#	toCall: my ($stranded_CREInfoHsh_ref) = &defineStrandedCRE($clusterInfoHsh_ref, $tmp_bed_dir, $bedtools_bin, $extended_tssCluster_bed_path);
+#	calledInLine: 228
+#....................................................................................................................................................#
+	my ($clusterInfoHsh_ref, $tmp_bed_dir, $bedtools_bin, $extended_tssCluster_bed_path) = @_;
+	
+	my $stranded_CREInfoHsh_ref = {};
+
+	&reportAndLogStatus("defining stranded CRE", 10, "\n");#->3225
+	
+	my $tmp_stranded_merged_CRE_bed = "$tmp_bed_dir/cluster_stranded_merged_CRE.bed";
+	
+	system  "$bedtools_bin merge -s -c 4,5,6 -o distinct,sum,distinct -delim \";\" -i $extended_tssCluster_bed_path >$tmp_stranded_merged_CRE_bed";
+	
+	open MERGECREBED, "<", "$tmp_stranded_merged_CRE_bed";
+	while (<MERGECREBED>) {
+		chomp;
+		my ($chrom, $chromStart, $chromEnd, $clusterIDStr, $score, $strandStr) = split /\t/;
+		my $strand = $strandStr;
+		die "strand in strand speccific merging of TSS clusters error\n" if $strandStr =~ m/\;/;
+		my $CREID = "$chrom\_$chromStart\_$chromEnd\_$strand";
+		my $max_clusterID = undef;
+		my $max_count = 0;
+		
+		foreach my $clusterID (split /;/, $clusterIDStr) {
+			my $max = $clusterInfoHsh_ref->{$clusterID}{'max'};
+			if ($max > $max_count) {
+				$max_clusterID = $clusterID; 
+				$max_count = $max;
+			}
+
+			$stranded_CREInfoHsh_ref->{$CREID}{'clusterID'}{$clusterID}++;
+			$clusterInfoHsh_ref->{$clusterID}{'CREID'} = $CREID;
+		}
+		$stranded_CREInfoHsh_ref->{$CREID}{'stranded_count'}{'-'} = 0; #---[2022/06/27 15:49] count on - strand regardless of the CRE strand
+		$stranded_CREInfoHsh_ref->{$CREID}{'stranded_count'}{'+'} = 0; #---[2022/06/27 15:49] count on + strand regardless of the CRE strand
+		$stranded_CREInfoHsh_ref->{$CREID}{'strand'} = $strand;
+		$stranded_CREInfoHsh_ref->{$CREID}{'chrom'} = $chrom;
+		$stranded_CREInfoHsh_ref->{$CREID}{'start'} = $chromStart;
+		$stranded_CREInfoHsh_ref->{$CREID}{'end'} = $chromEnd;
+		$stranded_CREInfoHsh_ref->{$CREID}{'score'} = $score;
+		#$stranded_CREInfoHsh_ref->{$CREID}{'proximity'} = $proximity;
+
+		$stranded_CREInfoHsh_ref->{$CREID}{'regionType'} = $clusterInfoHsh_ref->{$max_clusterID}{'regionType'};
+		$stranded_CREInfoHsh_ref->{$CREID}{'regionGeneID'} = $clusterInfoHsh_ref->{$max_clusterID}{'regionGeneID'};
+		$stranded_CREInfoHsh_ref->{$CREID}{'regionOritentation'} = $clusterInfoHsh_ref->{$max_clusterID}{'regionOritentation'};
+		$stranded_CREInfoHsh_ref->{$CREID}{'max_clusterID'} = $max_clusterID;
+
+	}
+	close MERGECREBED;
+	
+	&reportAndLogStatus("counting stranded CRE", 10, "\n");#->3225
+
+	#---[2022/06/27 17:08] cut tmp_stranded_merged_CRE_bed in advance before feeding as the concatenated ID at column 5 might 
+	open BEDTOOLS, "cut -f 1,2,3,6 $tmp_stranded_merged_CRE_bed | $bedtools_bin intersect -wo -a stdin -b $extended_tssCluster_bed_path | cut -f 1,2,3,4,8 |";
+	while (<BEDTOOLS>) {
+		chomp;
+		my ($chrom, $chromStart, $chromEnd, $strand, $clusterID) = split /\t/;
+		my $CREID = "$chrom\_$chromStart\_$chromEnd\_$strand";
+		print "clusterID $clusterID does not exists\n" if not exists $clusterInfoHsh_ref->{$clusterID};
+		my $cluster_strand = $clusterInfoHsh_ref->{$clusterID}{'strand'};
+		my $cluster_count = $clusterInfoHsh_ref->{$clusterID}{'count'};
+		$stranded_CREInfoHsh_ref->{$CREID}{'stranded_count'}{$cluster_strand} += $cluster_count;
+	}
+	close BEDTOOLS;
+	
+	return ($stranded_CREInfoHsh_ref);
 }
 sub exonRngToGtf {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
-#	appearInSub: printTrnscptGtf|2278
+#	appearInSub: printTrnscptGtf|2531
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 3_readInfo|217
+#	secondaryAppearInSection: 3_readInfo|213
 #	input: $chrom, $exonRngAry_ref, $geneID, $sourceTag, $strand, $trnscptID
 #	output: $gtf_ary_ref
 #	toCall: my ($gtf_ary_ref) = &exonRngToGtf($exonRngAry_ref, $chrom, $strand, $trnscptID, $geneID, $sourceTag);
-#	calledInLine: 2323
+#	calledInLine: 2568
 #....................................................................................................................................................#
 	my ($exonRngAry_ref, $chrom, $strand, $trnscptID, $geneID, $sourceTag) = @_;
 	
@@ -1160,34 +1364,39 @@ sub exonRngToGtf {
 	
 	return ($gtf_ary_ref);
 }
-sub filterUnannotatedCluster {
+sub filterCRE {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
-#	input: $clusterInfoHsh_ref
+#	input: $CREInfoHsh_ref, $clusterInfoHsh_ref, $min_CRE_count
 #	output: 
-#	toCall: &filterUnannotatedCluster($clusterInfoHsh_ref);
-#	calledInLine: 230
+#	toCall: &filterCRE($CREInfoHsh_ref, $clusterInfoHsh_ref, $min_CRE_count);
+#	calledInLine: 232
 #....................................................................................................................................................#
-	my ($clusterInfoHsh_ref) = @_;
+	my ($CREInfoHsh_ref, $clusterInfoHsh_ref, $min_CRE_count) = @_;
 	
-	&reportAndLogStatus("removing unanno cluster within filter region", 10, "\n");#->2953
-	my $num_rm = 0;
-	my $num_unanno = 0;
-	foreach my $clusterID (keys %{$clusterInfoHsh_ref}) {
-		if (not exists $clusterInfoHsh_ref->{$clusterID}{'trnscptID'}) {
-			$num_unanno++;
-			if ($clusterInfoHsh_ref->{$clusterID}{'filter'} eq 'yes') {
-				delete $clusterInfoHsh_ref->{$clusterID};
-				$num_rm++;
+	&reportAndLogStatus("Removing non-promoter CRE with < $min_CRE_count", 10, "\n");#->3225
+	
+	my $num_retained = 0;
+	my $num_removed = 0;
+	foreach my $CREID (keys %{$CREInfoHsh_ref}) {
+		my $gene_promoter = $CREInfoHsh_ref->{$CREID}{'gene_promoter'};
+		my $sumClusterRead = $CREInfoHsh_ref->{$CREID}{'sumClusterRead'};
+		if ($gene_promoter eq 'none' and $sumClusterRead < $min_CRE_count) {
+			$num_removed++;
+			foreach my $clusterID (keys %{$CREInfoHsh_ref->{$CREID}{'clusterID'}}) {
+				delete ($clusterInfoHsh_ref->{$clusterID});
 			}
+			delete ($CREInfoHsh_ref->{$CREID});
+		} else {
+			$num_retained++;
 		}
 	}
-
-	&reportAndLogStatus("$num_rm of $num_unanno unannotated clusters filtered out.", 10, "\n");#->2953
+	
+	&reportAndLogStatus("$num_removed CRE removed and $num_retained CREs retained", 10, "\n");#->3225
 	
 	return ();
 }
@@ -1195,22 +1404,22 @@ sub generateAddonGene {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
-#	appearInSub: addonTranscript|348
+#	appearInSub: addonTranscriptGene|358
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 3_readInfo|217
-#	input: $clusterInfoHsh_ref, $superClusterHsh_ref, $superclusterID
-#	output: $addon_chrom, $geneID
-#	toCall: my ($geneID, $addon_chrom) = &generateAddonGene($superClusterHsh_ref, $clusterInfoHsh_ref, $superclusterID);
-#	calledInLine: 367
+#	secondaryAppearInSection: 3_readInfo|213
+#	input: $CREID, $CREInfoHsh_ref, $clusterInfoHsh_ref
+#	output: $addon_g_strand, $geneID
+#	toCall: my ($geneID, $addon_g_strand) = &generateAddonGene($CREInfoHsh_ref, $clusterInfoHsh_ref, $CREID);
+#	calledInLine: 384
 #....................................................................................................................................................#
 	
-	my ($superClusterHsh_ref, $clusterInfoHsh_ref, $superclusterID) = @_;
+	my ($CREInfoHsh_ref, $clusterInfoHsh_ref, $CREID) = @_;
 	
 	my $chrom;
 	my $g_start = 0;
 	my $strand_hsh_ref = {};
 	
-	foreach my $clusterID (@{$superClusterHsh_ref->{$superclusterID}}) {
+	foreach my $clusterID (keys %{$CREInfoHsh_ref->{$CREID}{'clusterID'}}) {
 		$chrom = $clusterInfoHsh_ref->{$clusterID}{'chrom'};
 		$g_start = $clusterInfoHsh_ref->{$clusterID}{'start'} if $g_start < $clusterInfoHsh_ref->{$clusterID}{'start'};
 		my $strand = $clusterInfoHsh_ref->{$clusterID}{'strand'};
@@ -1237,24 +1446,120 @@ sub generateAddonGene {
 	my $addon_g_start = sprintf "%.9d", $g_start;
 	my $geneID = "ADDG".$addon_chrom.$addon_g_start.'.'.$addon_g_strand;
 	
-	return ($geneID, $addon_chrom);
+	return ($geneID, $addon_g_strand);
+}
+sub generateAddonTranscript {
+#....................................................................................................................................................#
+#	subroutineCategory: unassigned
+#	dependOnSub: >none
+#	appearInSub: addonTranscriptGene|358
+#	primaryAppearInSection: >none
+#	secondaryAppearInSection: 3_readInfo|213
+#	input: $CREID, $CREInfoHsh_ref, $addon_length, $addon_t_prefix_hsh_ref, $chrom_size_hsh_ref, $clusterInfoHsh_ref, $geneID, $geneInfoHsh_ref, $status, $trnscptInfoHsh_ref
+#	output: 
+#	toCall: &generateAddonTranscript($CREInfoHsh_ref, $CREID, $geneInfoHsh_ref, $geneID, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $addon_length, $chrom_size_hsh_ref, $status, $addon_t_prefix_hsh_ref);
+#	calledInLine: 396, 449
+#....................................................................................................................................................#
+	my ($CREInfoHsh_ref, $CREID, $geneInfoHsh_ref, $geneID, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $addon_length, $chrom_size_hsh_ref, $status, $addon_t_prefix_hsh_ref) = @_;
+
+	my $chrom = $CREInfoHsh_ref->{$CREID}{'chrom'};
+	my $cluster_addon_hsh_ref = {
+		'-' =>{
+			'max' => 0,
+			'peakpos' => undef,
+			'clusterID' => {},
+		},
+		'+' =>{
+			'max' => 0,
+			'peakpos' => undef,
+			'clusterID' => {},
+		},
+	};
+	
+	foreach my $clusterID (keys %{$CREInfoHsh_ref->{$CREID}{'clusterID'}}) {
+		my $strand = $clusterInfoHsh_ref->{$clusterID}{'strand'};
+		my $max = $clusterInfoHsh_ref->{$clusterID}{'max'};
+		my $peakPos = $clusterInfoHsh_ref->{$clusterID}{'peakPos'};
+		$cluster_addon_hsh_ref->{$strand}{'clusterID'}{$clusterID}++;
+		
+		if ($max >= $cluster_addon_hsh_ref->{$strand}{'max'}) {
+			$cluster_addon_hsh_ref->{$strand}{'max'} = $max;
+			$cluster_addon_hsh_ref->{$strand}{'peakPos'} = $peakPos;
+		}
+	}
+
+	foreach my $t_strand (keys %{$cluster_addon_hsh_ref}) {
+		next if $cluster_addon_hsh_ref->{$t_strand}{'max'} == 0;
+		my $t_start;
+		my $t_end;
+		my $peakPos = $cluster_addon_hsh_ref->{$t_strand}{'peakPos'};
+		
+		if ($t_strand eq '+') {
+			$t_start = $peakPos;
+			$t_end = $t_start + $addon_length;
+		} else {
+			$t_start = $peakPos - $addon_length;
+			$t_end = $peakPos;
+		}
+		
+		$t_start = 1 if $t_start < 1;
+		$t_end = $chrom_size_hsh_ref->{$chrom}-1 if $t_end >= $chrom_size_hsh_ref->{$chrom};
+		
+		my $addon_chrom = $chrom;
+		$addon_chrom =~ s/^chr//;
+		$addon_chrom = '0'.$addon_chrom if length($addon_chrom) == 1;
+		my $addon_t_start = sprintf "%.9d", $t_start;
+		my $addon_t_prefix =  "ADDT".$addon_chrom.$addon_t_start;
+		$addon_t_prefix_hsh_ref->{$addon_t_prefix}++;
+		my $extension = $addon_t_prefix_hsh_ref->{$addon_t_prefix};
+		my $trnscptID = $addon_t_prefix.'.'.$extension;
+
+		die "addon trnscptID $trnscptID is duplicated\n" if exists $trnscptInfoHsh_ref->{$trnscptID};
+		
+		$trnscptInfoHsh_ref->{$trnscptID}{'chrom'} = $chrom;
+		$trnscptInfoHsh_ref->{$trnscptID}{'strand'} = $t_strand;
+		@{$trnscptInfoHsh_ref->{$trnscptID}{'exonRng'}} = ($t_start, $t_end);
+
+		foreach my $clusterID (keys %{$cluster_addon_hsh_ref->{$t_strand}{'clusterID'}}) {
+			$clusterInfoHsh_ref->{$clusterID}{'trnscptID'}{$trnscptID} = $status;
+			$trnscptInfoHsh_ref->{$trnscptID}{'clusterID'}{$clusterID} = $status;
+			$geneInfoHsh_ref->{$geneID}{'clusterID'}{$clusterID} = $status;
+			$clusterInfoHsh_ref->{$clusterID}{'geneID'}{$geneID} = $status;
+		}
+		
+		$trnscptInfoHsh_ref->{$trnscptID}{'geneID'} = $geneID;
+		$geneInfoHsh_ref->{$geneID}{'trnscptID'}{$trnscptID} = $status;
+
+		my $chromStart = $t_start - 1;
+		my $chromEnd = $t_end;
+		my $thickStart = $chromStart;
+		my $thickEnd = $chromEnd;
+		my $blockSizes = $chromEnd - $chromStart;
+		my $blockCount = 1;
+		my $blockStarts = 0;
+	
+		$trnscptInfoHsh_ref->{$trnscptID}{'bedLine'} = [$chrom, $chromStart, $chromEnd, $trnscptID, '0', $t_strand, $thickStart, $thickEnd, ".", $blockCount, $blockSizes, $blockStarts];
+
+	}
+
+	return ();
 }
 sub generateExtendedCluster {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
 #	input: $CRE_extend_size, $CRE_extend_upstrm_ratio, $clusterInfoHsh_ref, $tmp_bed_dir
 #	output: $extended_tssCluster_bed_path
 #	toCall: my ($extended_tssCluster_bed_path) = &generateExtendedCluster($clusterInfoHsh_ref, $tmp_bed_dir, $CRE_extend_size, $CRE_extend_upstrm_ratio);
-#	calledInLine: 228
+#	calledInLine: 225
 #....................................................................................................................................................#
 	my ($clusterInfoHsh_ref, $tmp_bed_dir, $CRE_extend_size, $CRE_extend_upstrm_ratio) = @_;
 	
 	my $extended_tssCluster_bed_path = "$tmp_bed_dir/extended_cluster.bed";
-	&reportAndLogStatus("generating extended cluster", 10, "\n");#->2953
+	&reportAndLogStatus("generating extended cluster", 10, "\n");#->3225
 	open (EXTENDBED, "| sort -k1,1 -k2,2n >$extended_tssCluster_bed_path");
 	
 	foreach my $clusterID (keys %{$clusterInfoHsh_ref}) {
@@ -1295,10 +1600,13 @@ sub generateExtendedCluster {
 			$extendedEnd = $cluster_chromEnd;
 		}
 		
+		$extendedEnd = $cluster_chromEnd if $extendedEnd < $cluster_chromEnd;
+		$extendedStart = $cluster_chromStart if $extendedStart > $cluster_chromStart;
+		
 		$clusterInfoHsh_ref->{$clusterID}{'extendedStart'} = $extendedStart;
 		$clusterInfoHsh_ref->{$clusterID}{'extendedEnd'} = $extendedEnd;
 		
-		print EXTENDBED join "", (join "\t", ($chrom, $extendedStart, $extendedEnd, $clusterID, $score, $strand, $thickStart, $thickEnd, $rgbItem, $blockCount, $blockSizes, $blockStarts)), "\n";
+		print EXTENDBED join "", (join "\t", ($chrom, $extendedStart, $extendedEnd, $clusterID, $score, $strand, $thickStart, $thickEnd)), "\n";
 		
 	}
 	close EXTENDBED;
@@ -1310,12 +1618,12 @@ sub generateGenePromoterInfoHsh {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
 #	input: $CREInfoHsh_ref
 #	output: $gene_promoter_info_hsh_ref
 #	toCall: my ($gene_promoter_info_hsh_ref) = &generateGenePromoterInfoHsh($CREInfoHsh_ref);
-#	calledInLine: 243
+#	calledInLine: 239
 #....................................................................................................................................................#
 	my ($CREInfoHsh_ref) = @_;
 	
@@ -1332,133 +1640,17 @@ sub generateGenePromoterInfoHsh {
 
 	return ($gene_promoter_info_hsh_ref);
 }
-sub getSuperCluster {
-#....................................................................................................................................................#
-#	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
-#	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
-#	secondaryAppearInSection: >none
-#	input: $bedtools_bin, $clusterInfoHsh_ref, $merge_dist, $merge_strandness, $tmp_bed_dir
-#	output: $superClusterHsh_ref
-#	toCall: my ($superClusterHsh_ref) = &getSuperCluster($tmp_bed_dir, $clusterInfoHsh_ref, $merge_dist, $merge_strandness, $bedtools_bin);
-#	calledInLine: 231
-#....................................................................................................................................................#
-	
-	my ($tmp_bed_dir, $clusterInfoHsh_ref, $merge_dist, $merge_strandness, $bedtools_bin) = @_;
-	
-	my $superClusterHsh_ref = {};
-	
-	my $unanno_tssCluster_bed_path = "$tmp_bed_dir/unanno_cluster.bed";
-	&reportAndLogStatus("getting unanno supercluster", 10, "\n");#->2953
-	open (UNANNOBED, "| sort -k1,1 -k2,2n >$unanno_tssCluster_bed_path");
-	foreach my $clusterID (keys %{$clusterInfoHsh_ref}) {
-		if (not exists $clusterInfoHsh_ref->{$clusterID}{'trnscptID'}) {
-			my $strand = $clusterInfoHsh_ref->{$clusterID}{'strand'};
-			my $chrom = $clusterInfoHsh_ref->{$clusterID}{'chrom'};
-			my $start = $clusterInfoHsh_ref->{$clusterID}{'start'};
-			my $end = $clusterInfoHsh_ref->{$clusterID}{'end'};
-			print UNANNOBED join "", (join "\t", ($chrom, $start, $end, $clusterID, '1', $strand)), "\n";
-		}
-	}
-	close UNANNOBED;
-	
-	if ($merge_strandness eq 'stranded') {
-		open (SUPERCLUSTER, "$bedtools_bin cluster -s -d $merge_dist -i $unanno_tssCluster_bed_path |");
-	} elsif ($merge_strandness eq 'strandless') {
-		open (SUPERCLUSTER, "$bedtools_bin cluster -d $merge_dist -i $unanno_tssCluster_bed_path |");
-	} else {
-		die "merge_strandness $merge_strandness is not valid\n";
-	}
-
-	while (<SUPERCLUSTER>) {
-		chomp;
-		my @splt = split /\t/;
-		my $clusterID = $splt[3];
-		my $superclusterID = $splt[-1];
-		push @{$superClusterHsh_ref->{$superclusterID}}, $clusterID;
-	}	
-	close SUPERCLUSTER;
-	
-	my $num_superclusters = keys %{$superClusterHsh_ref};
-	&reportAndLogStatus("$num_superclusters super clusters defined", 10, "\n");#->2953
-	
-	die "supercluster definition problem\n" if $num_superclusters == 0;
-	
-	return ($superClusterHsh_ref);
-}
-sub intersectCluster {
-#....................................................................................................................................................#
-#	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
-#	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
-#	secondaryAppearInSection: >none
-#	input: $bedtools_bin, $chrom_size_path, $clusterInfoHsh_ref, $end5_rng_bed_path, $exon_slop_rng, $geneInfoHsh_ref, $transcript_in_scope_bed_path, $trnscptInfoHsh_ref, $tssCluster_bed_path
-#	output: none
-#	toCall: &intersectCluster($transcript_in_scope_bed_path, $tssCluster_bed_path, $end5_rng_bed_path, $chrom_size_path, $exon_slop_rng, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $bedtools_bin);
-#	calledInLine: 229
-#....................................................................................................................................................#
-	
-	my ($transcript_in_scope_bed_path, $tssCluster_bed_path, $end5_rng_bed_path, $chrom_size_path, $exon_slop_rng, $clusterInfoHsh_ref, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $bedtools_bin) = @_;
-	
-	foreach my $end5_exon (qw/end5 exon/) {
-		
-		&reportAndLogStatus("Intersecting cluster and transcript $end5_exon", 10, "\n");#->2953
-		
-		if ($end5_exon eq 'end5') {
-			open BEDTOOLS, "$bedtools_bin intersect -wo -a $end5_rng_bed_path -b $tssCluster_bed_path |" ;
-		} elsif ($end5_exon eq 'exon') {
-			
-			#---[4/18/17 12:13] skip if exon_slop_rng == 1
-			if ($exon_slop_rng == -1) {
-				&reportAndLogStatus("exon_slop_rng==-1. Skipping exon intersect.", 10, "\n");#->2953
-				next;
-			}
-			
-			open BEDTOOLS, "$bedtools_bin bed12tobed6 -i $transcript_in_scope_bed_path | $bedtools_bin slop -b $exon_slop_rng -i stdin -g $chrom_size_path | $bedtools_bin intersect -s -wo -a stdin -b $tssCluster_bed_path |" ;
-		}
-
-		while (<BEDTOOLS>) {
-			#chr10	13141663	13142302	ENST00000482140.5_1	1	+	chr10	13142075	13142193	p1@OPTN	247174	+	13142162	13142163	255,0,0	118
-			my (@splt) = split /\t/;
-			my $clusterID = $splt[9];
-			my $cluster_strand = $splt[11];
-			my $trnscptIDStr = $splt[3];
-			my $trnscpt_strand = $splt[5];
-			my @trnscptIDStrAry = split /\|/, $trnscptIDStr;
-			my $trnscptID = $trnscptIDStrAry[-1];
-			
-			if ($cluster_strand eq '.' or $cluster_strand eq $trnscpt_strand) {
-				#---[4/16/17 0:01] skip end5
-				next if exists $trnscptInfoHsh_ref->{$trnscptID}{'clusterID'}{$clusterID};
-
-				die "$trnscptID does not exists in trnscptInfoHsh_ref\n" if not exists $trnscptInfoHsh_ref->{$trnscptID};
-				die "$clusterID does not exists in clusterInfoHsh_ref\n" if not exists $clusterInfoHsh_ref->{$clusterID};
-				my $geneID = $trnscptInfoHsh_ref->{$trnscptID}{'geneID'};
-		
-				$trnscptInfoHsh_ref->{$trnscptID}{'clusterID'}{$clusterID} = $end5_exon;
-				$clusterInfoHsh_ref->{$clusterID}{'trnscptID'}{$trnscptID} = $end5_exon;
-				$clusterInfoHsh_ref->{$clusterID}{'geneID'}{$geneID} = $end5_exon;
-				$geneInfoHsh_ref->{$geneID}{'clusterID'}{$clusterID} = $end5_exon;
-
-				$clusterInfoHsh_ref->{$clusterID}{'type'} = 'gene_tss';
-			}
-		}
-		close BEDTOOLS;
-	}
-}
 sub logCalledCMDAndScript {
 #....................................................................................................................................................#
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|193
+#	primaryAppearInSection: 2_defineOutDirPath|189
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $result_script_dir, $scriptAbsPath
 #	output: 
 #	toCall: &logCalledCMDAndScript($ARGVStr, $result_script_dir, $scriptAbsPath);
-#	calledInLine: 208
+#	calledInLine: 204
 #....................................................................................................................................................#
 	my ($ARGVStr, $result_script_dir, $scriptAbsPath) = @_;
 
@@ -1476,24 +1668,22 @@ sub logCalledCMDAndScript {
 sub printAllBed {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
-#	input: $CREInfoHsh_ref, $clusterInfoHsh_ref, $distal_CRE_locus_info_hsh_ref, $geneInfoHsh_ref, $gene_promoter_info_hsh_ref, $outputPrefix, $result_bed_dir, $trnscptInfoHsh_ref
+#	input: $CREInfoHsh_ref, $clusterInfoHsh_ref, $geneInfoHsh_ref, $gene_promoter_info_hsh_ref, $locusInfoHsh_ref, $outputPrefix, $result_bed_dir, $trnscptInfoHsh_ref
 #	output: none
-#	toCall: &printAllBed($result_bed_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $CREInfoHsh_ref, $distal_CRE_locus_info_hsh_ref, $gene_promoter_info_hsh_ref, $outputPrefix);
-#	calledInLine: 244
+#	toCall: &printAllBed($result_bed_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $CREInfoHsh_ref, $locusInfoHsh_ref, $gene_promoter_info_hsh_ref, $outputPrefix);
+#	calledInLine: 240
 #....................................................................................................................................................#
 
-	my ($result_bed_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $CREInfoHsh_ref, $distal_CRE_locus_info_hsh_ref, $gene_promoter_info_hsh_ref, $outputPrefix) = @_;
+	my ($result_bed_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $CREInfoHsh_ref, $locusInfoHsh_ref, $gene_promoter_info_hsh_ref, $outputPrefix) = @_;
 	
-	my %itemHsh = (
-		'gene' => $geneInfoHsh_ref,
-		'transcript' => $trnscptInfoHsh_ref,
+	my %region_hsh = (
 		'cluster' => $clusterInfoHsh_ref,
 		'CRE' => $CREInfoHsh_ref,
-		'distal_CRE_locus' => $distal_CRE_locus_info_hsh_ref,
+		'locus' => $locusInfoHsh_ref,
 		'gene_promoter' => $gene_promoter_info_hsh_ref,
 	);
 
@@ -1503,9 +1693,9 @@ sub printAllBed {
 		'.' => '77,175,74',
 	};
 	
-	foreach my $item_type (keys %itemHsh) {
-		&reportAndLogStatus("printing $item_type bed", 10, "\n");#->2953
-		my $hsh_ref = $itemHsh{$item_type};
+	foreach my $item_type (keys %region_hsh) {
+		&reportAndLogStatus("printing $item_type bed", 10, "\n");#->3225
+		my $hsh_ref = $region_hsh{$item_type};
 		my $filePath;
 		
 		$filePath = "$result_bed_dir/$outputPrefix.$item_type.coord.bed.gz";
@@ -1524,6 +1714,37 @@ sub printAllBed {
 		}
 		close OUTBED;
 	};
+
+
+	foreach my $add_or_ref (qw/addon reference/) {
+		&reportAndLogStatus("printing $add_or_ref gene transcript bed", 10, "\n");#->3225
+		
+		my $gene_filePath = "$result_bed_dir/$outputPrefix.gene.$add_or_ref.bed.gz";
+		my $transcript_filePath = "$result_bed_dir/$outputPrefix.transcript.$add_or_ref.bed.gz";
+		$globalReadmeHsh_ref->{$gene_filePath}{'description'} = "It contains ranges of $add_or_ref gene, with gene name | gene ID at 4th column";
+		$globalReadmeHsh_ref->{$transcript_filePath}{'description'} = "It contains ranges of $add_or_ref transcript, with gene name | transcript ID at 4th column";
+		open GENEBED, "| sort -k1,1 -k2,2n | gzip -c >$gene_filePath";
+		open TRANSCRIPTBED, "| sort -k1,1 -k2,2n | gzip -c >$transcript_filePath";
+	
+		foreach my $geneID (keys %{$geneInfoHsh_ref}) {
+			next if $add_or_ref eq 'reference' and $geneID =~ m/^ADDG/;
+			next if $add_or_ref eq 'addon' and $geneID !~ m/^ADDG/;
+			my $geneName = $geneInfoHsh_ref->{$geneID}{'geneName'};
+			my $strand = $geneInfoHsh_ref->{$geneID}{'bedLine'}[5];
+			my @gene_bedAry = @{$geneInfoHsh_ref->{$geneID}{'bedLine'}};
+			$gene_bedAry[8] = $strand_color_hsh_ref->{$strand};
+			$gene_bedAry[3] = join "|", ($geneName, $geneID);
+			print GENEBED join "", (join "\t", (@gene_bedAry)), "\n";
+			foreach my $trnscptID (keys %{$geneInfoHsh_ref->{$geneID}{'trnscptID'}}) {
+				my @trnscpt_bedAry = @{$trnscptInfoHsh_ref->{$trnscptID}{'bedLine'}};
+				$trnscpt_bedAry[8] = $strand_color_hsh_ref->{$strand};
+				$trnscpt_bedAry[3] = join "|", ($geneName, $trnscptID);
+				print TRANSCRIPTBED join "", (join "\t", (@trnscpt_bedAry)), "\n";
+			}
+		}
+		close GENEBED;
+		close TRANSCRIPTBED;
+	}
 
 	{
 		my $filePath = "$result_bed_dir/$outputPrefix.cluster.annot.bed.gz";
@@ -1554,23 +1775,37 @@ sub printAllBed {
 		close OUTBED;
 	}
 
+	{
+		my $filePath = "$result_bed_dir/$outputPrefix.locus.annot.bed.gz";
+		$globalReadmeHsh_ref->{$filePath}{'description'} = "It contains ranges of all CRE locus, with CRE locus name at 4th column";
+		open OUTBED, "| sort -k1,1 -k2,2n | gzip -c >$filePath";
+	
+		foreach my $locusID (keys %{$locusInfoHsh_ref}) {
+			my @bedAry = @{$locusInfoHsh_ref->{$locusID}{'bedLine'}};
+			$bedAry[8] = $locusInfoHsh_ref->{$locusID}{'rgbItem'};
+			$bedAry[3] = $locusInfoHsh_ref->{$locusID}{'locusName'};
+			print OUTBED join "", (join "\t", (@bedAry)), "\n";
+		}
+		close OUTBED;
+	}
+
 }
 sub printEnd5Bed {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
 #	input: $dn_end5Rng, $tmp_bed_dir, $trnscptInfoHsh_ref, $up_end5Rng
 #	output: $end5_point_bed_path, $end5_rng_bed_path
 #	toCall: my ($end5_rng_bed_path, $end5_point_bed_path) = &printEnd5Bed($trnscptInfoHsh_ref, $up_end5Rng, $dn_end5Rng, $tmp_bed_dir);
-#	calledInLine: 225
+#	calledInLine: 222
 #....................................................................................................................................................#
 
 	my ($trnscptInfoHsh_ref, $up_end5Rng, $dn_end5Rng, $tmp_bed_dir) = @_;
 
-	&reportAndLogStatus("Printing transcript end5 bed", 10, "\n");#->2953
+	&reportAndLogStatus("Printing transcript end5 bed", 10, "\n");#->3225
 
 	my $end5_rng_bed_path = "$tmp_bed_dir/end5_rng.bed";
 	my $end5_point_bed_path = "$tmp_bed_dir/end5_point.bed";
@@ -1639,14 +1874,14 @@ sub printEnd5Bed {
 sub printGenePromoterInfo {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
 #	input: $CREInfoHsh_ref, $geneInfoHsh_ref, $gene_promoter_CRE_pair_hsh_ref, $outputPrefix, $result_log_dir
 #	output: none
 #	toCall: &printGenePromoterInfo($result_log_dir, $gene_promoter_CRE_pair_hsh_ref, $geneInfoHsh_ref, $CREInfoHsh_ref, $outputPrefix);
-#	calledInLine: 252
+#	calledInLine: 248
 #....................................................................................................................................................#
 
 	my ($result_log_dir, $gene_promoter_CRE_pair_hsh_ref, $geneInfoHsh_ref, $CREInfoHsh_ref, $outputPrefix) = @_;
@@ -1655,7 +1890,7 @@ sub printGenePromoterInfo {
 	open ALTPROMLOG, "| gzip -c >$filePath";
 	my @headerAry = ('CREID', 'geneID', 'geneName', 'total_exp_frac', 'gene_strand_read_frac', 'sumClusterRead', 'status', 'loc');
 	print ALTPROMLOG join "", (join "\t", @headerAry), "\n";
-	&reportAndLogStatus("Printing gene promoter info", 0, "\n");#->2953
+	&reportAndLogStatus("Printing gene promoter info", 0, "\n");#->3225
 
 	$globalReadmeHsh_ref->{$filePath}{'description'} = "list of annotated and unannotated gene promoters as pairs of CREID and geneID";
 	@{$globalReadmeHsh_ref->{$filePath}{'headerAry'}} = @headerAry;
@@ -1686,12 +1921,12 @@ sub printOutputFileListAndReadme {
 #	subroutineCategory: output
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 4_finishingTasks|258
+#	primaryAppearInSection: 4_finishingTasks|254
 #	secondaryAppearInSection: >none
 #	input: $ARGVStr, $outDir, $paramTag
 #	output: 
 #	toCall: &printOutputFileListAndReadme($ARGVStr, $paramTag, $outDir);
-#	calledInLine: 261
+#	calledInLine: 257
 #....................................................................................................................................................#
 	my ($ARGVStr, $paramTag, $outDir) = @_;
 	
@@ -1804,64 +2039,63 @@ sub printOutputFileListAndReadme {
 sub printStartOrFinishMessage {
 #....................................................................................................................................................#
 #	subroutineCategory: general
-#	dependOnSub: currentTime|695
+#	dependOnSub: currentTime|736
 #	appearInSub: >none
-#	primaryAppearInSection: 2_defineOutDirPath|193, 4_finishingTasks|258
+#	primaryAppearInSection: 2_defineOutDirPath|189, 4_finishingTasks|254
 #	secondaryAppearInSection: >none
 #	input: $StartOrFinishMessage
 #	output: none
 #	toCall: &printStartOrFinishMessage($StartOrFinishMessage);
-#	calledInLine: 209, 262
+#	calledInLine: 205, 258
 #....................................................................................................................................................#
 
 	my ($StartOrFinishMessage) = @_;
 	
 	if ($StartOrFinishMessage eq "startMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] starts running ...... \n";#->695
+		print "[".&currentTime()."] starts running ...... \n";#->736
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->695
+		print $tmplog_fh "[".&currentTime()."] starts running ...... \n";#->736
 		print $tmplog_fh "=========================================================================\n\n";
 
 	} elsif ($StartOrFinishMessage eq "finishMessage") {
 		print "\n=========================================================================\n";
-		print "[".&currentTime()."] finished running .......\n";#->695
+		print "[".&currentTime()."] finished running .......\n";#->736
 		print "=========================================================================\n\n";
 
 		print $tmplog_fh "\n=========================================================================\n";
-		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->695
+		print $tmplog_fh "[".&currentTime()."] finished running .......\n";#->736
 		print $tmplog_fh "=========================================================================\n\n";
 	}
 }
 sub printTableCREInfo {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
 #	input: $CREInfoHsh_ref, $clusterInfoHsh_ref, $coding_class_hsh_ref, $geneInfoHsh_ref, $outputPrefix, $result_log_dir, $trnscptInfoHsh_ref
 #	output: none
 #	toCall: &printTableCREInfo($result_log_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $CREInfoHsh_ref, $coding_class_hsh_ref, $outputPrefix);
-#	calledInLine: 249
+#	calledInLine: 245
 #....................................................................................................................................................#
 
 	my ($result_log_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $CREInfoHsh_ref, $coding_class_hsh_ref, $outputPrefix) = @_;
 	
 	my $filePath = "$result_log_dir/$outputPrefix.CRE.info.tsv.gz";
 	open CRELOG, "| gzip -c >$filePath";
-	my @headerAry = ('CREID', 'CREName', 'typeStr', 'mask', 'score', 'geneNum', 'clusterIDStr', 'trnscptIDStr', 'geneIDStr', 'geneNameStr', 'geneClassStr', 'codingClassStr', 'proximity', 'regionType', 'regionOritentation', 'regionGeneID', 'class', 'best_prob', 'best_clusterID', 'sumClusterRead', 'gene_promoter', 'gene_promoter_geneID');
+	my @headerAry = ('CREID', 'CREName', 'typeStr', 'score', 'geneNum', 'clusterIDStr', 'trnscptIDStr', 'geneIDStr', 'geneNameStr', 'geneClassStr', 'codingClassStr', 'proximity', 'regionType', 'regionOritentation', 'regionGeneID', 'class', 'best_prob', 'best_clusterID', 'sumClusterRead', 'gene_promoter', 'gene_promoter_geneID', 'locusID', 'locusName', 'locus_count', 'locus_hyperactive');
 	print CRELOG join "", (join "\t", @headerAry), "\n";
-	&reportAndLogStatus("Printing CRE info", 0, "\n");#->2953
+	&reportAndLogStatus("Printing CRE info", 0, "\n");#->3225
 
 	$globalReadmeHsh_ref->{$filePath}{'description'} = "cis-regulatory element CRE annotation, one-row-per CRE, with infomation of its associated genes and clusters";
 	@{$globalReadmeHsh_ref->{$filePath}{'headerAry'}} = @headerAry;
 
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'CREID'} = '[unique ID] Identifier of the CRE.';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'CREName'} = '[string] Name of the CRE, in format of [r][rank]@[geneNameX],[r][rank]@[geneNameY]';
-	$globalReadmeHsh_ref->{$filePath}{'header'}{'mask'} = '[yes or no] its cluster is masked, or not';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'typeStr'} = '[string] the type of its cluster, annotated as gene tss or not';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'geneNum'} = '[string] number of gene associated with the CRE';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'geneIDStr'} = '[string] Identifier of gene associated with its cluster, ";" delimited. Mainly inherited from the "gene ID" field in GENCODE or FANTOM CAT, plus "addon" genes from groups of unannotated TSS clusters [ADDG#########].';
@@ -1880,12 +2114,15 @@ sub printTableCREInfo {
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'sumClusterRead'} = '[integer] sum of read within its member cluster';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'gene_promoter'} = '[annotated, unannotated or none] is defined as a gene promoter, with annotated transcript (annotated), or without annotated transcripts (unannotated), or otherwise (none)';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'gene_promoter_geneID'} = '[string] is defined as the promoter of genes with these geneIDs, ";" delimited.';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'locusID'} = '[unique ID] the ID of the locus it belongs to';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'locusName'} = '[unique ID] the name of the locus it belongs to';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'locus_count'} = '[integer] the total number of reads its the CRE locus contains';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'locus_hyperactive'} = '[yes/no] the CRE locus is defined as hyperactive, or not';
 
 	my $count_hsh_ref = {};
 	foreach my $CREID (sort keys %{$CREInfoHsh_ref}) {
 		my $CREName = $CREInfoHsh_ref->{$CREID}{'CREName'};
 		my $score = $CREInfoHsh_ref->{$CREID}{'score'};
-		my $mask = $CREInfoHsh_ref->{$CREID}{'mask'};
 		my $gene_promoter = $CREInfoHsh_ref->{$CREID}{'gene_promoter'};
 		my $gene_promoter_geneID = 'none';
 		$gene_promoter_geneID = join ";", (sort keys %{$CREInfoHsh_ref->{$CREID}{'gene_promoter_geneID'}}) if exists $CREInfoHsh_ref->{$CREID}{'gene_promoter_geneID'};
@@ -1945,6 +2182,11 @@ sub printTableCREInfo {
 		} elsif ($proximity eq 'distal') {
 			$class = 'distal';
 		}
+
+		my $locusID = $CREInfoHsh_ref->{$CREID}{'locusID'};
+		my $locusName = $CREInfoHsh_ref->{$CREID}{'locusName'};
+		my $locus_count = $CREInfoHsh_ref->{$CREID}{'locus_count'};
+		my $locus_hyperactive = $CREInfoHsh_ref->{$CREID}{'locus_hyperactive'};
 		
 		$count_hsh_ref->{'class'}{'count'}{$class}++;
 		$count_hsh_ref->{'proximity'}{'count'}{$proximity}++;
@@ -1955,49 +2197,108 @@ sub printTableCREInfo {
 		$count_hsh_ref->{'codingClassStr'}{'total'}++;
 		$count_hsh_ref->{'regionType'}{'total'}++;
 		
-		print CRELOG join "", (join "\t", ($CREID, $CREName, $typeStr, $mask, $score, $geneNum, $clusterIDStr, $trnscptIDStr, $geneIDStr, $geneNameStr, $geneClassStr, $codingClassStr, $proximity, $regionType, $regionOritentation, $regionGeneID, $class, $best_prob, $best_clusterID, $sumClusterRead, $gene_promoter, $gene_promoter_geneID)), "\n";
+		print CRELOG join "", (join "\t", ($CREID, $CREName, $typeStr, $score, $geneNum, $clusterIDStr, $trnscptIDStr, $geneIDStr, $geneNameStr, $geneClassStr, $codingClassStr, $proximity, $regionType, $regionOritentation, $regionGeneID, $class, $best_prob, $best_clusterID, $sumClusterRead, $gene_promoter, $gene_promoter_geneID, $locusID, $locusName, $locus_count, $locus_hyperactive)), "\n";
 
 	}
 	close CRELOG;
 	
 	foreach my $anno_type (sort keys %{$count_hsh_ref}) {
-		&reportAndLogStatus("--- CRE $anno_type count statistics ---", 10, "\n");#->2953
+		&reportAndLogStatus("--- CRE $anno_type count statistics ---", 10, "\n");#->3225
 		my $total = $count_hsh_ref->{$anno_type}{'total'};
 		foreach my $anno_ID (sort {$count_hsh_ref->{$anno_type}{'count'}{$b} <=> $count_hsh_ref->{$anno_type}{'count'}{$a}} keys %{$count_hsh_ref->{$anno_type}{'count'}}) {
 			my $count = $count_hsh_ref->{$anno_type}{'count'}{$anno_ID};
 			my $pct = sprintf "%.3f", 100*$count/$total;
-			&reportAndLogStatus("CRE $anno_type: $anno_ID = $count [$pct%]", 10, "\n");#->2953
+			&reportAndLogStatus("CRE $anno_type: $anno_ID = $count [$pct%]", 10, "\n");#->3225
 
 		}
 	}
 }
+sub printTableCRELocusInfo {
+#....................................................................................................................................................#
+#	subroutineCategory: unassigned
+#	dependOnSub: reportAndLogStatus|3225
+#	appearInSub: >none
+#	primaryAppearInSection: 3_readInfo|213
+#	secondaryAppearInSection: >none
+#	input: $locusInfoHsh_ref, $outputPrefix, $result_log_dir
+#	output: none
+#	toCall: &printTableCRELocusInfo($result_log_dir, $locusInfoHsh_ref, $outputPrefix);
+#	calledInLine: 247
+#....................................................................................................................................................#
+
+	my ($result_log_dir, $locusInfoHsh_ref, $outputPrefix) = @_;
+	
+	my $filePath = "$result_log_dir/$outputPrefix.locus.info.tsv.gz";
+	open DLLOG, "| gzip -c >$filePath";
+	my @headerAry = ('locusID', 'locusName', 'proximity', 'chrom', 'start', 'end', 'size', 'CREnum', 'total_count', 'top_count', 'top_frac', 'spreadness', 'hyperactive', 'CREID_str');
+	print DLLOG join "", (join "\t", @headerAry), "\n";
+	&reportAndLogStatus("Printing CRE info", 0, "\n");#->3225
+
+	$globalReadmeHsh_ref->{$filePath}{'description'} = "CRE locus (groups of CREs), one-row-per locus, with infomation of its CRE and activity";
+	@{$globalReadmeHsh_ref->{$filePath}{'headerAry'}} = @headerAry;
+
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'locusID'} = '[unique ID] Identifier of the locus';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'locusName'} = '[unique ID] Name of the locus';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'proximity'} = '[unique ID] proximity of the locus';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'chrom'} = '[string] ID of chromosome';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'start'} = '[integer] start of the locus';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'end'} = '[integer] end of the locus';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'size'} = '[integer] size of the locus in base pair';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'CREnum'} = '[string] Number of CRE associated with the locus';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'total_count'} = '[integer] Sum of read counts of all its CRE';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'top_count'} = '[integer] Read counts of the highest expressed CRE';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'top_frac'} = '[fraction] Top-fraction is defined as the expression amount (read/UMI) on the highest expressed distal CRE in the expression amount of all distal CRE (i.e. top_count/total_count)';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'spreadness'} = '[float] Spreadness is defined as "num-of-CRE/top-fraction". Num-of-CRE refers to the number of CRE within the CRE locus. Top-fraction is defined in top_frac above. default = 4, equivalent to Num-of-CRE=3 and Top-fraction = 0.75, i.e. 3/0.75 = 4';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'hyperactive'} = '[yes/no] Defined as hyperactive, or not';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'CREID_str'} = '[string] ID of CRE associated with the locus, ";" delimited.';
+
+	my $count_hsh_ref = {};
+	foreach my $locusID (sort keys %{$locusInfoHsh_ref}) {
+
+		my $CREID_str = join ";", sort @{$locusInfoHsh_ref->{$locusID}{'CREID'}};
+		my ($chrom, $start, $end) = @{$locusInfoHsh_ref->{$locusID}{'loc'}};
+		my $total_count = $locusInfoHsh_ref->{$locusID}{'total_count'};
+		my $top_count = $locusInfoHsh_ref->{$locusID}{'top_count'};
+		my $top_frac = $locusInfoHsh_ref->{$locusID}{'top_frac'};
+		my $spreadness = $locusInfoHsh_ref->{$locusID}{'spreadness'};
+		my $size = $locusInfoHsh_ref->{$locusID}{'size'};
+		my $hyperactive = $locusInfoHsh_ref->{$locusID}{'hyperactive'};
+		my $CREnum = @{$locusInfoHsh_ref->{$locusID}{'CREID'}};
+		my $locusName = $locusInfoHsh_ref->{$locusID}{'locusName'};
+		my $proximity = $locusInfoHsh_ref->{$locusID}{'proximity'};
+
+		print DLLOG join "", (join "\t", ($locusID, $locusName, $proximity, $chrom, $start, $end, $size, $CREnum, $total_count, $top_count, $top_frac, $spreadness, $hyperactive, $CREID_str)), "\n";
+
+	}
+	close DLLOG;
+	
+}
 sub printTableClusterInfo {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
 #	input: $clusterInfoHsh_ref, $coding_class_hsh_ref, $geneInfoHsh_ref, $outputPrefix, $result_log_dir, $trnscptInfoHsh_ref
 #	output: none
 #	toCall: &printTableClusterInfo($result_log_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $coding_class_hsh_ref, $outputPrefix);
-#	calledInLine: 245
+#	calledInLine: 241
 #....................................................................................................................................................#
 
 	my ($result_log_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $coding_class_hsh_ref, $outputPrefix) = @_;
 	
 	my $filePath = "$result_log_dir/$outputPrefix.cluster.info.tsv.gz";
 	open CLUSTERLOG, "| gzip -c >$filePath";
-	my @headerAry = ('clusterID', 'clusterName', 'type', 'mask', 'score', 'geneNum', 'trnscptIDStr', 'geneIDStr', 'geneNameStr', 'geneClassStr', 'codingClassStr', 'proximity', 'regionType', 'regionOritentation', 'regionGeneID', 'class', 'CREID', 'prob');
+	my @headerAry = ('clusterID', 'clusterName', 'type', 'score', 'geneNum', 'trnscptIDStr', 'geneIDStr', 'geneNameStr', 'geneClassStr', 'codingClassStr', 'proximity', 'regionType', 'regionOritentation', 'regionGeneID', 'class', 'CREID', 'prob');
 	print CLUSTERLOG join "", (join "\t", @headerAry), "\n";
-	&reportAndLogStatus("Printing gene info", 0, "\n");#->2953
+	&reportAndLogStatus("Printing gene info", 0, "\n");#->3225
 
 	$globalReadmeHsh_ref->{$filePath}{'description'} = "TSS cluster centric annotation, one-row-per TSS cluster, with infomation of its associated genes";
 	@{$globalReadmeHsh_ref->{$filePath}{'headerAry'}} = @headerAry;
 
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'clusterID'} = '[unique ID] Identifier of the TSS cluster.';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'clusterName'} = '[string] Name of the cluster, in format of [p|e][rank]@[geneNameX],[p|e][rank]@[geneNameY]';
-	$globalReadmeHsh_ref->{$filePath}{'header'}{'mask'} = '[yes or no] the TSS cluster is masked, or not';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'type'} = '[gene_tss or unanno_tss] the TSS cluster is annotated as gene tss or not';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'geneNum'} = '[string] number of gene associated with the TSS cluster';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'geneIDStr'} = '[string] Identifier of gene associated with the TSS cluster, ";" delimited. Mainly inherited from the "gene ID" field in GENCODE or FANTOM CAT, plus "addon" genes from groups of unannotated TSS clusters [ADDG#########].';
@@ -2019,7 +2320,6 @@ sub printTableClusterInfo {
 		my $clusterName = $clusterInfoHsh_ref->{$clusterID}{'clusterName'};
 		my $score = $clusterInfoHsh_ref->{$clusterID}{'score'};
 		my $type = $clusterInfoHsh_ref->{$clusterID}{'type'};
-		my $mask = $clusterInfoHsh_ref->{$clusterID}{'mask'};
 		my $CREID = $clusterInfoHsh_ref->{$clusterID}{'CREID'};
 		my $prob = $clusterInfoHsh_ref->{$clusterID}{'prob'};
 		my %IDHsh = ();
@@ -2070,96 +2370,42 @@ sub printTableClusterInfo {
 		$count_hsh_ref->{'codingClassStr'}{'total'}++;
 		$count_hsh_ref->{'regionType'}{'total'}++;
 		
-		print CLUSTERLOG join "", (join "\t", ($clusterID, $clusterName, $type, $mask, $score, $geneNum, $trnscptIDStr, $geneIDStr, $geneNameStr, $geneClassStr, $codingClassStr, $proximity, $regionType, $regionOritentation, $regionGeneID, $class, $CREID, $prob)), "\n";
+		print CLUSTERLOG join "", (join "\t", ($clusterID, $clusterName, $type, $score, $geneNum, $trnscptIDStr, $geneIDStr, $geneNameStr, $geneClassStr, $codingClassStr, $proximity, $regionType, $regionOritentation, $regionGeneID, $class, $CREID, $prob)), "\n";
 
 	}
 	close CLUSTERLOG;
 	
 	foreach my $anno_type (sort keys %{$count_hsh_ref}) {
-		&reportAndLogStatus("--- cluster $anno_type count statistics ---", 10, "\n");#->2953
+		&reportAndLogStatus("--- cluster $anno_type count statistics ---", 10, "\n");#->3225
 		my $total = $count_hsh_ref->{$anno_type}{'total'};
 		foreach my $anno_ID (sort {$count_hsh_ref->{$anno_type}{'count'}{$b} <=> $count_hsh_ref->{$anno_type}{'count'}{$a}} keys %{$count_hsh_ref->{$anno_type}{'count'}}) {
 			my $count = $count_hsh_ref->{$anno_type}{'count'}{$anno_ID};
 			my $pct = sprintf "%.3f", 100*$count/$total;
-			&reportAndLogStatus("cluster  $anno_type: $anno_ID = $count [$pct%]", 10, "\n");#->2953
+			&reportAndLogStatus("cluster  $anno_type: $anno_ID = $count [$pct%]", 10, "\n");#->3225
 
 		}
 	}
 }
-sub printTableDistalCRELocusInfo {
-#....................................................................................................................................................#
-#	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
-#	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
-#	secondaryAppearInSection: >none
-#	input: $distal_CRE_locus_info_hsh_ref, $outputPrefix, $result_log_dir
-#	output: none
-#	toCall: &printTableDistalCRELocusInfo($result_log_dir, $distal_CRE_locus_info_hsh_ref, $outputPrefix);
-#	calledInLine: 251
-#....................................................................................................................................................#
-
-	my ($result_log_dir, $distal_CRE_locus_info_hsh_ref, $outputPrefix) = @_;
-	
-	my $filePath = "$result_log_dir/$outputPrefix.distal_CRE_locus.info.tsv.gz";
-	open DLLOG, "| gzip -c >$filePath";
-	my @headerAry = ('distal_CRE_locus_ID', 'chrom', 'start', 'end', 'size', 'CREnum', 'total_count', 'top_count', 'top_frac', 'spreadness', 'hyperactive', 'CREID_str');
-	print DLLOG join "", (join "\t", @headerAry), "\n";
-	&reportAndLogStatus("Printing CRE info", 0, "\n");#->2953
-
-	$globalReadmeHsh_ref->{$filePath}{'description'} = "distal CRE locus (groups of CREs), one-row-per locus, with infomation of its CRE and activity";
-	@{$globalReadmeHsh_ref->{$filePath}{'headerAry'}} = @headerAry;
-
-	$globalReadmeHsh_ref->{$filePath}{'header'}{'distal_CRE_locus_ID'} = '[unique ID] Identifier of the distal locus';
-	$globalReadmeHsh_ref->{$filePath}{'header'}{'chrom'} = '[string] ID of chromosome';
-	$globalReadmeHsh_ref->{$filePath}{'header'}{'start'} = '[integer] start of the locus';
-	$globalReadmeHsh_ref->{$filePath}{'header'}{'end'} = '[integer] end of the locus';
-	$globalReadmeHsh_ref->{$filePath}{'header'}{'size'} = '[integer] size of the locus in base pair';
-	$globalReadmeHsh_ref->{$filePath}{'header'}{'CREnum'} = '[string] Number of CRE associated with the locus';
-	$globalReadmeHsh_ref->{$filePath}{'header'}{'total_count'} = '[integer] Sum of read counts of all its CRE';
-	$globalReadmeHsh_ref->{$filePath}{'header'}{'top_count'} = '[integer] Read counts of the highest expressed CRE';
-	$globalReadmeHsh_ref->{$filePath}{'header'}{'top_frac'} = '[fraction] top_count / total_count';
-	$globalReadmeHsh_ref->{$filePath}{'header'}{'hyperactive'} = '[yes/no] Defined as hyperactive, or not';
-	$globalReadmeHsh_ref->{$filePath}{'header'}{'CREID_str'} = '[string] ID of CRE associated with the locus, ";" delimited.';
-
-	my $count_hsh_ref = {};
-	foreach my $distal_CRE_locus_ID (sort keys %{$distal_CRE_locus_info_hsh_ref}) {
-		my $CREID_str = join ";", sort @{$distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'CREID'}};
-		my ($chrom, $start, $end) = @{$distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'loc'}};
-		my $total_count = $distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'total_count'};
-		my $top_count = $distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'top_count'};
-		my $top_frac = $distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'top_frac'};
-		my $spreadness = $distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'spreadness'};
-		my $size = $distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'size'};
-		my $hyperactive = $distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'hyperactive'};
-		my $CREnum = @{$distal_CRE_locus_info_hsh_ref->{$distal_CRE_locus_ID}{'CREID'}};
-
-		print DLLOG join "", (join "\t", ($distal_CRE_locus_ID, $chrom, $start, $end, $size, $CREnum, $total_count, $top_count, $top_frac, $spreadness, $hyperactive, $CREID_str)), "\n";
-
-	}
-	close DLLOG;
-	
-}
 sub printTableGeneInfo {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
 #	input: $coding_class_hsh_ref, $geneInfoHsh_ref, $outputPrefix, $result_log_dir
 #	output: none
 #	toCall: &printTableGeneInfo($result_log_dir, $geneInfoHsh_ref, $coding_class_hsh_ref, $outputPrefix);
-#	calledInLine: 246
+#	calledInLine: 242
 #....................................................................................................................................................#
 
 	my ($result_log_dir, $geneInfoHsh_ref, $coding_class_hsh_ref, $outputPrefix) = @_;
 	
-	&reportAndLogStatus("Printing gene info", 0, "\n");#->2953
+	&reportAndLogStatus("Printing gene info", 0, "\n");#->3225
 
 	my $filePath = "$result_log_dir/$outputPrefix.gene.info.tsv.gz";
 	open GENELOG, "| gzip -c >$filePath";
-	my @headerAry = ('geneID', 'geneClass', 'geneName', 'mask', 'trnscpt_num', 'cluster_num', 'end5_hit_num', 'exon_hit_num', 'addon_hit_num', 'trnscptIDStr', 'clusterIDStr', 'codingClass');
+	my @headerAry = ('geneID', 'geneClass', 'geneName', 'trnscpt_num', 'cluster_num', 'CRE_num', 'end5_hit_num', 'exon_hit_num', 'addon_hit_num', 'trnscptIDStr', 'clusterIDStr', 'CREIDStr', 'codingClass');
 	print GENELOG join "", (join "\t", @headerAry), "\n";
 
 	$globalReadmeHsh_ref->{$filePath}{'description'} = "Gene centric annotation, one-row-per gene, with its annotation and its associated TSS clusters and transcripts";
@@ -2167,7 +2413,6 @@ sub printTableGeneInfo {
 
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'geneID'} = '[unique ID] Identifier of the gene. Mainly inherited from the "gene ID" field in GENCODE or FANTOM CAT, plus "addon" genes from groups of unannotated TSS clusters [ADDG#########].';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'geneClass'} = '[string] Class of the gene. if anno was from genecode, it refers to the biotype of the genes from genecode. if anno was from FANTOM CAT, it refers to the gene classes of the genes in FANTOM CAT.';
-	$globalReadmeHsh_ref->{$filePath}{'header'}{'mask'} = '[yes or no] transcript is masked from the mask gtf, or not';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'geneName'} = '[string] Name of the gene. Mainly inherited from the "gene name" field in GENCODE, , plus "addon" genes from unannotated TSS clusters [ADDG#########].';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'trnscpt_num'} = '[non-zero positive integer] Num of transcripts associated with the gene.';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'cluster_num'} = '[non-zero positive integer] Num of TSS clusters associated with the gene.';
@@ -2181,10 +2426,11 @@ sub printTableGeneInfo {
 	foreach my $geneID (sort keys %{$geneInfoHsh_ref}) {
 		my $trnscptIDStr = join ";", (sort keys %{$geneInfoHsh_ref->{$geneID}{'trnscptID'}});
 		my $clusterIDStr = join ";", (sort keys %{$geneInfoHsh_ref->{$geneID}{'clusterID'}});
+		my $CREIDStr = join ";", (sort keys %{$geneInfoHsh_ref->{$geneID}{'CREID'}});
+		my $CRE_num = keys %{$geneInfoHsh_ref->{$geneID}{'CREID'}};
 		my $cluster_num = keys %{$geneInfoHsh_ref->{$geneID}{'clusterID'}};
 		my $trnscpt_num = keys %{$geneInfoHsh_ref->{$geneID}{'trnscptID'}};
 		my $geneClass = $geneInfoHsh_ref->{$geneID}{'geneClass'};
-		my $mask = $geneInfoHsh_ref->{$geneID}{'mask'};
 		my $geneName = $geneInfoHsh_ref->{$geneID}{'geneName'};
 		my $codingClass = 'unknown';
 		$codingClass = $coding_class_hsh_ref->{$geneClass} if (exists $coding_class_hsh_ref->{$geneClass});
@@ -2197,7 +2443,7 @@ sub printTableGeneInfo {
 			$addon_hit_num++ if $geneInfoHsh_ref->{$geneID}{'clusterID'}{$clusterID} eq 'addon';
 		}
 	
-		print GENELOG join "", (join "\t", ($geneID, $geneClass, $geneName, $mask, $trnscpt_num, $cluster_num, $end5_hit_num, $exon_hit_num, $addon_hit_num, $trnscptIDStr, $clusterIDStr, $codingClass)), "\n";
+		print GENELOG join "", (join "\t", ($geneID, $geneClass, $geneName, $trnscpt_num, $cluster_num, $CRE_num, $end5_hit_num, $exon_hit_num, $addon_hit_num, $trnscptIDStr, $clusterIDStr, $CREIDStr, $codingClass)), "\n";
 	}
 	close GENELOG;
 
@@ -2205,50 +2451,59 @@ sub printTableGeneInfo {
 sub printTableIDMappingInfo {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
-#	input: $clusterInfoHsh_ref, $coding_class_hsh_ref, $geneInfoHsh_ref, $outputPrefix, $result_log_dir, $trnscptInfoHsh_ref
+#	input: $CREInfoHsh_ref, $clusterInfoHsh_ref, $coding_class_hsh_ref, $geneInfoHsh_ref, $locusInfoHsh_ref, $outputPrefix, $result_log_dir, $trnscptInfoHsh_ref
 #	output: none
-#	toCall: &printTableIDMappingInfo($result_log_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $coding_class_hsh_ref, $outputPrefix);
-#	calledInLine: 247
+#	toCall: &printTableIDMappingInfo($result_log_dir, $CREInfoHsh_ref, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $coding_class_hsh_ref, $locusInfoHsh_ref, $outputPrefix);
+#	calledInLine: 243
 #....................................................................................................................................................#
 
-	my ($result_log_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $coding_class_hsh_ref, $outputPrefix) = @_;
+	my ($result_log_dir, $CREInfoHsh_ref, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $clusterInfoHsh_ref, $coding_class_hsh_ref, $locusInfoHsh_ref, $outputPrefix) = @_;
 	
-	&reportAndLogStatus("Printing ID mapping table log files", 10, "\n");#->2953
+	&reportAndLogStatus("Printing ID mapping table log files", 10, "\n");#->3225
 
 	my $filePath = "$result_log_dir/$outputPrefix.ID_mapping.info.tsv.gz";
 	open IDLOG, "| gzip -c >$filePath";
-	my @headerAry = ('clusterID', 'clusterName', 'type', 'trnscptID', 'geneID', 'geneName', 'geneClass', 'mask', 'rank', 'tag_count', 'hit', 'codingClass', 'CREID');
+	my @headerAry = ('clusterID', 'clusterName', 'type', 'trnscptID', 'geneID', 'geneName', 'geneClass', 'rank', 'tag_count', 'hit', 'codingClass', 'CREID', 'CREName', 'proximity', 'locusID', 'locusName', 'hyperactive');
 	print IDLOG join "", (join "\t", @headerAry), "\n";
-	&reportAndLogStatus("Printing ID mapping info", 0, "\n");#->2953
+	&reportAndLogStatus("Printing ID mapping info", 0, "\n");#->3225
 
 	$globalReadmeHsh_ref->{$filePath}{'description'} = "1-to-1 mapping between IDs of genes, transcripts and TSS clusters";
 	@{$globalReadmeHsh_ref->{$filePath}{'headerAry'}} = @headerAry;
 
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'clusterID'} = '[unique ID] Identifier of the TSS cluster.';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'clusterName'} = '[string] Name of the cluster, in format of [p|e][rank]@[geneNameX],[p|e][rank]@[geneNameY]';
-	$globalReadmeHsh_ref->{$filePath}{'header'}{'mask'} = '[yes or no] transcript is masked from the mask gtf, or not';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'type'} = '[gene_tss or unanno_tss] the TSS cluster is annotated as gene tss or not';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'geneID'} = '[unique ID] Identifier of the gene. Mainly inherited from the "gene ID" field in GENCODE or FANTOM CAT, plus "addon" genes from groups of unannotated TSS clusters [ADDG#########].';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'trnscptID'} = '[unique ID] Identifier of the transcripts. Mainly inherited from the "transcript ID" field in GENCODE or FANTOM CAT, plus "addon" transcripts from unannotated TSS clusters [ADDT#########].';
-	$globalReadmeHsh_ref->{$filePath}{'header'}{'geneName'} = '[string] Name of the gene. Mainly inherited from the "gene name" field in GENCODE, , plus "addon" genes from unannotated TSS clusters [ADDG#########].';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'geneName'} = '[unique ID] Name of the gene. Mainly inherited from the "gene name" field in GENCODE, , plus "addon" genes from unannotated TSS clusters [ADDG#########].';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'geneClass'} = '[string] Class of the gene. if anno was from genecode, it refers to the biotype of the genes from genecode. if anno was from FANTOM CAT, it refers to the gene classes of the genes in FANTOM CAT.';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'rank'} = '[integer] rank of the cluster within the gene';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'tag_count'} = '[integer] number of ctss tag count';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'hit'} = '[end5, exon or addon] location of clusterID "hit" on the transcript, can at 5\'end, on exon, or addon. exon hit will be turned of if exon_slop_rng==-1. addon refers to dummy transcripts added to unannotated TSS clusters';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'codingClass'} = '[coding, noncoding, pseudogene, others or unknown] assigned based on predefined coding status of geneClass';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'CREID'} = '[unique ID] ID of the CRE the clusterID belongs to';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'CREName'} = '[unique ID] Name of the CRE the clusterID belongs to';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'locusID'} = '[unique ID] Identifier of the locus';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'locusName'} = '[unique ID] Name of the locus';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'proximity'} = '[unique ID] proximity of the locus';
+	$globalReadmeHsh_ref->{$filePath}{'header'}{'hyperactive'} = '[yes/no] CRE locus is defined as hyperactive, or not';
 	
 	foreach my $clusterID (sort keys %{$clusterInfoHsh_ref}) {
 		my $type = $clusterInfoHsh_ref->{$clusterID}{'type'};
 		my $clusterName = $clusterInfoHsh_ref->{$clusterID}{'clusterName'};
 		my $CREID = $clusterInfoHsh_ref->{$clusterID}{'CREID'};
+		my $CREName = $CREInfoHsh_ref->{$CREID}{'CREName'};
+		my $proximity = $CREInfoHsh_ref->{$CREID}{'proximity'};
+		my $locusID = $CREInfoHsh_ref->{$CREID}{'locusID'};
+		my $locusName = $locusInfoHsh_ref->{$locusID}{'locusName'};
+		my $hyperactive = $locusInfoHsh_ref->{$locusID}{'hyperactive'};
+		
 		foreach my $trnscptID (sort keys %{$clusterInfoHsh_ref->{$clusterID}{'trnscptID'}}) {
 			my $hit = $clusterInfoHsh_ref->{$clusterID}{'trnscptID'}{$trnscptID};
-			my $mask = $trnscptInfoHsh_ref->{$trnscptID}{'mask'};
 			my $geneID = $trnscptInfoHsh_ref->{$trnscptID}{'geneID'};
 			my $geneClass = $geneInfoHsh_ref->{$geneID}{'geneClass'};
 			my $geneName = $geneInfoHsh_ref->{$geneID}{'geneName'};
@@ -2256,7 +2511,7 @@ sub printTableIDMappingInfo {
 			my $tag_count = $clusterInfoHsh_ref->{$clusterID}{'score'};
 			my $codingClass = 'unknown';
 			$codingClass = $coding_class_hsh_ref->{$geneClass} if (exists $coding_class_hsh_ref->{$geneClass});
-			print IDLOG join "", (join "\t", ($clusterID, $clusterName, $type, $trnscptID, $geneID, $geneName, $geneClass, $mask, $rank, $tag_count, $hit, $codingClass, $CREID)), "\n";
+			print IDLOG join "", (join "\t", ($clusterID, $clusterName, $type, $trnscptID, $geneID, $geneName, $geneClass, $rank, $tag_count, $hit, $codingClass, $CREID, $CREName, $proximity, $locusID, $locusName, $hyperactive)), "\n";
 		}
 	}
 	close IDLOG;
@@ -2265,23 +2520,23 @@ sub printTableIDMappingInfo {
 sub printTableTranscriptInfo {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
 #	input: $coding_class_hsh_ref, $geneInfoHsh_ref, $outputPrefix, $result_log_dir, $trnscptInfoHsh_ref
 #	output: none
 #	toCall: &printTableTranscriptInfo($result_log_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $coding_class_hsh_ref, $outputPrefix);
-#	calledInLine: 248
+#	calledInLine: 244
 #....................................................................................................................................................#
 
 	my ($result_log_dir, $geneInfoHsh_ref, $trnscptInfoHsh_ref, $coding_class_hsh_ref, $outputPrefix) = @_;
 	
 	my $filePath = "$result_log_dir/$outputPrefix.transcript.info.tsv.gz";
 	open TRANSCRIPTLOG, "| gzip -c >$filePath";
-	my @headerAry = ('trnscptID', 'geneID', 'geneClass', 'geneName', 'mask', 'cluster_num', 'end5_hit_num', 'exon_hit_num', 'addon_hit_num', 'clusterIDStr', 'codingClass');
+	my @headerAry = ('trnscptID', 'geneID', 'geneClass', 'geneName', 'cluster_num', 'end5_hit_num', 'exon_hit_num', 'addon_hit_num', 'clusterIDStr', 'codingClass');
 	print TRANSCRIPTLOG join "", (join "\t", @headerAry), "\n";
-	&reportAndLogStatus("Printing transcript info", 0, "\n");#->2953
+	&reportAndLogStatus("Printing transcript info", 0, "\n");#->3225
 
 	$globalReadmeHsh_ref->{$filePath}{'description'} = "transcript centric annotation, one-row-per gene, with its gene annotation and its associated TSS clusters";
 	@{$globalReadmeHsh_ref->{$filePath}{'headerAry'}} = @headerAry;
@@ -2295,10 +2550,8 @@ sub printTableTranscriptInfo {
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'exon_hit_num'} = '[integer] num of TSS cluster hit on exon of it';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'addon_hit_num'} = '[integer] num of TSS cluster addon for it';
 	$globalReadmeHsh_ref->{$filePath}{'header'}{'clusterIDStr'} = '[string] ID of cluster associated with the transcript, ";" delimited.';
-	$globalReadmeHsh_ref->{$filePath}{'header'}{'mask'} = '[yes or no] transcript is masked from the mask gtf, or not';
 	
 	foreach my $trnscptID (sort keys %{$trnscptInfoHsh_ref}) {
-		my $mask = $trnscptInfoHsh_ref->{$trnscptID}{'mask'};
 		my $geneID = $trnscptInfoHsh_ref->{$trnscptID}{'geneID'};
 		my $geneClass = $geneInfoHsh_ref->{$geneID}{'geneClass'};
 		my $codingClass = 'unknown';
@@ -2315,36 +2568,31 @@ sub printTableTranscriptInfo {
 			$addon_hit_num++ if $trnscptInfoHsh_ref->{$trnscptID}{'clusterID'}{$clusterID} eq 'addon';
 		}
 
-		print TRANSCRIPTLOG join "", (join "\t", ($trnscptID, $geneID, $geneClass, $geneName, $mask, $cluster_num, $end5_hit_num, $exon_hit_num, $addon_hit_num, $clusterIDStr, $codingClass)), "\n";
+		print TRANSCRIPTLOG join "", (join "\t", ($trnscptID, $geneID, $geneClass, $geneName, $cluster_num, $end5_hit_num, $exon_hit_num, $addon_hit_num, $clusterIDStr, $codingClass)), "\n";
 	}
 	close TRANSCRIPTLOG;
 }
 sub printTrnscptGtf {
 #....................................................................................................................................................#
 #	subroutineCategory: specific
-#	dependOnSub: exonRngToGtf|1095
+#	dependOnSub: exonRngToGtf|1299
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
 #	input: $geneInfoHsh_ref, $outputPrefix, $result_gtf_dir, $trnscptInfoHsh_ref
 #	output: 
 #	toCall: &printTrnscptGtf($result_gtf_dir, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $outputPrefix);
-#	calledInLine: 250
+#	calledInLine: 246
 #....................................................................................................................................................#
 	my ($result_gtf_dir, $trnscptInfoHsh_ref, $geneInfoHsh_ref, $outputPrefix) = @_;
 	
 	my $all_trnscpt_gtf_path = "$result_gtf_dir/$outputPrefix.gtf.gz";
-	$globalReadmeHsh_ref->{$all_trnscpt_gtf_path}{'description'} = "It contains all transcripts, including the addon transcripts, without masking on structural RNA and small RNAs";
+	$globalReadmeHsh_ref->{$all_trnscpt_gtf_path}{'description'} = "It contains all transcripts, including the addon transcripts";
 
-	my $mask_trnscpt_gtf_path = "$result_gtf_dir/$outputPrefix.masked.gtf.gz";
-	$globalReadmeHsh_ref->{$mask_trnscpt_gtf_path}{'description'} = "It contains transcripts, including the addon transcripts, with structural RNA and small RNA masked, suitable for running cufflinks or stringtie";
-	
 	open (ALL, "| sort -k1,1 -k4,4n | gzip -c >$all_trnscpt_gtf_path");
-	open (MASK, "| sort -k1,1 -k4,4n | gzip -c >$mask_trnscpt_gtf_path");
 
 	foreach my $geneID (sort keys %{$geneInfoHsh_ref}) {
 		my $sourceTag = 'DGT';
-		my $mask = $geneInfoHsh_ref->{$geneID}{'mask'};
 		my $g_chrom = $geneInfoHsh_ref->{$geneID}{'chrom'};
 		my $g_strand = $geneInfoHsh_ref->{$geneID}{'strand'};
 		my ($geneStart, $geneEnd) = @{$geneInfoHsh_ref->{$geneID}{'geneRng'}};
@@ -2356,47 +2604,41 @@ sub printTrnscptGtf {
 		#chr1	FANTOM	gene	47082703	47083645	.	+	.	gene_id "CATG00000000004.1"; geneSuperClass "all_lncRNA";  geneClass "CATG00000000004.1";  geneSubClass "divergent_promoters"; gene_type "__na"; gene_name "CATG00000000004.1"; coding_status "nonCoding"; cumulative_support "ENCODE"; geneCategory "p_lncRNA_divergent"; DHS_type "DHS_promoter";	
 		my @gene_line_ary = ($g_chrom, $sourceTag, 'gene', $gtfStart, $gtfEnd, '.', $g_strand, '.', "gene_id \"$geneID\"; geneClass \"$geneClass\"; gene_type \"$geneClass\"; gene_name \"$geneName\"; geneAnnoPlus \"$geneClass\";");
 		print ALL join "", (join "\t", (@gene_line_ary)), "\n";
-		if ($mask eq 'no') {
-			print MASK join "", (join "\t", (@gene_line_ary)), "\n";
-		}
 		
 		foreach my $trnscptID (keys %{$geneInfoHsh_ref->{$geneID}{'trnscptID'}}) {
 			my $chrom = $trnscptInfoHsh_ref->{$trnscptID}{'chrom'};
 			my $strand = $trnscptInfoHsh_ref->{$trnscptID}{'strand'};
 
 			my $exonRngAry_ref = $trnscptInfoHsh_ref->{$trnscptID}{'exonRng'};
-			my ($gtf_ary_ref) = &exonRngToGtf($exonRngAry_ref, $chrom, $strand, $trnscptID, $geneID, $sourceTag);#->1095
+			my ($gtf_ary_ref) = &exonRngToGtf($exonRngAry_ref, $chrom, $strand, $trnscptID, $geneID, $sourceTag);#->1299
 		
 			print ALL join "", (join "\t", (@{$_})), "\n" foreach @{$gtf_ary_ref};
-			if ($mask eq 'no') {
-				print MASK join "", (join "\t", (@{$_})), "\n" foreach @{$gtf_ary_ref};
-			}
 		}
 	}
 	
 	close ALL;
-	close MASK;
 
 	return ();
 }
 sub rankCREWithinGene {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: >none
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
-#	input: $CREInfoHsh_ref, $geneInfoHsh_ref
+#	input: $CREInfoHsh_ref, $geneInfoHsh_ref, $max_gene_num
 #	output: 
-#	toCall: &rankCREWithinGene($CREInfoHsh_ref, $geneInfoHsh_ref);
-#	calledInLine: 239
+#	toCall: &rankCREWithinGene($CREInfoHsh_ref, $geneInfoHsh_ref, $max_gene_num);
+#	calledInLine: 236
 #....................................................................................................................................................#
-	my ($CREInfoHsh_ref, $geneInfoHsh_ref) = @_;
+	my ($CREInfoHsh_ref, $geneInfoHsh_ref, $max_gene_num) = @_;
 
 	my $proximity_tag_hsh_ref = {
 		'proximal' => "P",
 		'distal' => "D",
 	};
+	my $geneStr_hsh_ref = {};
 	
 	foreach my $geneID (sort keys %{$geneInfoHsh_ref}) {
 		my $rank_hsh_ref = {};
@@ -2415,7 +2657,7 @@ sub rankCREWithinGene {
 	}	
 	
 	foreach my $CREID (sort keys %{$CREInfoHsh_ref}) {
-
+		die "CREID $CREID has no rank\n" if not exists $CREInfoHsh_ref->{$CREID}{'rank'};
 		my $rank_hsh_ref = {};
 		foreach my $geneID (keys %{$CREInfoHsh_ref->{$CREID}{'rank'}}) {
 			my $rank = $CREInfoHsh_ref->{$CREID}{'rank'}{$geneID};
@@ -2429,10 +2671,22 @@ sub rankCREWithinGene {
 				push @CRENameAry, "r$rank\@$geneName";
 			}
 		}
+
+		my $num_gene = @CRENameAry;
+		if ($num_gene > $max_gene_num) {
+			my $num_others = $num_gene - $max_gene_num;
+			my $last_index = $max_gene_num-1;
+			@CRENameAry = (@CRENameAry[0..$last_index], $num_others."_others");
+		}
+
 		my $proximity = $CREInfoHsh_ref->{$CREID}{'proximity'};
 		my $proximity_tag = $proximity_tag_hsh_ref->{$proximity};
-		my $CREName = join ":", ($proximity_tag, (join ",", @CRENameAry));
+		my $geneStr = join ",", @CRENameAry;
+		$geneStr_hsh_ref->{$geneStr}++;
+		my $occurence = $geneStr_hsh_ref->{$geneStr};
+		my $CREName = join ":", ($proximity_tag, $occurence, $geneStr);
 		$CREInfoHsh_ref->{$CREID}{'CREName'} = $CREName;
+		#&reportAndLogStatus("$CREName", 10, "\n");#->3225
 	}
 
 	return ();
@@ -2440,21 +2694,23 @@ sub rankCREWithinGene {
 sub rankClusterWithinGene {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: >none
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
-#	input: $clusterInfoHsh_ref, $geneInfoHsh_ref
+#	input: $clusterInfoHsh_ref, $geneInfoHsh_ref, $max_gene_num
 #	output: 
-#	toCall: &rankClusterWithinGene($clusterInfoHsh_ref, $geneInfoHsh_ref);
-#	calledInLine: 236
+#	toCall: &rankClusterWithinGene($clusterInfoHsh_ref, $geneInfoHsh_ref, $max_gene_num);
+#	calledInLine: 237
 #....................................................................................................................................................#
-	my ($clusterInfoHsh_ref, $geneInfoHsh_ref) = @_;
+	my ($clusterInfoHsh_ref, $geneInfoHsh_ref, $max_gene_num) = @_;
 
 	my $proximity_tag_hsh_ref = {
 		'proximal' => "P",
 		'distal' => "D",
 	};
+
+	my $geneStr_hsh_ref = {};
 
 	foreach my $geneID (sort keys %{$geneInfoHsh_ref}) {
 		my $rank_hsh_ref = {};
@@ -2487,12 +2743,25 @@ sub rankClusterWithinGene {
 			}
 		}
 
+		my $num_gene = @clusterNameAry;
+		if ($num_gene > $max_gene_num) {
+			my $num_others = $num_gene - $max_gene_num;
+			my $last_index = $max_gene_num-1;
+			@clusterNameAry = (@clusterNameAry[0..4], $num_others."_others");
+		}
+
 		my $proximity = $clusterInfoHsh_ref->{$clusterID}{'proximity'};
 		my $proximity_tag = $proximity_tag_hsh_ref->{$proximity};
-		my $clusterName = join ":", ($proximity_tag, (join ",", @clusterNameAry));
-		$clusterInfoHsh_ref->{$clusterID}{'clusterName'} = $clusterName;
-	}
+		my $geneStr = join ",", @clusterNameAry;
+		$geneStr_hsh_ref->{$geneStr}++;
+		my $occurence = $geneStr_hsh_ref->{$geneStr};
 
+		my $clusterName = join ":", ($proximity_tag, $occurence, $geneStr);
+		$clusterInfoHsh_ref->{$clusterID}{'clusterName'} = $clusterName;
+		#&reportAndLogStatus("$clusterName", 10, "\n");#->3225
+
+	}
+	
 	return ();
 }
 sub readChromSize {
@@ -2500,12 +2769,12 @@ sub readChromSize {
 #	subroutineCategory: unassigned
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
 #	input: $chrom_size_path
 #	output: $chrom_size_hsh_ref
 #	toCall: my ($chrom_size_hsh_ref) = &readChromSize($chrom_size_path);
-#	calledInLine: 220
+#	calledInLine: 216
 #....................................................................................................................................................#
 	my ($chrom_size_path) = @_;
 	
@@ -2523,17 +2792,24 @@ sub readChromSize {
 sub readClusterBed {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
-#	input: $tssCluster_bed_path
+#	input: $excl_chrom, $tssCluster_bed_path
 #	output: $clusterInfoHsh_ref
-#	toCall: my ($clusterInfoHsh_ref) = &readClusterBed($tssCluster_bed_path);
-#	calledInLine: 226
+#	toCall: my ($clusterInfoHsh_ref) = &readClusterBed($tssCluster_bed_path, $excl_chrom);
+#	calledInLine: 223
 #....................................................................................................................................................#
 
-	my ($tssCluster_bed_path) = @_;
+	my ($tssCluster_bed_path, $excl_chrom) = @_;
+	
+	my $excl_chrom_hsh_ref = {};
+	if ($excl_chrom ne 'null') {
+		for my $chrom (split /\,/, $excl_chrom) {
+			$excl_chrom_hsh_ref->{$chrom}++;
+		}
+	}
 
 	my $clusterInfoHsh_ref = {};
 	
@@ -2547,7 +2823,7 @@ sub readClusterBed {
 		chomp;
 
 		my ($chrom, $start, $end, $clusterID, $score, $strand, $thickStart, $thickEnd) = split /\t/;
-		
+		next if exists $excl_chrom_hsh_ref->{$chrom};
 		#if ($strand ne '+' and $strand ne '-') {
 		#	die "skip $clusterID: ambigous strand\n";
 		#}
@@ -2565,7 +2841,6 @@ sub readClusterBed {
 		$clusterInfoHsh_ref->{$clusterID}{'type'} = 'unanno_tss';
 		$clusterInfoHsh_ref->{$clusterID}{'peakPos'} = $thickEnd;
 		$clusterInfoHsh_ref->{$clusterID}{'score'} = $score;
-		$clusterInfoHsh_ref->{$clusterID}{'filter'} = 'no';
 
 		my $chromStart = $start;
 		my $chromEnd = $end;
@@ -2579,7 +2854,7 @@ sub readClusterBed {
 	close TRANSCRIPTBED;
 	
 	my $num_clusters = keys %{$clusterInfoHsh_ref};
-	&reportAndLogStatus("$num_clusters clusters read", 10, "\n");#->2953
+	&reportAndLogStatus("$num_clusters clusters read", 10, "\n");#->3225
 
 	return ($clusterInfoHsh_ref);
 
@@ -2587,19 +2862,19 @@ sub readClusterBed {
 sub readClusterInfo {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
-#	input: $clusterInfoHsh_ref, $tssCluster_info_path
+#	input: $clusterInfoHsh_ref, $pseudocount_correction, $tssCluster_info_path
 #	output: 
-#	toCall: &readClusterInfo($tssCluster_info_path, $clusterInfoHsh_ref);
-#	calledInLine: 227
+#	toCall: &readClusterInfo($tssCluster_info_path, $clusterInfoHsh_ref, $pseudocount_correction);
+#	calledInLine: 224
 #....................................................................................................................................................#
 
-	my ($tssCluster_info_path, $clusterInfoHsh_ref) = @_;
+	my ($tssCluster_info_path, $clusterInfoHsh_ref, $pseudocount_correction) = @_;
 
-	&reportAndLogStatus("Reading tssCluster info", 10, "\n");#->2953
+	&reportAndLogStatus("Reading tssCluster info", 10, "\n");#->3225
 
 	if ($tssCluster_info_path =~ m/\.gz$/) {
 		open (FILEIN, " gzip -dc $tssCluster_info_path|");
@@ -2630,9 +2905,9 @@ sub readClusterInfo {
 		my $count = $splt[$colIndexHsh{'count'}];
 		if (exists $clusterInfoHsh_ref->{$clusterID}) {
 			$clusterInfoHsh_ref->{$clusterID}{'prob'} = $prob;
-			$clusterInfoHsh_ref->{$clusterID}{'max'} = $max;
+			$clusterInfoHsh_ref->{$clusterID}{'max'} = $max - $pseudocount_correction;
 			$clusterInfoHsh_ref->{$clusterID}{'summit'} = $summit;
-			$clusterInfoHsh_ref->{$clusterID}{'count'} = $count;
+			$clusterInfoHsh_ref->{$clusterID}{'count'} = $count - $pseudocount_correction;
 		}
 	}
 	close FILEIN;
@@ -2648,19 +2923,19 @@ sub readClusterInfo {
 sub readGeneInfo {
 #....................................................................................................................................................#
 #	subroutineCategory: getTextInfo
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
 #	input: $geneInfoHsh_ref, $gene_info_path
 #	output: 
 #	toCall: &readGeneInfo($gene_info_path, $geneInfoHsh_ref);
-#	calledInLine: 223
+#	calledInLine: 219
 #....................................................................................................................................................#
 
 	my ($gene_info_path, $geneInfoHsh_ref) = @_;
 
-	&reportAndLogStatus("Reading gene info", 10, "\n");#->2953
+	&reportAndLogStatus("Reading gene info", 10, "\n");#->3225
 
 	if ($gene_info_path =~ m/\.gz$/) {
 		open (FILEIN, " gzip -dc $gene_info_path|");
@@ -2713,7 +2988,7 @@ sub readGeneInfo {
 	close FILEIN;
 	
 	my $num_gene = keys %{$geneInfoHsh_ref};
-	&reportAndLogStatus("$num_gene genes reads", 10, "\n");#->2953
+	&reportAndLogStatus("$num_gene genes reads", 10, "\n");#->3225
 	
 	return ();
 }
@@ -2722,32 +2997,30 @@ sub readParameters {
 #	subroutineCategory: general
 #	dependOnSub: >none
 #	appearInSub: >none
-#	primaryAppearInSection: 0_startingTasks|165
+#	primaryAppearInSection: 0_startingTasks|169
 #	secondaryAppearInSection: >none
 #	input: none
-#	output: $CRE_extend_size, $CRE_extend_upstrm_ratio, $Rscript_bin, $addon_length, $dn_end5Rng, $exon_slop_rng, $genome, $merge_dist, $merge_strandness, $min_gene_strand_read_frac, $min_spreadness, $min_total_exp_frac, $outDir, $outputPrefix, $overwrite, $proximal_strandness, $proximity_slop_rng, $stitch_distance, $tssCluster_bed_path, $tssCluster_info_path, $up_end5Rng
-#	toCall: my ($exon_slop_rng, $addon_length, $merge_dist, $up_end5Rng, $dn_end5Rng, $tssCluster_bed_path, $tssCluster_info_path, $merge_strandness, $proximity_slop_rng, $CRE_extend_size, $CRE_extend_upstrm_ratio, $genome, $proximal_strandness, $stitch_distance, $min_total_exp_frac, $min_gene_strand_read_frac, $min_spreadness, $Rscript_bin, $outputPrefix, $outDir, $overwrite) = &readParameters();
-#	calledInLine: 168
+#	output: $CRE_extend_size, $CRE_extend_upstrm_ratio, $Rscript_bin, $addon_length, $distal_stitch_distance, $dn_end5Rng, $excl_chrom, $genome, $min_CRE_count, $min_gene_strand_read_frac, $min_spreadness, $min_total_exp_frac, $outDir, $outputPrefix, $overwrite, $proximal_extend_nt, $tssCluster_bed_path, $tssCluster_info_path, $up_end5Rng
+#	toCall: my ($addon_length, $up_end5Rng, $dn_end5Rng, $tssCluster_bed_path, $tssCluster_info_path, $CRE_extend_size, $CRE_extend_upstrm_ratio, $genome, $distal_stitch_distance, $min_total_exp_frac, $min_gene_strand_read_frac, $min_spreadness, $proximal_extend_nt, $min_CRE_count, $Rscript_bin, $excl_chrom, $outputPrefix, $outDir, $overwrite) = &readParameters();
+#	calledInLine: 172
 #....................................................................................................................................................#
 	
-	my ($exon_slop_rng, $addon_length, $merge_dist, $up_end5Rng, $dn_end5Rng, $tssCluster_bed_path, $tssCluster_info_path, $merge_strandness, $proximity_slop_rng, $CRE_extend_size, $CRE_extend_upstrm_ratio, $genome, $proximal_strandness, $stitch_distance, $min_total_exp_frac, $min_gene_strand_read_frac, $min_spreadness, $Rscript_bin, $outputPrefix, $outDir, $overwrite);
+	my ($addon_length, $up_end5Rng, $dn_end5Rng, $tssCluster_bed_path, $tssCluster_info_path, $CRE_extend_size, $CRE_extend_upstrm_ratio, $genome, $distal_stitch_distance, $min_total_exp_frac, $min_gene_strand_read_frac, $min_spreadness, $proximal_extend_nt, $min_CRE_count, $Rscript_bin, $excl_chrom, $outputPrefix, $outDir, $overwrite);
 	
 	$up_end5Rng = 500;
 	$dn_end5Rng = 500;
-	$merge_dist = 500;
 	$addon_length = 500;
-	$proximity_slop_rng = 500;
-	$min_total_exp_frac = 0.1;
-	$min_gene_strand_read_frac = 0.8;
+	$min_total_exp_frac = 0.05;
+	$min_gene_strand_read_frac = 0.75;
 	$min_spreadness = 4;
 	$CRE_extend_size = 500;
-	$exon_slop_rng = -1;
+	$proximal_extend_nt = 500;
 	$CRE_extend_upstrm_ratio = 4;
-	$stitch_distance = 'undefined';
-	$merge_strandness = 'strandless';
-	$proximal_strandness = 'stranded';
+	$min_CRE_count = 5;
+	$distal_stitch_distance = 'undefined';
 	$Rscript_bin = 'Rscript';
 	$overwrite = 'no';
+	$excl_chrom = 'chrM,ChrM';
 
 	GetOptions 	(
 		"tssCluster_bed_path=s"			=>	\$tssCluster_bed_path,
@@ -2755,19 +3028,17 @@ sub readParameters {
 		"genome=s"							=>	\$genome,
 		"up_end5Rng:i"						=>	\$up_end5Rng,
 		"dn_end5Rng:i"						=>	\$dn_end5Rng,
-		"merge_dist:i"						=>	\$merge_dist,
 		"addon_length:i"					=>	\$addon_length,
-		"exon_slop_rng:i"					=>	\$exon_slop_rng,
-		"proximity_slop_rng:i"			=>	\$proximity_slop_rng,
-		"merge_strandness:s"				=>	\$merge_strandness,
-		"proximal_strandness:s"			=>	\$proximal_strandness,
 		"CRE_extend_size:i"				=>	\$CRE_extend_size,
 		"CRE_extend_upstrm_ratio:f"	=>	\$CRE_extend_upstrm_ratio,
-		"stitch_distance:s"				=>	\$stitch_distance,
+		"distal_stitch_distance:s"				=>	\$distal_stitch_distance,
 		"min_total_exp_frac:f"			=>	\$min_total_exp_frac,
 		"min_gene_strand_read_frac:f"	=>	\$min_gene_strand_read_frac,
+		"min_CRE_count:i"					=>	\$min_CRE_count,
 		"min_spreadness:f"				=>	\$min_spreadness,
-		"Rscript_bin=s"					=>	\$Rscript_bin,
+		"proximal_extend_nt:i"			=>	\$proximal_extend_nt,
+		"Rscript_bin:s"					=>	\$Rscript_bin,
+		"excl_chrom:s"						=>	\$excl_chrom,
 		"outputPrefix=s"					=>	\$outputPrefix,
 		"outDir=s"							=>	\$outDir,
 		"overwrite:s"						=>	\$overwrite,
@@ -2790,19 +3061,19 @@ sub readParameters {
 	chop $outDir if ($outDir =~ m/\/$/); #---remove the last slash
 	system "mkdir -p -m 755 $outDir/";
 	
-	return($exon_slop_rng, $addon_length, $merge_dist, $up_end5Rng, $dn_end5Rng, $tssCluster_bed_path, $tssCluster_info_path, $merge_strandness, $proximity_slop_rng, $CRE_extend_size, $CRE_extend_upstrm_ratio, $genome, $proximal_strandness, $stitch_distance, $min_total_exp_frac, $min_gene_strand_read_frac, $min_spreadness, $Rscript_bin, $outputPrefix, $outDir, $overwrite);
+	return($addon_length, $up_end5Rng, $dn_end5Rng, $tssCluster_bed_path, $tssCluster_info_path, $CRE_extend_size, $CRE_extend_upstrm_ratio, $genome, $distal_stitch_distance, $min_total_exp_frac, $min_gene_strand_read_frac, $min_spreadness, $proximal_extend_nt, $min_CRE_count, $Rscript_bin, $excl_chrom, $outputPrefix, $outDir, $overwrite);
 }
 sub readTranscriptBed {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
 #	input: $chrom_size_hsh_ref, $outDir, $tmp_bed_dir, $transcript_bed_path
 #	output: $transcript_in_scope_bed_path, $trnscptInfoHsh_ref
 #	toCall: my ($trnscptInfoHsh_ref, $transcript_in_scope_bed_path) = &readTranscriptBed($transcript_bed_path, $chrom_size_hsh_ref, $tmp_bed_dir, $outDir);
-#	calledInLine: 221
+#	calledInLine: 217
 #....................................................................................................................................................#
 
 	my ($transcript_bed_path, $chrom_size_hsh_ref, $tmp_bed_dir, $outDir) = @_;
@@ -2811,7 +3082,7 @@ sub readTranscriptBed {
 	my $transcript_in_scope_bed_path = "$tmp_bed_dir/transcript_in_scope.bed";
 	open TRNSCPTSCOPE, ">", $transcript_in_scope_bed_path;
 
-	&reportAndLogStatus("Reading transcript bed", 10, "\n");#->2953
+	&reportAndLogStatus("Reading transcript bed", 10, "\n");#->3225
 	
 	open (TRANSCRIPTBED, "gzip -dc $transcript_bed_path |");
 	while (<TRANSCRIPTBED>) {
@@ -2820,7 +3091,7 @@ sub readTranscriptBed {
 		my ($chrom, $start, $end, $trnscptIDStr, $score, $strand, $thickStart, $thickEnd, $rgbItem, $blkCount, $blkSizes, $blkStarts) = split /\t/;
 		
 		if (not exists $chrom_size_hsh_ref->{$chrom}) {
-			#&reportAndLogStatus("trnscpt $trnscptIDStr will be skipped as it is on chrom $chrom that is outside the defined chromSize file", 10, "\n");#->2953
+			#&reportAndLogStatus("trnscpt $trnscptIDStr will be skipped as it is on chrom $chrom that is outside the defined chromSize file", 10, "\n");#->3225
 			next;
 		}
 		print TRNSCPTSCOPE $_."\n";
@@ -2874,19 +3145,19 @@ sub readTranscriptBed {
 sub readTranscriptInfo {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
 #	input: $transcript_info_path, $trnscptInfoHsh_ref
 #	output: $geneInfoHsh_ref
 #	toCall: my ($geneInfoHsh_ref) = &readTranscriptInfo($transcript_info_path, $trnscptInfoHsh_ref);
-#	calledInLine: 222
+#	calledInLine: 218
 #....................................................................................................................................................#
 
 	my ($transcript_info_path, $trnscptInfoHsh_ref) = @_;
 
-	&reportAndLogStatus("Reading transcript info", 10, "\n");#->2953
+	&reportAndLogStatus("Reading transcript info", 10, "\n");#->3225
 	my $geneInfoHsh_ref = {};
 
 	if ($transcript_info_path =~ m/\.gz$/) {
@@ -2923,46 +3194,47 @@ sub readTranscriptInfo {
 		my $trnscptID = $splt[$colIndexHsh{'trnscptID'}];
 		if (exists $trnscptInfoHsh_ref->{$trnscptID}) {
 			$trnscptInfoHsh_ref->{$trnscptID}{'geneID'} = $geneID;
-			$geneInfoHsh_ref->{$geneID}{'trnscptID'}{$trnscptID}++;
+			$geneInfoHsh_ref->{$geneID}{'trnscptID'}{$trnscptID} = 'annotated';
 		}
 	}
 	close FILEIN;
 
 	my $num_transcript = keys %{$trnscptInfoHsh_ref};
-	&reportAndLogStatus("$num_transcript transcripts reads", 10, "\n");#->2953
+	&reportAndLogStatus("$num_transcript transcripts reads", 10, "\n");#->3225
 	
 	return ($geneInfoHsh_ref);
 }
 sub removeTmpBedDir {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
 #	input: $tmp_bed_dir
 #	output: none
 #	toCall: &removeTmpBedDir($tmp_bed_dir);
-#	calledInLine: 253
+#	calledInLine: 249
 #....................................................................................................................................................#
 	
 	my ($tmp_bed_dir) = @_;
 	
-	&reportAndLogStatus("removing tmp_bed_dir", 10, "\n");#->2953
-	system ("rm -rf $tmp_bed_dir");
+	&reportAndLogStatus("removing tmp_bed_dir", 10, "\n");#->3225
+	system ("rm -rf $tmp_bed_dir 2>/dev/null");
+	system ("rm -rf $tmp_bed_dir 2>/dev/null");#---[2022/06/29 11:22] delete twice
 
 }
 sub removeUnsupportedGene {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
 #	input: $geneInfoHsh_ref, $trnscptInfoHsh_ref
 #	output: none
 #	toCall: &removeUnsupportedGene($geneInfoHsh_ref, $trnscptInfoHsh_ref);
-#	calledInLine: 240
+#	calledInLine: 235
 #....................................................................................................................................................#
 	
 	my ($geneInfoHsh_ref, $trnscptInfoHsh_ref) = @_;
@@ -2973,7 +3245,7 @@ sub removeUnsupportedGene {
 	);
 	
 	foreach my $item_type (keys %itemHsh) {
-		&reportAndLogStatus("removing $item_type with no 5'end support", 10, "\n");#->2953
+		&reportAndLogStatus("removing $item_type with no 5'end support", 10, "\n");#->3225
 		my $hsh_ref = $itemHsh{$item_type};
 		my $remove_num = 0;
 		foreach my $itemID (keys %{$hsh_ref}) {
@@ -2983,7 +3255,7 @@ sub removeUnsupportedGene {
 			};
 		}
 		
-		&reportAndLogStatus("$remove_num $item_type removed", 10, "\n");#->2953
+		&reportAndLogStatus("$remove_num $item_type removed", 10, "\n");#->3225
 		
 	};
 
@@ -2997,169 +3269,41 @@ sub removeUnsupportedGene {
 sub reportAndLogStatus {
 #....................................................................................................................................................#
 #	subroutineCategory: log
-#	dependOnSub: currentTime|695
-#	appearInSub: addonTranscript|348, assignClusterProximity|445, checkAllExecutable|553, checkRScriptVersion|633, defineCRE|713, defineHyperactiveDistalLoci|861, defineUnannoPromoter|1002, filterUnannotatedCluster|1119, generateExtendedCluster|1198, getSuperCluster|1291, intersectCluster|1346, printAllBed|1432, printEnd5Bed|1514, printGenePromoterInfo|1595, printTableCREInfo|1794, printTableClusterInfo|1930, printTableDistalCRELocusInfo|2045, printTableGeneInfo|2099, printTableIDMappingInfo|2161, printTableTranscriptInfo|2221, readClusterBed|2479, readClusterInfo|2543, readGeneInfo|2604, readTranscriptBed|2751, readTranscriptInfo|2830, removeTmpBedDir|2892, removeUnsupportedGene|2911, summerizeGeneInfo|3103
+#	dependOnSub: currentTime|736
+#	appearInSub: addAnnoGeneInfoLoc|309, addonTranscriptGene|358, assignClusterGenePromoter|459, assignClusterRegion|499, checkAllExecutable|594, checkRScriptVersion|674, defineCRE|754, defineCRELocus|863, defineGenePromoter|1076, defineStitchDistance|1190, defineStrandedCRE|1223, filterCRE|1323, generateExtendedCluster|1503, printAllBed|1624, printEnd5Bed|1749, printGenePromoterInfo|1830, printTableCREInfo|2029, printTableCRELocusInfo|2172, printTableClusterInfo|2232, printTableGeneInfo|2345, printTableIDMappingInfo|2407, printTableTranscriptInfo|2476, rankCREWithinGene|2579, rankClusterWithinGene|2650, readClusterBed|2748, readClusterInfo|2818, readGeneInfo|2879, readTranscriptBed|3022, readTranscriptInfo|3101, removeTmpBedDir|3163, removeUnsupportedGene|3183, summerizeGeneInfo|3247
 #	primaryAppearInSection: >none
-#	secondaryAppearInSection: 2_defineOutDirPath|193, 3_readInfo|217
+#	secondaryAppearInSection: 2_defineOutDirPath|189, 3_readInfo|213
 #	input: $lineEnd, $message, $numTrailingSpace
 #	output: 
 #	toCall: &reportAndLogStatus($message, $numTrailingSpace, $lineEnd);
-#	calledInLine: 364, 459, 479, 529, 538, 574, 579, 588, 597, 606, 615, 624, 652, 658, 729, 759, 876, 902, 905, 907, 910, 956, 959, 997, 1015, 1090, 1132, 1145, 1212, 1308, 1339, 1362, 1370, 1462, 1528, 1613, 1812, 1919, 1924, 1948, 2034, 2039, 2063, 2113, 2175, 2181, 2239, 2537, 2557, 2618, 2671, 2769, 2778, 2844, 2887, 2906, 2931, 2941, 3117
+#	calledInLine: 323, 372, 473, 513, 533, 583, 615, 620, 629, 638, 647, 656, 665, 693, 699, 773, 793, 805, 885, 906, 955, 960, 995, 1089, 1185, 1214, 1218, 1238, 1281, 1336, 1354, 1517, 1652, 1675, 1763, 1848, 2047, 2161, 2166, 2190, 2250, 2334, 2339, 2359, 2421, 2427, 2494, 2644, 2716, 2812, 2832, 2893, 2946, 3040, 3049, 3115, 3158, 3177, 3203, 3213, 3261
 #....................................................................................................................................................#
 	my ($message, $numTrailingSpace, $lineEnd) = @_;
 
 	my $trailingSpaces = '';
 	$trailingSpaces .= " " for (1..$numTrailingSpace);
 	
-	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->695
-	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->695
+	print "[".&currentTime()."] ".$message.$trailingSpaces.$lineEnd;#->736
+	print $tmplog_fh "[".&currentTime()."] ".$message.$lineEnd if $lineEnd ne "\r";#->736
 	
-	return ();
-}
-sub storeCREInfoFromBed {
-#....................................................................................................................................................#
-#	subroutineCategory: unassigned
-#	dependOnSub: >none
-#	appearInSub: defineCRE|713
-#	primaryAppearInSection: >none
-#	secondaryAppearInSection: 3_readInfo|217
-#	input: $CREInfoHsh_ref, $clusterInfoHsh_ref, $proximity, $tmp_merged_CRE_bed
-#	output: 
-#	toCall: &storeCREInfoFromBed($tmp_merged_CRE_bed, $proximity, $CREInfoHsh_ref, $clusterInfoHsh_ref);
-#	calledInLine: 755, 781
-#....................................................................................................................................................#
-	my ($tmp_merged_CRE_bed, $proximity, $CREInfoHsh_ref, $clusterInfoHsh_ref) = @_;
-
-	open MERGECREBED, "<", "$tmp_merged_CRE_bed";
-	while (<MERGECREBED>) {
-		chomp;
-		my ($chrom, $chromStart, $chromEnd, $clusterIDStr, $score, $strandStr) = split /\t/;
-		my $strand = $strandStr;
-		$strand = '.' if $strandStr =~ m/\;/;
-		my $CREID = "$chrom\_$chromStart\_$chromEnd\_$strand";
-		my $max_clusterID = undef;
-		my $max_count = 0;
-		
-		foreach my $clusterID (split /;/, $clusterIDStr) {
-			my $max = $clusterInfoHsh_ref->{$clusterID}{'max'};
-			if ($max > $max_count) {
-				$max_clusterID = $clusterID; 
-				$max_count = $max;
-			}
-
-			$CREInfoHsh_ref->{$CREID}{'clusterID'}{$clusterID}++;
-			$clusterInfoHsh_ref->{$clusterID}{'CREID'} = $CREID;
-		}
-		$CREInfoHsh_ref->{$CREID}{'strand'} = $strand;
-		$CREInfoHsh_ref->{$CREID}{'chrom'} = $chrom;
-		$CREInfoHsh_ref->{$CREID}{'start'} = $chromStart;
-		$CREInfoHsh_ref->{$CREID}{'end'} = $chromEnd;
-		$CREInfoHsh_ref->{$CREID}{'score'} = $score;
-		$CREInfoHsh_ref->{$CREID}{'proximity'} = $proximity;
-
-		$CREInfoHsh_ref->{$CREID}{'regionType'} = $clusterInfoHsh_ref->{$max_clusterID}{'regionType'};
-		$CREInfoHsh_ref->{$CREID}{'regionGeneID'} = $clusterInfoHsh_ref->{$max_clusterID}{'regionGeneID'};
-		$CREInfoHsh_ref->{$CREID}{'regionOritentation'} = $clusterInfoHsh_ref->{$max_clusterID}{'regionOritentation'};
-
-	}
-	close MERGECREBED;
-
-	return ();
-}
-sub summerizeCREInfo {
-#....................................................................................................................................................#
-#	subroutineCategory: unassigned
-#	dependOnSub: >none
-#	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
-#	secondaryAppearInSection: >none
-#	input: $CREInfoHsh_ref, $clusterInfoHsh_ref, $geneInfoHsh_ref
-#	output: 
-#	toCall: &summerizeCREInfo($clusterInfoHsh_ref, $CREInfoHsh_ref, $geneInfoHsh_ref);
-#	calledInLine: 238
-#....................................................................................................................................................#
-	my ($clusterInfoHsh_ref, $CREInfoHsh_ref, $geneInfoHsh_ref) = @_;
-	
-	foreach my $CREID (keys %{$CREInfoHsh_ref}) {
-		my @CRENameAry = ();
-		my $mask = 'no';
-		my $max = 0;
-		my $peakPos;
-		my $sumClusterRead = 0;
-		my $stranded_count_hsh_ref = {
-			'+' => 0,
-			'-' => 0,
-		};
-		foreach my $clusterID (keys %{$CREInfoHsh_ref->{$CREID}{'clusterID'}}) {
-			foreach my $geneID (keys %{$clusterInfoHsh_ref->{$clusterID}{'geneID'}}) {
-				$CREInfoHsh_ref->{$CREID}{'geneID'}{$geneID}++;
-				$geneInfoHsh_ref->{$geneID}{'CREID'}{$CREID}++;
-			}
-
-			my $count = $clusterInfoHsh_ref->{$clusterID}{'count'};
-			my $strand = $clusterInfoHsh_ref->{$clusterID}{'strand'};
-			$stranded_count_hsh_ref->{$strand}+=$count; 
-			$sumClusterRead+=$count;
-			
-			foreach my $promoter_name (split /\,/, $clusterInfoHsh_ref->{$clusterID}{'clusterName'}) {
-				push @CRENameAry, $promoter_name;
-			}
-			if ($clusterInfoHsh_ref->{$clusterID}{'max'} > $max) {
-				$max = $clusterInfoHsh_ref->{$clusterID}{'max'};
-				$peakPos = $clusterInfoHsh_ref->{$clusterID}{'peakPos'};
-			}
-			$mask = 'yes' if $clusterInfoHsh_ref->{$clusterID}{'mask'} eq 'yes';
-		}
-		my $chrom = $CREInfoHsh_ref->{$CREID}{'chrom'};
-		my $start = $CREInfoHsh_ref->{$CREID}{'start'};
-		my $end = $CREInfoHsh_ref->{$CREID}{'end'};
-		my $score = $CREInfoHsh_ref->{$CREID}{'score'};
-		my $strand = $CREInfoHsh_ref->{$CREID}{'strand'};
-
-		my $chromStart = $start;
-		my $chromEnd = $end;
-		my $blockSizes = $chromEnd - $chromStart;
-		my $blockCount = 1;
-		my $blockStarts = 0;
-		my $thickEnd = $peakPos;
-		my $thickStart = $thickEnd - 1;
-
-		$CREInfoHsh_ref->{$CREID}{'plusClusterRead'} = $stranded_count_hsh_ref->{'+'};
-		$CREInfoHsh_ref->{$CREID}{'minusClusterRead'} = $stranded_count_hsh_ref->{'-'};
-		$CREInfoHsh_ref->{$CREID}{'sumClusterRead'} = $sumClusterRead;
-		$CREInfoHsh_ref->{$CREID}{'mask'} = $mask;
-		$CREInfoHsh_ref->{$CREID}{'peakPos'} = $peakPos;
-		if ($CREInfoHsh_ref->{$CREID}{'proximity'} eq 'proximal') {
-			$CREInfoHsh_ref->{$CREID}{'rgbItem'} = '106,61,154';
-
-		} elsif ($CREInfoHsh_ref->{$CREID}{'proximity'} eq 'distal') {
-			$CREInfoHsh_ref->{$CREID}{'rgbItem'} = '255,127,0';
-		
-		} else {
-			die;
-		}
-
-		$CREInfoHsh_ref->{$CREID}{'bedLine'} = [$chrom, $chromStart, $chromEnd, $CREID, $sumClusterRead, $strand, $thickStart, $thickEnd, ".", $blockCount, $blockSizes, $blockStarts];
-	}
-
 	return ();
 }
 sub summerizeGeneInfo {
 #....................................................................................................................................................#
 #	subroutineCategory: unassigned
-#	dependOnSub: reportAndLogStatus|2953
+#	dependOnSub: reportAndLogStatus|3225
 #	appearInSub: >none
-#	primaryAppearInSection: 3_readInfo|217
+#	primaryAppearInSection: 3_readInfo|213
 #	secondaryAppearInSection: >none
 #	input: $geneInfoHsh_ref, $trnscptInfoHsh_ref
 #	output: none
 #	toCall: &summerizeGeneInfo($geneInfoHsh_ref, $trnscptInfoHsh_ref);
-#	calledInLine: 233
+#	calledInLine: 234
 #....................................................................................................................................................#
 
 	my ($geneInfoHsh_ref, $trnscptInfoHsh_ref) = @_;
 	
-	&reportAndLogStatus("summerizing gene information", 10, "\n");#->2953
+	&reportAndLogStatus("summerizing gene information", 10, "\n");#->3225
 	
 	foreach my $geneID (keys %{$geneInfoHsh_ref}) {
 		my @tmpRngAry = ();
@@ -3202,6 +3346,73 @@ sub summerizeGeneInfo {
 		
 	}
 }
+sub summerizeStrandedCREInfo {
+#....................................................................................................................................................#
+#	subroutineCategory: unassigned
+#	dependOnSub: >none
+#	appearInSub: >none
+#	primaryAppearInSection: 3_readInfo|213
+#	secondaryAppearInSection: >none
+#	input: $clusterInfoHsh_ref, $geneInfoHsh_ref, $stranded_CREInfoHsh_ref
+#	output: 
+#	toCall: &summerizeStrandedCREInfo($clusterInfoHsh_ref, $stranded_CREInfoHsh_ref, $geneInfoHsh_ref);
+#	calledInLine: 229
+#....................................................................................................................................................#
+	my ($clusterInfoHsh_ref, $stranded_CREInfoHsh_ref, $geneInfoHsh_ref) = @_;
+	
+	foreach my $CREID (keys %{$stranded_CREInfoHsh_ref}) {
+		my @CRENameAry = ();
+		my $max = 0;
+		my $peakPos;
+		my $sumClusterRead = 0;
+		
+		foreach my $clusterID (keys %{$stranded_CREInfoHsh_ref->{$CREID}{'clusterID'}}) {
+			foreach my $geneID (keys %{$clusterInfoHsh_ref->{$clusterID}{'geneID'}}) {
+				$stranded_CREInfoHsh_ref->{$CREID}{'geneID'}{$geneID}++;
+				$geneInfoHsh_ref->{$geneID}{'CREID'}{$CREID} = 'annotated_promoter';
+			}
+
+			my $count = $clusterInfoHsh_ref->{$clusterID}{'count'};
+			$sumClusterRead+=$count;
+			
+			if ($clusterInfoHsh_ref->{$clusterID}{'max'} > $max) {
+				$max = $clusterInfoHsh_ref->{$clusterID}{'max'};
+				$peakPos = $clusterInfoHsh_ref->{$clusterID}{'peakPos'};
+			}
+		}
+		my $chrom = $stranded_CREInfoHsh_ref->{$CREID}{'chrom'};
+		my $start = $stranded_CREInfoHsh_ref->{$CREID}{'start'};
+		my $end = $stranded_CREInfoHsh_ref->{$CREID}{'end'};
+		my $score = $stranded_CREInfoHsh_ref->{$CREID}{'score'};
+		my $strand = $stranded_CREInfoHsh_ref->{$CREID}{'strand'};
+
+		my $chromStart = $start;
+		my $chromEnd = $end;
+		my $blockSizes = $chromEnd - $chromStart;
+		my $blockCount = 1;
+		my $blockStarts = 0;
+		my $thickEnd = $peakPos;
+		my $thickStart = $thickEnd - 1;
+
+		$stranded_CREInfoHsh_ref->{$CREID}{'sumClusterRead'} = $sumClusterRead;
+		$stranded_CREInfoHsh_ref->{$CREID}{'max'} = $max;
+		$stranded_CREInfoHsh_ref->{$CREID}{'peakPos'} = $peakPos;
+
+		if ($stranded_CREInfoHsh_ref->{$CREID}{'strand'} eq '+') {
+			$stranded_CREInfoHsh_ref->{$CREID}{'rgbItem'} = '228,26,28';
+
+		} elsif ($stranded_CREInfoHsh_ref->{$CREID}{'strand'} eq '-') {
+			$stranded_CREInfoHsh_ref->{$CREID}{'rgbItem'} = '55,126,184';
+		
+		} else {
+			die;
+		}
+
+		$stranded_CREInfoHsh_ref->{$CREID}{'bedLine'} = [$chrom, $chromStart, $chromEnd, $CREID, $sumClusterRead, $strand, $thickStart, $thickEnd, ".", $blockCount, $blockSizes, $blockStarts];
+	}
+
+	return ();
+}
 sub timeStamp {
 #....................................................................................................................................................#
 #	subroutineCategory: time, general
@@ -3212,13 +3423,81 @@ sub timeStamp {
 #	input: none
 #	output: $curntTimeStamp
 #	toCall: my ($curntTimeStamp) = &timeStamp();
-#	calledInLine: 153
+#	calledInLine: 157
 #....................................................................................................................................................#
 	
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
 	my $curntTimeStamp = sprintf "%04d.%02d.%02d.%02d.%02d.%02d", $year+1900,$mon+1,$mday,$hour,$min,$sec;	
 
 	return ($curntTimeStamp);
+}
+sub transferStrandedCREData {
+#....................................................................................................................................................#
+#	subroutineCategory: unassigned
+#	dependOnSub: >none
+#	appearInSub: defineCRE|754
+#	primaryAppearInSection: >none
+#	secondaryAppearInSection: 3_readInfo|213
+#	input: $CREIDStr, $CREInfoHsh_ref, $chrom, $clusterInfoHsh_ref, $end, $gene_promoter, $start, $strand, $stranded_CREInfoHsh_ref
+#	output: 
+#	toCall: &transferStrandedCREData($chrom, $start, $end, $strand, $gene_promoter, $CREIDStr, $CREInfoHsh_ref, $stranded_CREInfoHsh_ref, $clusterInfoHsh_ref);
+#	calledInLine: 787, 801
+#....................................................................................................................................................#
+	my ($chrom, $start, $end, $strand, $gene_promoter, $CREIDStr, $CREInfoHsh_ref, $stranded_CREInfoHsh_ref, $clusterInfoHsh_ref) = @_;
+
+	my $merged_CREID = "$chrom\_$start\_$end\_$strand";
+		
+	my $max = 0;
+	my $max_clusterID;
+	
+	foreach my $indiv_CREID (split /;/, $CREIDStr) {
+	
+		if (exists $stranded_CREInfoHsh_ref->{$indiv_CREID}{'gene_promoter_geneID'}) {
+			foreach my $geneID (keys %{$stranded_CREInfoHsh_ref->{$indiv_CREID}{'gene_promoter_geneID'}}) {
+				$CREInfoHsh_ref->{$merged_CREID}{'gene_promoter_geneID'}{$geneID} = $stranded_CREInfoHsh_ref->{$indiv_CREID}{'gene_promoter_geneID'}{$geneID};
+			}
+		}
+		
+		if (exists $stranded_CREInfoHsh_ref->{$indiv_CREID}{'geneID'}) {
+			foreach my $geneID (keys %{$stranded_CREInfoHsh_ref->{$indiv_CREID}{'geneID'}}) {
+				$CREInfoHsh_ref->{$merged_CREID}{'geneID'}{$geneID} = $stranded_CREInfoHsh_ref->{$indiv_CREID}{'geneID'}{$geneID};
+			}
+		}
+
+		foreach my $strand (qw/+ -/) {
+			$CREInfoHsh_ref->{$merged_CREID}{'stranded_count'}{$strand} += $stranded_CREInfoHsh_ref->{$indiv_CREID}{'stranded_count'}{$strand};
+		}
+
+		foreach my $param (qw/sumClusterRead score/) {
+			$CREInfoHsh_ref->{$merged_CREID}{$param} += $stranded_CREInfoHsh_ref->{$indiv_CREID}{$param};
+		}
+
+		foreach my $clusterID (keys %{$stranded_CREInfoHsh_ref->{$indiv_CREID}{'clusterID'}}) {
+			$CREInfoHsh_ref->{$merged_CREID}{'clusterID'}{$clusterID}++;
+			$clusterInfoHsh_ref->{$clusterID}{'CREID'} = $merged_CREID;
+		}
+		
+		if ($stranded_CREInfoHsh_ref->{$indiv_CREID}{'max'} >= $max) {
+			$max = $stranded_CREInfoHsh_ref->{$indiv_CREID}{'max'};
+			$max_clusterID = $stranded_CREInfoHsh_ref->{$indiv_CREID}{'max_clusterID'};
+		}
+	}
+
+	$CREInfoHsh_ref->{$merged_CREID}{'chrom'} = $chrom;
+	$CREInfoHsh_ref->{$merged_CREID}{'start'} = $start;
+	$CREInfoHsh_ref->{$merged_CREID}{'end'} = $end;
+	$CREInfoHsh_ref->{$merged_CREID}{'strand'} = $strand;
+
+	$CREInfoHsh_ref->{$merged_CREID}{'gene_promoter'} = $gene_promoter;
+	$CREInfoHsh_ref->{$merged_CREID}{'max'} = $max;
+	$CREInfoHsh_ref->{$merged_CREID}{'max_clusterID'} = $max_clusterID;
+
+	$CREInfoHsh_ref->{$merged_CREID}{'regionType'} = $clusterInfoHsh_ref->{$max_clusterID}{'regionType'};
+	$CREInfoHsh_ref->{$merged_CREID}{'regionGeneID'} = $clusterInfoHsh_ref->{$max_clusterID}{'regionGeneID'};
+	$CREInfoHsh_ref->{$merged_CREID}{'regionOritentation'} = $clusterInfoHsh_ref->{$max_clusterID}{'regionOritentation'};
+	$CREInfoHsh_ref->{$merged_CREID}{'peakPos'} = $clusterInfoHsh_ref->{$max_clusterID}{'peakPos'};
+
+	return ();
 }
 
 exit;
