@@ -344,6 +344,7 @@ This folder contains the following tools and workflows. A tool perform a single 
  To demo run, cd to SCAFE dir and run:
    scafe.tool.sc.count \
    --overwrite=yes \
+   --genome=hg19.gencode_v32lift37 \
    --countRegion_bed_path=./demo/output/sc.solo/annotate/demo/bed/demo.CRE.annot.bed.gz \
    --cellBarcode_list_path=./demo/input/sc.solo/demo.barcodes.tsv.gz \
    --ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.CB.ctss.bed.gz \
