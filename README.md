@@ -147,7 +147,16 @@ docker pull cchon/scafe:latest
 #---to run scafe within a docker container, run
 docker run -it cchon/scafe:latest
 ```
+The Docker image can also be used with [Singularity](https://docs.sylabs.io/guides/3.5/user-guide/introduction.html) container platform, with additional options specified as the followings.
 
+```shell
+#---to pull the docker image using singularity
+singularity pull docker://cchon/scafe:latest
+
+#---to run scafe within a singularity container, run
+singularity shell --writable --env APPEND_PATH=/SCAFE/scripts --env LC_ALL=C docker://cchon/scafe:latest
+
+```
 ## Getting started with demo data<a name="7"></a>
 Now you have enssured all dependencies and downloaded SCAFE, time to get the demo data and test a few runs on the demo data.
 
