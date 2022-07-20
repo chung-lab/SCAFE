@@ -328,7 +328,7 @@ This folder contains the following tools and workflows. A tool perform a single 
                                                 prevent over permissive counting to ctss in the CRE range by stricting only 
                                                 ctss within valid tssClusters to be counted. 
                                                 *.tssCluster.default.filtered.bed.gz from scafe.tool.cm.filter.
-                                                It will skip filtering if not file was provide (default=null).
+                                                It will skip filtering if no file was provide (default=null).
    --ctss_scope_slop_bp    <optional> [integer] the length of the boundary extension (in bp) for filter region provided in
                                                 option ctss_scope_bed_path. All regions in ctss_scope_bed_path will be 
                                                 extended both side by ctss_scope_slop_bp, for controlling the permissiveness
@@ -344,7 +344,7 @@ This folder contains the following tools and workflows. A tool perform a single 
  To demo run, cd to SCAFE dir and run:
    scafe.tool.sc.count \
    --overwrite=yes \
-   --genome= hg19.gencode_v32lift37 \
+   --genome=hg19.gencode_v32lift37 \
    --countRegion_bed_path=./demo/output/sc.solo/annotate/demo/bed/demo.CRE.annot.bed.gz \
    --cellBarcode_list_path=./demo/input/sc.solo/demo.barcodes.tsv.gz \
    --ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.CB.ctss.bed.gz \
@@ -640,6 +640,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    scafe.tool.cm.cluster \
    --overwrite=yes \
    --cluster_ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.collapse.ctss.bed.gz \
+   --count_ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.unencoded_G.collapse.ctss.bed.gz \
    --outputPrefix=demo \
    --outDir=./demo/output/sc.solo/cluster/
 ```
@@ -687,7 +688,7 @@ This folder contains the following tools and workflows. A tool perform a single 
                                                      taken as 4:1 ratio. $CRE_extend_size=500 and $CRE_extend_upstrm_ratio=4,
                                                      upstream and downstream will be 400 and 100 respectively 
                                                      (default = 4)
-   --distal_stitch_distance            (optional) [integer] distance (nt) for stitching distal tCRE for defining hyperactive distal loci.
+   --distal_stitch_distance     (optional) [integer] distance (nt) for stitching distal tCRE for defining hyperactive distal loci.
                                                      aka superenhancer candidates. If undefined, an optimized value will be 
                                                      determined based on the tangent to rank-distance plot. As a note, the original 
                                                      distance for stitching enhancer in 
@@ -702,7 +703,7 @@ This folder contains the following tools and workflows. A tool perform a single 
    --min_gene_strand_read_frac (optional) [fraction] minimum fraction of the expression amount (read/UMI) on the gene strand (in total number 
                                                      of UMI/read both strand) of a tCRE to be regarded as an unannotated promoter of the gene.
                                                      (default = 0.75)
-   --min_spreadness            (optional) [fraction] minimum spreadness of the distal CRE to be considered as hyperactive distal loci.
+   --min_spreadness               (optional) [float] minimum spreadness of the distal CRE to be considered as hyperactive distal loci.
                                                      Spreadness is defined as "num-of-CRE/top-fraction". Top-fraction is defined as the expression 
                                                      amount (read/UMI) on the highest expressed distal CRE in the expression amount of all distal CRE 
                                                      within the locus. Num-of-CRE refers to the number of CRE within the distal CRE locus 

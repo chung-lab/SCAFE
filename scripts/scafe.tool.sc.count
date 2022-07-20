@@ -97,7 +97,7 @@ use Cwd 'abs_path';
                                                 prevent over permissive counting to ctss in the CRE range by stricting only 
                                                 ctss within valid tssClusters to be counted. 
                                                 *.tssCluster.default.filtered.bed.gz from scafe.tool.cm.filter.
-                                                It will skip filtering if not file was provide (default=null).
+                                                It will skip filtering if no file was provide (default=null).
    --ctss_scope_slop_bp    <optional> [integer] the length of the boundary extension (in bp) for filter region provided in
                                                 option ctss_scope_bed_path. All regions in ctss_scope_bed_path will be 
                                                 extended both side by ctss_scope_slop_bp, for controlling the permissiveness
@@ -113,7 +113,7 @@ use Cwd 'abs_path';
  For demo, cd to SCAFE dir and run,
    scafe.tool.sc.count \
    --overwrite=yes \
-   --genome= hg19.gencode_v32lift37 \
+   --genome=hg19.gencode_v32lift37 \
    --countRegion_bed_path=./demo/output/sc.solo/annotate/demo/bed/demo.CRE.annot.bed.gz \
    --cellBarcode_list_path=./demo/input/sc.solo/demo.barcodes.tsv.gz \
    --ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.CB.ctss.bed.gz \

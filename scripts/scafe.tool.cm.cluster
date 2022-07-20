@@ -110,6 +110,7 @@ use Cwd 'abs_path';
    scafe.tool.cm.cluster \
    --overwrite=yes \
    --cluster_ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.collapse.ctss.bed.gz \
+   --count_ctss_bed_path=./demo/output/sc.solo/bam_to_ctss/demo/bed/demo.unencoded_G.collapse.ctss.bed.gz \
    --outputPrefix=demo \
    --outDir=./demo/output/sc.solo/cluster/
 
@@ -123,7 +124,7 @@ v1.0.0 [June 6, 2022]
 
 v1.0.1 [June 26, 2022]
 	-min_num_sample_expr_cluster and min_num_sample_expr_summit are deprecated
-	-count_ctss_bed_path change to count_ctss_bed_path
+	-count_ctss_bed_path changed usage
 	-count_scope_bed_path is deprecated
 	-min_pos_count deprecated
 	-merge_dist deprecated
