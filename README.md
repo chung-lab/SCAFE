@@ -24,6 +24,7 @@
 * [Installation](#6)
 * [Getting started with demo data](#7)
 * [Run *SCAFE* on your own data](#8)
+* [Wishlist](#9)
 
 ## Publications<a name="1"></a>
 
@@ -436,8 +437,11 @@ scafe.workflow.bk.solo --help
 scafe.workflow.cm.aggregate --help
 scafe.workflow.bk.subsample --help
 ```
+## Wishlist
 
-
+* *bam\_to\_ctss* error check for various problems in bam file, e.g. bams with read 2 only
+* enable the use of system-wide bins for common 3rd party software (e.g. bedtools samtools)
+* update genome resources with updated genocode versions
 
 
 
