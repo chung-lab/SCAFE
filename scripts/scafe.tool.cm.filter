@@ -712,12 +712,12 @@ sub checkRScriptVersion {
 	my $predict_prob_R = "$dirPath/../resources/R/predict_prob.R";
 	my $benchmark_roc_R = "$dirPath/../resources/R/benchmark_roc.R";
 
-	my $stdOut = `$Rscript_bin --version 2>&1`;
-	if ($stdOut =~ m/R scripting front-end version (\S+)/) {
-		&reportAndLogStatus("Checking: Rscript version: $1", 0, "\n");#->2284
-	} else {
-		die "Rscript is not installed properly. Quitting.\n";
-	}
+	#my $stdOut = `$Rscript_bin --version 2>&1`;
+	#if ($stdOut =~ m/R scripting front-end version (\S+)/) {
+	#	&reportAndLogStatus("Checking: Rscript version: $1", 0, "\n");#->2284
+	#} else {
+	#	die "Rscript is not installed properly. Quitting.\n";
+	#}
 	
 	if (-s $build_glm_R) {
 		&reportAndLogStatus("build_glm_R found.", 0, "\n");#->2284
