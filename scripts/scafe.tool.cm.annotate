@@ -689,12 +689,12 @@ sub checkRScriptVersion {
 	my $dirPath = dirname(rel2abs($0));
 	my $optimize_tangent_R = "$dirPath/../resources/R/optimize_tangent.R";
 
-	my $stdOut = `$Rscript_bin --version 2>&1`;
-	if ($stdOut =~ m/R scripting front-end version (\S+)/) {
-		&reportAndLogStatus("Checking: Rscript version: $1", 0, "\n");#->2953
-	} else {
-		die "Rscript is not installed properly at $Rscript_bin. Quitting.\n";
-	}
+	#my $stdOut = `$Rscript_bin --version 2>&1`;
+	#if ($stdOut =~ m/R scripting front-end version (\S+)/) {
+	#	&reportAndLogStatus("Checking: Rscript version: $1", 0, "\n");#->2953
+	#} else {
+	#	die "Rscript is not installed properly at $Rscript_bin. Quitting.\n";
+	#}
 	
 	if (-s $optimize_tangent_R) {
 		&reportAndLogStatus("optimize_tangent_R found.", 0, "\n");#->2953
